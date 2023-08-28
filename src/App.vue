@@ -35,16 +35,28 @@ const initializeDBTable = async () => {
 const insertTestWeight = async () => {
   try {
     await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-26 11:42:55', 80);
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-22 11:42:55', 81);
     `);
     await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-25 11:42:55', 79);
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-21 18:42:55', 81.5);
     `);
     await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-24 11:42:55', 79.5);
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-20 11:42:55', 81.7);
     `);
     await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-23 11:42:55', 80);
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-19 18:42:55', 81.4);
+    `);
+    await databaseStore.getDatabase()?.run(`
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-18 11:42:55', 81);
+    `);
+    await databaseStore.getDatabase()?.run(`
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-17 18:42:55', 81.5);
+    `);
+    await databaseStore.getDatabase()?.run(`
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-16 11:42:55', 81.7);
+    `);
+    await databaseStore.getDatabase()?.run(`
+      INSERT INTO weight (timestamp, weight) VALUES ('2023-08-15 18:42:55', 81.4);
     `);
   } catch (e) {
     alert("ERROR inserting in DB " + JSON.stringify(e));

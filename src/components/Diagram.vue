@@ -2,104 +2,135 @@
   <div class="canvas-box">
     <canvas ref="weightChartEl"></canvas>
   </div>
+  <p>{{ x }}</p>
+  <p>{{ y }}</p>
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch, nextTick, onMounted, watchEffect, computed } from 'vue'
-import { Chart, CategoryScale, LinearScale, LineController, PointElement, LineElement } from 'chart.js'
-import WeightRecord from '../datatypes/weight'
+import { ref, shallowRef, watch, nextTick } from "vue";
+import {
+  Chart,
+  CategoryScale,
+  LineController,
+  PointElement,
+  LineElement,
+  TimeScale,
+} from "chart.js";
+// import "chartjs-adapter-date-fns";
+import WeightRecord from "../datatypes/weight";
 
+Chart.register(
+  CategoryScale,
+  TimeScale,
+  LineController,
+  PointElement,
+  LineElement
+);
 
-Chart.register(CategoryScale, LinearScale, LineController, PointElement, LineElement)
+const weightChartEl = ref<HTMLCanvasElement | null>(null);
+const weightChart = shallowRef<Chart | null>(null);
 
-const weightChartEl = ref<HTMLCanvasElement | null>(null)
-const weightChart = shallowRef<Chart | null>(null)
+const { weights } = defineProps<{ weights: WeightRecord[] }>();
 
+const x = ref([]);
+const y = ref([]);
 
-
-const { weights } = defineProps<{ weights: WeightRecord[] }>()
 watch(
   weights,
   async (newWeights) => {
     // const _ws = Array.from(averagedQueryResults());
     const _ws = averagedQueryResults();
-    const ws = _ws.sort((a:WeightRecord, b:WeightRecord) => 
-    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    const ws = _ws.sort(
+      (a: WeightRecord, b: WeightRecord) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
-    
+
+    const dataX = ws.map((weight: WeightRecord) =>
+      new Date(weight.timestamp).getTime()
+    );
+    const dataY = ws.map((weight: WeightRecord) => weight.weight);
+
+    x.value = dataX;
+    y.value = dataY;
+
+    // alert(dataX);
+    // alert(dataY);
+
     if (weightChart.value) {
+      weightChart.value.data.labels = dataX;
+      weightChart.value.data.datasets[0].data = dataY;
 
-      weightChart.value.data.labels = ws.map((weight:any) =>
-        // new Date(weight.timestamp).toLocaleDateString()
-        weight.timestamp
-      )
-      weightChart.value.data.datasets[0].data = ws.map((weight:any) => weight.weight);
-
-      weightChart.value.update()
-      return
+      weightChart.value.update();
+      return;
     }
 
     nextTick(() => {
-
-    if (weightChartEl.value) {
-      const ctx = weightChartEl.value.getContext('2d')
-      if (ctx) {
-        weightChart.value = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ws.map((weight:any) =>
-              // new Date(weight.timestamp).toLocaleDateString()
-              weight.timestamp
-            ),
-            datasets: [
-              {
-                label: 'Weight',
-                data: ws.map((weight:any) => weight.weight),
-                backgroundColor: 'rgba(147, 30, 21, 0.2)',
-                borderColor: 'rgba(147, 30, 21, 1)',
-                borderWidth: 1,
-                fill: true,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-            x: {
-              grid: {
-                display: false,
+      if (weightChartEl.value) {
+        const ctx = weightChartEl.value.getContext("2d");
+        if (ctx) {
+          weightChart.value = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: dataX,
+              datasets: [
+                {
+                  label: "Weight",
+                  data: dataY,
+                  backgroundColor: "rgba(147, 30, 21, 0.2)",
+                  borderColor: "rgba(147, 30, 21, 1)",
+                  borderWidth: 1,
+                  fill: true,
+                  tension: 0.4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    unit: "day",
+                    stepSize: 1,
+                  },
+                  grid: {
+                    display: true,
+                    color: "#888",
+                  },
+                },
+                y: {
+                  grid: {
+                    color: "#444",
+                  },
+                },
               },
             },
-            y: {
-              grid: {
-                color: '#444',
-            },
-          },
+          });
         }
-          }
-        })
       }
-    }
-  })
+    });
   },
-  { deep: true}
-)
+  { deep: true }
+);
 
 const averagedQueryResults = () => {
-  const sortedQueryResults = weights.slice().sort(
-    (a: WeightRecord, b: WeightRecord) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  const sortedQueryResults = weights
+    .slice()
+    .sort(
+      (a: WeightRecord, b: WeightRecord) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
 
-  const averagedResults: WeightRecord[] = [];
-  let currentDate = '';
+  const averagedResults: any = [];
+  let currentDate = 0;
   let totalWeight = 0;
   let count = 0;
 
   for (const record of sortedQueryResults) {
-    const recordDate = new Date(record.timestamp).toLocaleDateString();
+    const recordDate = new Date(record.timestamp).getTime();
 
-    if (currentDate === '') {
+    if (currentDate === 0) {
       currentDate = recordDate;
       totalWeight = record.weight;
       count = 1;
