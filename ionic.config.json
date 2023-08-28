@@ -1,5 +1,6 @@
 {
-  "name": "SweatFlixApp",
+  "name": "SweatFlix",
+  "id": "com.patsch36.sweatflix",
   "integrations": {
     "capacitor": {}
   },

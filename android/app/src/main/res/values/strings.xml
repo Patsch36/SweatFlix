@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SweatFlix</string>
+    <string name="title_activity_main">SweatFlix</string>
+    <string name="package_name">com.patsch36.sweatflix</string>
+    <string name="custom_url_scheme">com.patsch36.sweatflix</string>
+</resources>
