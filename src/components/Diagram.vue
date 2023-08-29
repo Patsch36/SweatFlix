@@ -2,30 +2,32 @@
   <div class="canvas-box">
     <canvas ref="weightChartEl"></canvas>
   </div>
-  <p>{{ x }}</p>
-  <p>{{ y }}</p>
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch, nextTick } from "vue";
+import { ref, shallowRef, watch, nextTick, onMounted } from "vue";
 import {
   Chart,
   CategoryScale,
   LineController,
   PointElement,
   LineElement,
+  LinearScale,
   TimeScale,
 } from "chart.js";
-// import "chartjs-adapter-date-fns";
+import "chartjs-adapter-date-fns";
 import WeightRecord from "../datatypes/weight";
 
-Chart.register(
-  CategoryScale,
-  TimeScale,
-  LineController,
-  PointElement,
-  LineElement
-);
+onMounted(() => {
+  Chart.register(
+    CategoryScale,
+    LineController,
+    PointElement,
+    LineElement,
+    LinearScale,
+    TimeScale
+  );
+});
 
 const weightChartEl = ref<HTMLCanvasElement | null>(null);
 const weightChart = shallowRef<Chart | null>(null);
@@ -37,7 +39,7 @@ const y = ref([]);
 
 watch(
   weights,
-  async (newWeights) => {
+  (newWeights) => {
     // const _ws = Array.from(averagedQueryResults());
     const _ws = averagedQueryResults();
     const ws = _ws.sort(
@@ -49,6 +51,8 @@ watch(
       new Date(weight.timestamp).getTime()
     );
     const dataY = ws.map((weight: WeightRecord) => weight.weight);
+
+    // DataX is in ms since 1.1.1970 and DataY is weight in kg, both numeric
 
     x.value = dataX;
     y.value = dataY;
@@ -76,7 +80,7 @@ watch(
                 {
                   label: "Weight",
                   data: dataY,
-                  backgroundColor: "rgba(147, 30, 21, 0.2)",
+                  backgroundColor: "rgba(147, 30, 21, 0.5)",
                   borderColor: "rgba(147, 30, 21, 1)",
                   borderWidth: 1,
                   fill: true,
