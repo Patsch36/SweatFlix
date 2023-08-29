@@ -1,6 +1,6 @@
 <template>
   <div class="canvas-box">
-    <canvas ref="weightChartEl"></canvas>
+    <canvas ref="weightChartEl" height="450px"></canvas>
   </div>
 </template>
 

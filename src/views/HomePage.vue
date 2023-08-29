@@ -1,5 +1,5 @@
 <template>
-  <ion-page style="padding-inline: 0.75rem">
+  <ion-page style="padding-inline: 0.75rem; height: calc(100vh - 100px)">
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>Home</ion-title>
@@ -89,6 +89,7 @@ import { onBeforeMount, onMounted, ref } from "vue";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
+import Tabbar from "./Tabbar.vue";
 const databaseStore = useDatabaseStore();
 const queryCurrentWeightResults = ref<any>([]);
 

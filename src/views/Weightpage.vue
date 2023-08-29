@@ -1,5 +1,5 @@
 <template>
-  <ion-page>
+  <ion-page style="height: calc(100vh - 100px)">
     <ion-header :translucent="true" color="light">
       <ion-toolbar>
         <ion-title color="primary-contrast">Weight</ion-title>
@@ -80,6 +80,7 @@ import {
   IonItemSliding,
   IonItemOption,
   IonItemOptions,
+  IonFooter,
 } from "@ionic/vue";
 import type { Animation } from "@ionic/vue";
 import { chevronBack } from "ionicons/icons";
@@ -89,6 +90,7 @@ import { useDatabaseStore } from "../stores/databaseStore";
 import { trash } from "ionicons/icons";
 import Diagram from "../components/Diagram.vue";
 import WeightRecord from "../datatypes/weight";
+import Tabbar from "./Tabbar.vue";
 
 const router = useRouter();
 const queryResults = ref<any>(null);
