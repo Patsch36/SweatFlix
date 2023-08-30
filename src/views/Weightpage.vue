@@ -24,13 +24,15 @@
       </ion-header>
 
       <div class="input-container">
-        <ion-button @click="decreaseWeight" color="transparent">-</ion-button>
-        <ion-input
-          type="number"
-          :value="latestWeight !== null ? latestWeight.toString() : ''"
-          @input="handleWeightInput"
-          :style="{ width: inputWidth }"></ion-input>
-        <ion-button @click="increaseWeight" color="transparent">+</ion-button>
+        <div class="numberwrapper">
+          <ion-button @click="decreaseWeight" color="transparent">-</ion-button>
+          <ion-input
+            type="number"
+            :value="latestWeight !== null ? latestWeight.toString() : ''"
+            @input="handleWeightInput"
+            :style="{ width: inputWidth }"></ion-input>
+          <ion-button @click="increaseWeight" color="transparent">+</ion-button>
+        </div>
         <ion-button @click="addWeightEntry" class="addButton">ADD</ion-button>
       </div>
 
@@ -273,17 +275,33 @@ ion-card-header {
 }
 
 .fixed-height-list {
-  height: 40%;
+  /* height: 40%; */
   overflow-y: scroll;
   width: calc(100% - 1rem);
 }
 
 .input-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
-  padding-inline: 16px;
+  margin-block: 20px 35px;
+  margin-inline: auto;
+  width: 200px;
+  aspect-ratio: 1/1;
+  background-color: var(--ion-color-dark-shade);
+  border-radius: 100%;
+  border: 5px solid var(--ion-color-primary);
+}
+
+.numberwrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 50px !important;
+  margin-top: 15px;
 }
 
 .input-container ion-input {
@@ -293,6 +311,7 @@ ion-card-header {
   justify-content: center;
   margin-inline: 5px;
   font-family: monospace;
+  text-align: center;
 }
 
 .input-container ion-button {
@@ -307,7 +326,6 @@ ion-card-header {
 .addButton {
   color: var(--ion-color-primary-contrast) !important;
   font-size: 1rem !important;
-  margin-left: auto;
   width: 5rem !important;
 }
 

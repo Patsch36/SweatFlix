@@ -123,6 +123,7 @@ watch(
   { deep: true }
 );
 
+// watch(() => weightRef.value?.innerText, (newWeights)
 const updateChart = () => {
   // alert("watch");
   if (!weightRef.value?.innerText) return;
