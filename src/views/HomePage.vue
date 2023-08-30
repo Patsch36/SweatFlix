@@ -89,7 +89,6 @@ import { onBeforeMount, onMounted, ref } from "vue";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
-import Tabbar from "./Tabbar.vue";
 const databaseStore = useDatabaseStore();
 const queryCurrentWeightResults = ref<any>([]);
 

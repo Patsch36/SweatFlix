@@ -34,7 +34,30 @@
         <ion-button @click="addWeightEntry" class="addButton">ADD</ion-button>
       </div>
 
-      <Diagram :weights="queryResults" v-if="queryResults" />
+      <ion-segment
+        color="primary"
+        value="week"
+        @ion-change="TimeSegmentChanged($event)"
+        v-model="timeSegment"
+        style="margin-bottom: 15px">
+        <ion-segment-button value="week">
+          <ion-label>Week</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="month">
+          <ion-label>Month</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="halfyear">
+          <ion-label>6 Months</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="year">
+          <ion-label>Year</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="complete">
+          <ion-label>Complete</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <Diagram :weights="queryResults" v-if="queryResults" ref="diagram" />
 
       <ion-list class="fixed-height-list">
         <ion-list-header style="color: var(--ion-color-light-shade)">
@@ -44,8 +67,9 @@
 
         <ion-item-sliding v-for="item in queryResults" :key="item.timestamp">
           <ion-item>
-            <!-- <ion-label>{{ new Date(item.timestamp).toLocaleString() }}</ion-label> -->
-            <ion-label>{{ item.timestamp }}</ion-label>
+            <ion-label>{{
+              new Date(item.timestamp).toLocaleString()
+            }}</ion-label>
             <ion-label>{{ item.weight }}</ion-label>
           </ion-item>
           <ion-item-options>
@@ -80,17 +104,16 @@ import {
   IonItemSliding,
   IonItemOption,
   IonItemOptions,
-  IonFooter,
+  IonSegment,
+  IonSegmentButton,
 } from "@ionic/vue";
-import type { Animation } from "@ionic/vue";
 import { chevronBack } from "ionicons/icons";
-import { computed, onBeforeMount, ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "../stores/databaseStore";
 import { trash } from "ionicons/icons";
 import Diagram from "../components/Diagram.vue";
 import WeightRecord from "../datatypes/weight";
-import Tabbar from "./Tabbar.vue";
 
 const router = useRouter();
 const queryResults = ref<any>(null);
@@ -98,12 +121,34 @@ const databaseStore = useDatabaseStore();
 let latestWeight = ref<number>(0);
 const inputWidth = ref<string>("5rem");
 
+const diagram = ref<any>(null);
+const timeSegment = ref<string>("week");
+
 const loadWeight = async () => {
-  const resp = await databaseStore.getDatabase()?.query(`SELECT * FROM weight`);
+  let timeFilter = "";
+
+  if (timeSegment.value === "week") {
+    timeFilter = "timestamp >= datetime('now', '-7 days')";
+  } else if (timeSegment.value === "month") {
+    timeFilter = "timestamp >= datetime('now', '-30 days')";
+  } else if (timeSegment.value === "halfyear") {
+    timeFilter = "timestamp >= datetime('now', '-180 days')";
+  } else if (timeSegment.value === "year") {
+    timeFilter = "timestamp >= datetime('now', '-365 days')";
+  }
+
+  const query = `SELECT * FROM weight ${
+    timeFilter ? `WHERE ${timeFilter}` : ""
+  }`;
+
+  const resp = await databaseStore.getDatabase()?.query(query);
   queryResults.value = resp?.values || [];
+
   queryResults.value.sort(
-    (a: WeightRecord, b: WeightRecord) =>
-      new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime()
+    (
+      a: { timestamp: string | number | Date },
+      b: { timestamp: string | number | Date }
+    ) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 };
 
@@ -165,7 +210,6 @@ const addWeightEntry = async () => {
         new Date(a.timestamp).getTime() < new Date(b.timestamp).getTime()
     );
 
-    // Hier fügst du den Eintrag auch zur SQLite-Datenbank hinzu
     try {
       await databaseStore
         .getDatabase()
@@ -203,6 +247,10 @@ const formatDate = (date: Date): string => {
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+const TimeSegmentChanged = (event: CustomEvent) => {
+  loadWeight();
 };
 </script>
 
@@ -265,5 +313,27 @@ ion-card-header {
 
 ion-card canvas {
   height: 100%;
+}
+
+ion-segment-button::part(indicator-background) {
+  background: var(--ion-color-primary);
+}
+
+/* Material Design styles */
+ion-segment-button.md::part(native),
+ion-segment-button.ios::part(native) {
+  color: white;
+}
+
+.segment-button-checked.md::part(native),
+.segment-button-checked.ios::part(native) {
+  color: var(--ion-color-primary-contrast);
+}
+
+ion-segment-button.md::part(indicator-background) {
+  height: 4px;
+}
+ion-segment-button.ios::part(indicator-background) {
+  border-radius: 20px;
 }
 </style>

@@ -2,6 +2,7 @@
   <div class="canvas-box">
     <canvas ref="weightChartEl" height="450px"></canvas>
   </div>
+  <p ref="weightRef" v-show="false">{{ weights }}</p>
 </template>
 
 <script setup lang="ts">
@@ -32,7 +33,9 @@ onMounted(() => {
 const weightChartEl = ref<HTMLCanvasElement | null>(null);
 const weightChart = shallowRef<Chart | null>(null);
 
-const { weights } = defineProps<{ weights: WeightRecord[] }>();
+const { weights } = defineProps(["weights"]);
+
+const weightRef = ref<HTMLElement | null>(null);
 
 const x = ref([]);
 const y = ref([]);
@@ -41,6 +44,7 @@ watch(
   weights,
   (newWeights) => {
     // const _ws = Array.from(averagedQueryResults());
+    // alert("watch");
     const _ws = averagedQueryResults();
     const ws = _ws.sort(
       (a: WeightRecord, b: WeightRecord) =>
@@ -52,11 +56,8 @@ watch(
     );
     const dataY = ws.map((weight: WeightRecord) => weight.weight);
 
-    // DataX is in ms since 1.1.1970 and DataY is weight in kg, both numeric
-
     x.value = dataX;
     y.value = dataY;
-
     // alert(dataX);
     // alert(dataY);
 
@@ -80,10 +81,14 @@ watch(
                 {
                   label: "Weight",
                   data: dataY,
-                  backgroundColor: "rgba(147, 30, 21, 0.5)",
+                  backgroundColor: "rgba(147, 30, 21, 0.2)",
                   borderColor: "rgba(147, 30, 21, 1)",
                   borderWidth: 1,
                   fill: true,
+                  pointRadius: 1, // Radius der Punkte
+                  pointBackgroundColor: "rgba(227,36,0, 0.2)", // Farbe der Punkte
+                  pointBorderColor: "rgba(227,36,0, 1)", // Randfarbe der Punkte
+                  pointBorderWidth: 1, // Breite des Randes der Punkte
                   tension: 0.4,
                 },
               ],
@@ -100,7 +105,7 @@ watch(
                   },
                   grid: {
                     display: true,
-                    color: "#888",
+                    color: "#222",
                   },
                 },
                 y: {
@@ -117,6 +122,37 @@ watch(
   },
   { deep: true }
 );
+
+const updateChart = () => {
+  // alert("watch");
+  if (!weightRef.value?.innerText) return;
+  let list = JSON.parse(weightRef.value.innerText);
+  console.log(list);
+  // const _ws = averagedQueryResults();
+  const ws = list.sort(
+    (a: WeightRecord, b: WeightRecord) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  const dataX = ws.map((weight: WeightRecord) =>
+    new Date(weight.timestamp).getTime()
+  );
+  const dataY = ws.map((weight: WeightRecord) => weight.weight);
+
+  x.value = dataX;
+  y.value = dataY;
+  // alert(dataX);
+  // alert(dataY);
+
+  if (weightChart.value) {
+    weightChart.value.data.labels = dataX;
+    weightChart.value.data.datasets[0].data = dataY;
+
+    weightChart.value.update();
+    return;
+  }
+};
+
+setInterval(updateChart, 500);
 
 const averagedQueryResults = () => {
   const sortedQueryResults = weights
