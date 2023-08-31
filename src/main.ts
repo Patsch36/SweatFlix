@@ -29,6 +29,7 @@ import { createPinia } from 'pinia'
 const pinia = createPinia();
 // pinia.use(piniaPluginPersistedstate);
 
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router)

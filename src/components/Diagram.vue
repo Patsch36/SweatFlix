@@ -128,8 +128,6 @@ const updateChart = () => {
   // alert("watch");
   if (!weightRef.value?.innerText) return;
   let list = JSON.parse(weightRef.value.innerText);
-  console.log(list);
-  // const _ws = averagedQueryResults();
   const ws = list.sort(
     (a: WeightRecord, b: WeightRecord) =>
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()

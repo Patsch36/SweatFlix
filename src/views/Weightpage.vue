@@ -292,6 +292,10 @@ ion-card-header {
   background-color: var(--ion-color-dark-shade);
   border-radius: 100%;
   border: 5px solid var(--ion-color-primary);
+  -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
 }
 
 .numberwrapper {

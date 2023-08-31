@@ -16,3 +16,24 @@ ion-page {
     padding-bottom: 50px;
     height: calc(100vh - 100px) !important;
 }
+
+ion-datetime {
+    --background: var(--ion-color-dark-shade);
+    border-radius: 16px;
+    border: 5px solid var(--ion-color-primary);
+    margin-inline: auto;
+    --wheel-highlight-background: var( --ion-color-dark-tint);
+    --wheel-fade-background-rgb: var(--ion-color-dark-shade);
+    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  }
+
+  ion-datetime::part(wheel-item) {
+    color: var(--ion-color-dark-contrast);
+  }
+
+  ion-datetime::part(wheel-item active) {
+    color: var(--ion-color-accent);
+  }

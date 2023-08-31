@@ -1,63 +1,163 @@
 <template>
-    <ion-page>
-      <ion-header :translucent="true">
+  <ion-page style="height: calc(100vh - 100px)">
+    <ion-header :translucent="true">
+      <ion-toolbar>
+        <ion-title>Calendar</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content :fullscreen="true">
+      <ion-header collapse="condense">
         <ion-toolbar>
-          <ion-title>Blank</ion-title>
+          <ion-title size="large">Calendar</ion-title>
         </ion-toolbar>
       </ion-header>
-  
-      <ion-content :fullscreen="true">
-        <ion-header collapse="condense">
-          <ion-toolbar>
-            <ion-title size="large">Calendar</ion-title>
-          </ion-toolbar>
-        </ion-header>
-  
-        <div id="container">
-          <strong>Ready to create an app?</strong>
-          <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-          <ion-button color="primary" router-link="/home">Home</ion-button>
-        </div>
-      </ion-content>
-    </ion-page>
-  
-    <!-- <base-layout pageTitle="Calendar">
+
+      <div id="container">
+        <ion-datetime
+          presentation="date"
+          :multiple="true"
+          :highlighted-dates="highlightedDates"
+          @ionChange="onDateChange"
+          ref="datetime">
+          <ion-buttons slot="buttons">
+            <ion-button color="danger" @click="reset()">Reset</ion-button>
+            <ion-button color="primary" @click="confirm()"
+              >Add Workout</ion-button
+            >
+          </ion-buttons>
+        </ion-datetime>
+        <ion-button fill="clear">
+          <ion-icon name="add"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-content>
+  </ion-page>
+
+  <!-- <base-layout pageTitle="Calendar">
       <ion-button color="primary" router-link="/home">Home</ion-button>
       In Calendar
       </base-layout>  -->
-  </template>
-  
-  <script setup lang="ts">
-  import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/vue';
-  </script>
-  
-  <style scoped>
-  #container {
-    text-align: center;
-    
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  
-  #container strong {
-    font-size: 20px;
-    line-height: 26px;
-  }
-  
-  #container p {
-    font-size: 16px;
-    line-height: 22px;
-    
-    color: #8c8c8c;
-    
-    margin: 0;
-  }
-  
-  #container a {
-    text-decoration: none;
-  }
-  </style>
-  
+</template>
+
+<script setup lang="ts">
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonDatetime,
+  IonButton,
+  IonButtons,
+} from "@ionic/vue";
+import { ref } from "vue";
+import { DatetimeCustomEvent } from "@ionic/core";
+
+const highlightedDates = [
+  {
+    date: "2023-08-05",
+    textColor: "var(--rose-color)",
+    backgroundColor: "var(--rose-background)",
+  },
+  {
+    date: "2023-08-10",
+    textColor: "var(--mint-color)",
+    backgroundColor: "var(--mint-background)",
+  },
+  {
+    date: "2023-08-20",
+    textColor: "var(--orange-color)",
+    backgroundColor: "var(--orange-background)",
+  },
+  {
+    date: "2023-08-23",
+    textColor: "var(--mindaro-color)",
+    backgroundColor: "var(--mindaro-background)",
+  },
+  {
+    date: "2023-08-25",
+    textColor: "var(--violet-color)",
+    backgroundColor: "var(--violet-background)",
+  },
+  {
+    date: "2023-08-30",
+    textColor: "var(--turquoise-color)",
+    backgroundColor: "var(--turquoise-background)",
+  },
+  {
+    date: "2023-08-14",
+    textColor: "var(--cerulean-color)",
+    backgroundColor: "var(--cerulean-background)",
+  },
+  {
+    date: "2023-08-15",
+    textColor: "var(--navy-color)",
+    backgroundColor: "var(--navy-background)",
+  },
+];
+
+const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
+
+const datetime = ref();
+const reset = () => datetime.value.$el.reset();
+const confirm = () => datetime.value.$el.confirm();
+
+const onDateChange = (event: DatetimeCustomEvent) => {
+  datepick.value = event.detail.value;
+  alert("Add workouts at " + event.detail.value);
+};
+</script>
+
+<style scoped>
+#container {
+  --giants-orange: #f46036ff;
+  --space-cadet: #2e294eff;
+  --persian-green: #1b998bff;
+  --red-pantone: #e71d36ff;
+  --mindaro: #c5d86dff;
+
+  --rose-color: #800080;
+  --rose-background: #ffc0cb;
+  --mint-color: #09721b;
+  --mint-background: #c8e5d0;
+  --violet-color: rgb(68, 10, 184);
+  --violet-background: rgb(211, 200, 229);
+  --mindaro-color: rgb(65, 72, 36);
+  --mindaro-background: #c5d86dff;
+  --turquoise-color: #0e4b44;
+  --turquoise-background: #c1e8e8;
+  --orange-color: #ff6600;
+  --orange-background: #ffdab3;
+  --cerulean-color: #001f3f;
+  --cerulean-background: #a4ddff;
+  --navy-color: #90026f;
+  --navy-background: #fab7eb;
+
+  text-align: center;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#container strong {
+  font-size: 20px;
+  line-height: 26px;
+}
+
+#container p {
+  font-size: 16px;
+  line-height: 22px;
+
+  color: #8c8c8c;
+
+  margin: 0;
+}
+
+#container a {
+  text-decoration: none;
+}
+</style>
