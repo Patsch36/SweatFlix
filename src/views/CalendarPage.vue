@@ -48,6 +48,30 @@
           >
         </div>
       </div>
+      <ion-modal ref="modal" :isOpen="modalOpen" @willDismiss="onWillDismiss">
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button @click="cancel()">Cancel</ion-button>
+            </ion-buttons>
+            <ion-title>Welcome</ion-title>
+            <ion-buttons slot="end">
+              <ion-button :strong="true" @click="confirmModal()"
+                >Confirm</ion-button
+              >
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          <ion-item>
+            <ion-label position="stacked">Enter your name</ion-label>
+            <ion-input
+              ref="input"
+              type="text"
+              placeholder="Your name"></ion-input>
+          </ion-item>
+        </ion-content>
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
@@ -65,10 +89,45 @@ import {
   IonChip,
   IonIcon,
   IonLabel,
+  IonModal,
+  IonItem,
+  IonInput,
 } from "@ionic/vue";
 import { ref } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
 import { refresh, add, trashOutline } from "ionicons/icons";
+import { OverlayEventDetail } from "@ionic/core/components";
+
+const message = ref(
+  "This modal example uses triggers to automatically open a modal when the button is clicked."
+);
+const modal = ref();
+
+const modalOpen = ref(false);
+const input = ref();
+
+const cancel = () => {
+  modal.value.$el.dismiss(null, "cancel");
+  modalOpen.value = false;
+};
+
+const confirmModal = () => {
+  const name = input.value.$el.value;
+  modal.value.$el.dismiss(name, "confirm");
+  modalOpen.value = false;
+
+  addValues();
+
+  console.log(highlightedDates);
+  datetime.value.$forceUpdate();
+  reset();
+};
+
+const onWillDismiss = (ev: CustomEvent<OverlayEventDetail>) => {
+  if (ev.detail.role === "confirm") {
+    message.value = `Hello, ${ev.detail.data}!`;
+  }
+};
 
 const highlightedDates = [
   {
@@ -177,8 +236,10 @@ const onDateChange = (event: DatetimeCustomEvent) => {
   }
 
   if (operation == "removeSelected") removeValues();
-  else if (operation === "confirm") addValues();
+  else if (operation === "confirm") modalOpen.value = true; //addValues();
 
+  console.log(highlightedDates);
+  datetime.value.$forceUpdate();
   reset();
 };
 
@@ -202,27 +263,18 @@ const removeValues = () => {
 };
 
 const addValues = () => {
-  // Get the selected dates from datepick.value
   const selectedDates = datepick.value;
 
-  if (typeof selectedDates === "string" || !selectedDates) {
+  if (!selectedDates || typeof selectedDates === "string") {
     return;
   }
 
-  if (typeof selectedDates === "string") {
-    return;
-  }
-
-  // Add selected dates to the highlightedDates array
   selectedDates.forEach((selectedDate) => {
-    const indexToAdd = highlightedDates.findIndex(
-      (dateObj) => dateObj.date === selectedDate
-    );
-    if (indexToAdd === -1) {
+    if (!highlightedDates.some((dateObj) => dateObj.date === selectedDate)) {
       highlightedDates.push({
         date: selectedDate,
-        textColor: "var(--giants-orange)",
-        backgroundColor: "var(--space-cadet)",
+        textColor: "var(--rose-color)",
+        backgroundColor: "var(--rose-background)",
       });
     }
   });
