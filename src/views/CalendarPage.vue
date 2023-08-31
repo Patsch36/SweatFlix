@@ -15,30 +15,41 @@
 
       <div id="container">
         <ion-datetime
+          style="margin-top: 15vh"
           presentation="date"
           :multiple="true"
           :highlighted-dates="highlightedDates"
           @ionChange="onDateChange"
           ref="datetime">
           <ion-buttons slot="buttons">
-            <ion-button color="danger" @click="reset()">Reset</ion-button>
-            <ion-button color="primary" @click="confirm()">Add</ion-button>
-            <ion-button color="primary" @click="removeSelected()"
-              >Remove</ion-button
-            >
+            <ion-button color="danger" @click="reset()">
+              <ion-icon :icon="refresh"></ion-icon>
+              <ion-label>Reset</ion-label>
+            </ion-button>
+            <ion-button @click="confirm()">
+              <ion-icon :icon="add"></ion-icon>
+              <ion-label>Add</ion-label>
+            </ion-button>
+            <ion-button @click="removeSelected()">
+              <ion-icon :icon="trashOutline"></ion-icon>
+              <ion-label>Remove</ion-label>
+            </ion-button>
           </ion-buttons>
         </ion-datetime>
-        <ion-button fill="clear">
-          <ion-icon name="add"></ion-icon>
-        </ion-button>
+        <div style="margin-top: 5vh">
+          <ion-chip
+            v-for="color in availableColors"
+            :key="color.color"
+            :style="{
+              color: color.color,
+              backgroundColor: color.background,
+            }">
+            {{ color.name }}</ion-chip
+          >
+        </div>
       </div>
     </ion-content>
   </ion-page>
-
-  <!-- <base-layout pageTitle="Calendar">
-      <ion-button color="primary" router-link="/home">Home</ion-button>
-      In Calendar
-      </base-layout>  -->
 </template>
 
 <script setup lang="ts">
@@ -51,9 +62,13 @@ import {
   IonDatetime,
   IonButton,
   IonButtons,
+  IonChip,
+  IonIcon,
+  IonLabel,
 } from "@ionic/vue";
 import { ref } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
+import { refresh, add, trashOutline } from "ionicons/icons";
 
 const highlightedDates = [
   {
@@ -101,6 +116,49 @@ const highlightedDates = [
 const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
 let operation = "";
 
+const availableColors = {
+  rose: {
+    name: "Rose",
+    color: "var(--rose-color)",
+    background: "var(--rose-background)",
+  },
+  mint: {
+    name: "Mint",
+    color: "var(--mint-color)",
+    background: "var(--mint-background)",
+  },
+  violet: {
+    name: "Violet",
+    color: "var(--violet-color)",
+    background: "var(--violet-background)",
+  },
+  mindaro: {
+    name: "Mindaro",
+    color: "var(--mindaro-color)",
+    background: "var(--mindaro-background)",
+  },
+  turquoise: {
+    name: "Turquoise",
+    color: "var(--turquoise-color)",
+    background: "var(--turquoise-background)",
+  },
+  orange: {
+    name: "Orange",
+    color: "var(--orange-color)",
+    background: "var(--orange-background)",
+  },
+  cerulean: {
+    name: "Cerulean",
+    color: "var(--cerulean-color)",
+    background: "var(--cerulean-background)",
+  },
+  navy: {
+    name: "Navy",
+    color: "var(--navy-color)",
+    background: "var(--navy-background)",
+  },
+};
+
 const datetime = ref();
 const reset = () => datetime.value.$el.reset();
 const confirm = () => {
@@ -118,59 +176,66 @@ const onDateChange = (event: DatetimeCustomEvent) => {
     datepick.value = [];
   }
 
-  if (operation == "removeSelected") {
-    // Get the selected dates from datepick.value
-    const selectedDates = datepick.value;
+  if (operation == "removeSelected") removeValues();
+  else if (operation === "confirm") addValues();
 
-    if (typeof selectedDates === "string") {
-      return;
-    }
+  reset();
+};
 
-    // Remove selected dates from the highlightedDates array
-    selectedDates.forEach((selectedDate) => {
-      const indexToRemove = highlightedDates.findIndex(
-        (dateObj) => dateObj.date === selectedDate
-      );
-      if (indexToRemove !== -1) {
-        highlightedDates.splice(indexToRemove, 1);
-      }
-    });
+const removeValues = () => {
+  // Get the selected dates from datepick.value
+  const selectedDates = datepick.value;
 
-    datetime.value.$el.removeSelected();
-  } else if (operation === "confirm") {
-    // Get the selected dates from datepick.value
-    const selectedDates = datepick.value;
-
-    if (typeof selectedDates === "string") {
-      return;
-    }
-
-    // Add selected dates to the highlightedDates array
-    selectedDates.forEach((selectedDate) => {
-      const indexToAdd = highlightedDates.findIndex(
-        (dateObj) => dateObj.date === selectedDate
-      );
-      if (indexToAdd === -1) {
-        highlightedDates.push({
-          date: selectedDate,
-          textColor: "var(--giants-orange)",
-          backgroundColor: "var(--space-cadet)",
-        });
-      }
-    });
+  if (typeof selectedDates === "string" || !selectedDates) {
+    return;
   }
 
-  alert(` ${operation} workouts at ` + event.detail.value);
+  // Remove selected dates from the highlightedDates array
+  selectedDates.forEach((selectedDate) => {
+    const indexToRemove = highlightedDates.findIndex(
+      (dateObj) => dateObj.date === selectedDate
+    );
+    if (indexToRemove !== -1) {
+      highlightedDates.splice(indexToRemove, 1);
+    }
+  });
+};
+
+const addValues = () => {
+  // Get the selected dates from datepick.value
+  const selectedDates = datepick.value;
+
+  if (typeof selectedDates === "string" || !selectedDates) {
+    return;
+  }
+
+  if (typeof selectedDates === "string") {
+    return;
+  }
+
+  // Add selected dates to the highlightedDates array
+  selectedDates.forEach((selectedDate) => {
+    const indexToAdd = highlightedDates.findIndex(
+      (dateObj) => dateObj.date === selectedDate
+    );
+    if (indexToAdd === -1) {
+      highlightedDates.push({
+        date: selectedDate,
+        textColor: "var(--giants-orange)",
+        backgroundColor: "var(--space-cadet)",
+      });
+    }
+  });
 };
 </script>
 
 <style scoped>
 #container {
-  --giants-orange: #f46036ff;
+  /* --giants-orange: #f46036ff;
   --space-cadet: #2e294eff;
   --persian-green: #1b998bff;
   --red-pantone: #e71d36ff;
-  --mindaro: #c5d86dff;
+  --mindaro: #c5d86dff; */
 
   --rose-color: #800080;
   --rose-background: #ffc0cb;
@@ -214,5 +279,8 @@ const onDateChange = (event: DatetimeCustomEvent) => {
 
 #container a {
   text-decoration: none;
+}
+ion-icon {
+  margin-right: 5px;
 }
 </style>
