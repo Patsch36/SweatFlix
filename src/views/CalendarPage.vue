@@ -22,8 +22,9 @@
           ref="datetime">
           <ion-buttons slot="buttons">
             <ion-button color="danger" @click="reset()">Reset</ion-button>
-            <ion-button color="primary" @click="confirm()"
-              >Add Workout</ion-button
+            <ion-button color="primary" @click="confirm()">Add</ion-button>
+            <ion-button color="primary" @click="removeSelected()"
+              >Remove</ion-button
             >
           </ion-buttons>
         </ion-datetime>
@@ -98,14 +99,68 @@ const highlightedDates = [
 ];
 
 const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
+let operation = "";
 
 const datetime = ref();
 const reset = () => datetime.value.$el.reset();
-const confirm = () => datetime.value.$el.confirm();
+const confirm = () => {
+  operation = "confirm";
+  datetime.value.$el.confirm();
+};
+const removeSelected = () => {
+  operation = "removeSelected";
+  datetime.value.$el.confirm();
+};
 
 const onDateChange = (event: DatetimeCustomEvent) => {
   datepick.value = event.detail.value;
-  alert("Add workouts at " + event.detail.value);
+  if (datepick.value === null || datepick.value === undefined) {
+    datepick.value = [];
+  }
+
+  if (operation == "removeSelected") {
+    // Get the selected dates from datepick.value
+    const selectedDates = datepick.value;
+
+    if (typeof selectedDates === "string") {
+      return;
+    }
+
+    // Remove selected dates from the highlightedDates array
+    selectedDates.forEach((selectedDate) => {
+      const indexToRemove = highlightedDates.findIndex(
+        (dateObj) => dateObj.date === selectedDate
+      );
+      if (indexToRemove !== -1) {
+        highlightedDates.splice(indexToRemove, 1);
+      }
+    });
+
+    datetime.value.$el.removeSelected();
+  } else if (operation === "confirm") {
+    // Get the selected dates from datepick.value
+    const selectedDates = datepick.value;
+
+    if (typeof selectedDates === "string") {
+      return;
+    }
+
+    // Add selected dates to the highlightedDates array
+    selectedDates.forEach((selectedDate) => {
+      const indexToAdd = highlightedDates.findIndex(
+        (dateObj) => dateObj.date === selectedDate
+      );
+      if (indexToAdd === -1) {
+        highlightedDates.push({
+          date: selectedDate,
+          textColor: "var(--giants-orange)",
+          backgroundColor: "var(--space-cadet)",
+        });
+      }
+    });
+  }
+
+  alert(` ${operation} workouts at ` + event.detail.value);
 };
 </script>
 
