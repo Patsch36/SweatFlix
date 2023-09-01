@@ -54,7 +54,7 @@
             <ion-buttons slot="start">
               <ion-button @click="cancel()">Cancel</ion-button>
             </ion-buttons>
-            <ion-title>Welcome</ion-title>
+            <ion-title>Add Workout</ion-title>
             <ion-buttons slot="end">
               <ion-button :strong="true" @click="confirmModal()"
                 >Confirm</ion-button
@@ -63,12 +63,29 @@
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
+          <h4>Selected Dates:</h4>
+          <ul>
+            <li v-for="item in datepick">
+              {{ new Date(item).toLocaleDateString() }}
+            </li>
+          </ul>
           <ion-item>
-            <ion-label position="stacked">Enter your name</ion-label>
-            <ion-input
-              ref="input"
-              type="text"
-              placeholder="Your name"></ion-input>
+            <ion-select
+              label="Choose Workout"
+              :interface-options="{
+                header: 'Colors',
+                subHeader: 'Select your favorite color',
+              }"
+              interface="action-sheet"
+              placeholder="Select One"
+              ref="input">
+              <ion-select-option value="pull">Push</ion-select-option>
+              <ion-select-option value="push">Pull</ion-select-option>
+              <ion-select-option value="leg">Leg</ion-select-option>
+              <ion-select-option value="core">Core</ion-select-option>
+              <ion-select-option value="arms">Arms</ion-select-option>
+              <ion-select-option value="cardio">Cardio</ion-select-option>
+            </ion-select>
           </ion-item>
         </ion-content>
       </ion-modal>
@@ -92,11 +109,14 @@ import {
   IonModal,
   IonItem,
   IonInput,
+  IonSelect,
+  IonSelectOption,
 } from "@ionic/vue";
 import { ref } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
 import { refresh, add, trashOutline } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core/components";
+import { DateObj, ColorInfo } from "@/datatypes/CalendarTypes";
 
 const message = ref(
   "This modal example uses triggers to automatically open a modal when the button is clicked."
@@ -116,7 +136,7 @@ const confirmModal = () => {
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  addValues();
+  addValues(name);
 
   console.log(highlightedDates);
   datetime.value.$forceUpdate();
@@ -129,53 +149,18 @@ const onWillDismiss = (ev: CustomEvent<OverlayEventDetail>) => {
   }
 };
 
-const highlightedDates = [
+const highlightedDates: DateObj[] = [
   {
-    date: "2023-08-05",
+    date: "2021-08-05",
     textColor: "var(--rose-color)",
     backgroundColor: "var(--rose-background)",
-  },
-  {
-    date: "2023-08-10",
-    textColor: "var(--mint-color)",
-    backgroundColor: "var(--mint-background)",
-  },
-  {
-    date: "2023-08-20",
-    textColor: "var(--orange-color)",
-    backgroundColor: "var(--orange-background)",
-  },
-  {
-    date: "2023-08-23",
-    textColor: "var(--mindaro-color)",
-    backgroundColor: "var(--mindaro-background)",
-  },
-  {
-    date: "2023-08-25",
-    textColor: "var(--violet-color)",
-    backgroundColor: "var(--violet-background)",
-  },
-  {
-    date: "2023-08-30",
-    textColor: "var(--turquoise-color)",
-    backgroundColor: "var(--turquoise-background)",
-  },
-  {
-    date: "2023-08-14",
-    textColor: "var(--cerulean-color)",
-    backgroundColor: "var(--cerulean-background)",
-  },
-  {
-    date: "2023-08-15",
-    textColor: "var(--navy-color)",
-    backgroundColor: "var(--navy-background)",
   },
 ];
 
 const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
 let operation = "";
 
-const availableColors = {
+const availableColors: Record<string, ColorInfo> = {
   rose: {
     name: "Rose",
     color: "var(--rose-color)",
@@ -262,19 +247,47 @@ const removeValues = () => {
   });
 };
 
-const addValues = () => {
+const addValues = (category: string) => {
   const selectedDates = datepick.value;
 
   if (!selectedDates || typeof selectedDates === "string") {
     return;
   }
 
-  selectedDates.forEach((selectedDate) => {
+  // translate category to color
+  let color = "";
+  switch (category) {
+    case "pull":
+      color = "rose";
+      break;
+    case "push":
+      color = "mint";
+      break;
+    case "leg":
+      color = "violet";
+      break;
+    case "core":
+      color = "mindaro";
+      break;
+    case "arms":
+      color = "turquoise";
+      break;
+    case "cardio":
+      color = "orange";
+      break;
+    default:
+      color = "cerulean";
+      break;
+  }
+
+  const colorInfo: ColorInfo = availableColors[color];
+
+  selectedDates.forEach((selectedDate: string) => {
     if (!highlightedDates.some((dateObj) => dateObj.date === selectedDate)) {
       highlightedDates.push({
         date: selectedDate,
-        textColor: "var(--rose-color)",
-        backgroundColor: "var(--rose-background)",
+        textColor: colorInfo.color,
+        backgroundColor: colorInfo.background,
       });
     }
   });
