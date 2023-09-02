@@ -36,14 +36,22 @@
         </ion-buttons>
       </ion-datetime>
       <div style="margin-top: 5vh">
-        <ion-chip
+        <!-- <ion-chip
           v-for="color in availableColors"
           :key="color.color"
           :style="{
             color: color.color,
             backgroundColor: color.background,
           }">
-          {{ color.name }}</ion-chip
+          {{ color.name }}</ion-chip -->
+        <ion-chip
+          v-for="workout in queryResults"
+          :key="workout.Name"
+          :style="{
+            color: `var(--${workout.Color}-color)`,
+            backgroundColor: `var(--${workout.Color}-background)`,
+          }">
+          {{ workout.Name }}</ion-chip
         >
       </div>
       <ion-modal ref="modal" :isOpen="modalOpen" @willDismiss="onWillDismiss">
