@@ -89,6 +89,48 @@ http://ionicframework.com/docs/theming/ */
   --ion-color-light-contrast-rgb: 0, 0, 0;
   --ion-color-light-shade: #d7d8da;
   --ion-color-light-tint: #f5f6f9;
+
+
+
+  /** Calendar-Colors **/
+  /* --giants-orange: #f46036ff;
+  --space-cadet: #2e294eff;
+  --persian-green: #1b998bff;
+  --red-pantone: #e71d36ff;
+  --mindaro: #c5d86dff; */
+
+  --rose-color: #800080;
+  --rose-background: #ffc0cb;
+  --mint-color: #09721b;
+  --mint-background: #c8e5d0;
+  --violet-color: rgb(68, 10, 184);
+  --violet-background: rgb(211, 200, 229);
+  --mindaro-color: rgb(65, 72, 36);
+  --mindaro-background: #c5d86dff;
+  --turquoise-color: #0e4b44;
+  --turquoise-background: #c1e8e8;
+  --orange-color: #ff6600;
+  --orange-background: #ffdab3;
+  --cerulean-color: #001f3f;
+  --cerulean-background: #a4ddff;
+  --navy-color: #90026f;
+  --navy-background: #fab7eb;
+  --indigo-color: #4b0082;
+  --indigo-background: #b0c4de;
+  --gold-color: #c0a405;
+  --gold-background: #ffec99;
+  --teal-color: #008080;
+  --teal-background: #b0e0e6;
+  --maroon-color: #800000;
+  --maroon-background: #ff9999;
+  --lime-color: #03c303;
+  --lime-background: #ccffcc;
+  --aubergine-color: #3b008b;
+  --aubergine-background: #bdb3ec;
+  --coral-color: #ff6b6b;
+  --coral-background: #ffcccb;
+  --olive-color: #808000;
+  --olive-background: #d3d86d;
 }
 
 @media (prefers-color-scheme: dark) {

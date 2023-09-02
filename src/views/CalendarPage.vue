@@ -201,6 +201,46 @@ const availableColors: Record<string, ColorInfo> = {
     color: "var(--navy-color)",
     background: "var(--navy-background)",
   },
+  indigo: {
+    name: "Indigo",
+    color: "var(--indigo-color)",
+    background: "var(--indigo-background)",
+  },
+  gold: {
+    name: "Gold",
+    color: "var(--gold-color)",
+    background: "var(--gold-background)",
+  },
+  teal: {
+    name: "Teal",
+    color: "var(--teal-color)",
+    background: "var(--teal-background)",
+  },
+  maroon: {
+    name: "Maroon",
+    color: "var(--maroon-color)",
+    background: "var(--maroon-background)",
+  },
+  lime: {
+    name: "Lime",
+    color: "var(--lime-color)",
+    background: "var(--lime-background)",
+  },
+  aubergine: {
+    name: "Aubergine",
+    color: "var(--aubergine-color)",
+    background: "var(--aubergine-background)",
+  },
+  coral: {
+    name: "Coral",
+    color: "var(--coral-color)",
+    background: "var(--coral-background)",
+  },
+  olive: {
+    name: "Olive",
+    color: "var(--olive-color)",
+    background: "var(--olive-background)",
+  },
 };
 
 const datetime = ref();
@@ -296,29 +336,6 @@ const addValues = (category: string) => {
 
 <style scoped>
 #container {
-  /* --giants-orange: #f46036ff;
-  --space-cadet: #2e294eff;
-  --persian-green: #1b998bff;
-  --red-pantone: #e71d36ff;
-  --mindaro: #c5d86dff; */
-
-  --rose-color: #800080;
-  --rose-background: #ffc0cb;
-  --mint-color: #09721b;
-  --mint-background: #c8e5d0;
-  --violet-color: rgb(68, 10, 184);
-  --violet-background: rgb(211, 200, 229);
-  --mindaro-color: rgb(65, 72, 36);
-  --mindaro-background: #c5d86dff;
-  --turquoise-color: #0e4b44;
-  --turquoise-background: #c1e8e8;
-  --orange-color: #ff6600;
-  --orange-background: #ffdab3;
-  --cerulean-color: #001f3f;
-  --cerulean-background: #a4ddff;
-  --navy-color: #90026f;
-  --navy-background: #fab7eb;
-
   text-align: center;
 
   position: absolute;
