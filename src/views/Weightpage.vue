@@ -62,7 +62,7 @@
       <Diagram :weights="queryResults" v-if="queryResults" ref="diagram" />
 
       <ion-list class="fixed-height-list">
-        <ion-list-header style="color: var(--ion-color-light-shade)">
+        <ion-list-header>
           <ion-label>Date</ion-label>
           <ion-label>Weight</ion-label>
         </ion-list-header>

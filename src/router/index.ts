@@ -28,6 +28,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/weight',
     name: 'Weight',
     component: () => import('../views/WeightPage.vue')
+  },
+  {
+    path: '/workouts',
+    name: 'Workouts',
+    component: () => import('../views/WorkoutPage.vue')
   }
 ]
 

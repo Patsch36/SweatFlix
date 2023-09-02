@@ -21,10 +21,18 @@ const databaseStore = useDatabaseStore();
 // INIT DATABASE
 const initializeDBTable = async () => {
   try {
-    await databaseStore.getDatabase()?.run(`CREATE TABLE weight (
-      timestamp DEFAULT (datetime('now','localtime')) PRIMARY KEY,
-      weight REAL NOT NULL
-    );`);
+    await databaseStore.getDatabase()?.run(`DROP TABLE WorkoutTemplate;`);
+    await databaseStore.getDatabase()?.run(`CREATE TABLE WorkoutTemplate (
+    Name TEXT PRIMARY KEY,
+    MuscleGroup INTEGER,
+    PlanID INTEGER,
+    Split TEXT,
+    Description TEXT,
+    Color TEXT,
+    active INTEGER,
+    FOREIGN KEY (MuscleGroup) REFERENCES MuscleGroup(ID),
+    FOREIGN KEY (PlanID) REFERENCES Plan(ID)
+);`);
 
     // await databaseStore.getDatabase()?.run(`DROP TABLE weight;`);
   } catch (e) {
@@ -35,28 +43,12 @@ const initializeDBTable = async () => {
 const insertTestWeight = async () => {
   try {
     await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2022-03-22 11:42:55', 82);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2022-06-21 18:42:55', 83.7);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2022-09-20 11:42:55', 85);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2022-12-19 18:42:55', 86);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2021-03-18 11:42:55', 88);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2021-06-17 18:42:55', 89.7);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2021-09-16 11:42:55', 90);
-    `);
-    await databaseStore.getDatabase()?.run(`
-      INSERT INTO weight (timestamp, weight) VALUES ('2021-12-15 18:42:55', 95);
+    INSERT INTO WorkoutTemplate (Name, MuscleGroup, PlanID, Split, Description, Color, active)
+VALUES 
+    ('Chest-Code Workout', 1, 4, 'Chest', 'A chest workout that will help you debug your upper body.', 'navy', 1),
+    ('Back-End Workout', 4, 4, 'Back', 'A back workout that will strengthen your back-end.', 'lime', 1),
+    ('Arm-Assembly Workout', 8, 4, 'Arms', 'An arm workout that will help you assemble stronger arms.', 'cerulean', 1),
+    ('Leg-acy Code Workout', 15, 4, 'Legs', 'A leg workout that will help you maintain your leg-acy code.', 'coral', 1);
     `);
   } catch (e) {
     alert("ERROR inserting in DB " + JSON.stringify(e));

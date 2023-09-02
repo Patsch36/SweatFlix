@@ -37,3 +37,7 @@ ion-datetime {
   ion-datetime::part(wheel-item active) {
     color: var(--ion-color-accent);
   }
+
+  ion-list-header {
+    color: var(--ion-color-light-shade)
+  }
