@@ -21,6 +21,7 @@
             <div class="item-content">
               <div class="chip-container">
                 <ion-chip
+                  v-if="item.active"
                   :style="{
                     color: `var(--${item.Color}-color)`,
                     backgroundColor: `var(--${item.Color}-background`,
@@ -30,7 +31,7 @@
                 <p class="item-name">{{ item.Name }}</p>
               </div>
               <p class="description">
-                {{ item.Split }} - {{ item.MuscleGroup }}
+                {{ item.Split }}
               </p>
             </div>
           </ion-label>
@@ -66,7 +67,7 @@ const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
 
 const loadWorkouts = async () => {
-  const query = `SELECT * FROM WorkoutTemplate INNER JOIN MuscleGroup ON WorkoutTemplate.MuscleGroup = MuscleGroup.ID`;
+  const query = `SELECT * FROM WorkoutTemplate`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   queryResults.value = resp?.values || [];
@@ -75,8 +76,13 @@ const loadWorkouts = async () => {
 onBeforeMount(async () => {
   await loadWorkouts();
   if (queryResults.value && queryResults.value.length > 0) {
-    queryResults.value.sort((a: any, b: any) => b.id > a.id);
-    queryResults.value.reverse();
+    // Sortieren Sie die Ergebnisse basierend auf 'active' (1 zuerst)
+    let sortedQueryResults = [...queryResults.value].sort((a: any, b: any) => {
+      if (a.active === 1 && b.active === 0) return -1;
+      if (a.active === 0 && b.active === 1) return 1;
+      return 0;
+    });
+    queryResults.value = sortedQueryResults;
   }
 });
 </script>
