@@ -48,6 +48,17 @@ export const createTables = async () => {
     );`);
 
     tableCreations += promise?.changes?.changes || 0;
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS Workout (
+        startdate DATETIME PRIMARY KEY,
+        enddate DATETIME,
+        note TEXT,
+        workoutname TEXT,
+        FOREIGN KEY (workoutname) REFERENCES WorkoutTemplate(Name)
+    );`);
+
+    tableCreations += promise?.changes?.changes || 0;
   } catch (e) {
     alert("ERROR Creating DB " + JSON.stringify(e));
   }
@@ -117,6 +128,16 @@ export const initTables = async () => {
           ('Leg-acy Code Workout', 4, 'Legs', 'A leg workout that will help you maintain your leg-acy code.', 'coral', 1);`);
 
     tableInitialisations += promise?.changes?.changes || 0;
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO Workout (startdate, enddate, note, workoutname)
+      VALUES 
+          ('2023-09-02T06:30:00', '2023-09-02T08:00:00', '', 'Chest-Code Workout'),
+          ('2023-08-31T06:30:00', '2023-08-31T08:00:00', '', 'Leg-acy Code Workout'),
+          ('2023-08-30T06:30:00', '2023-08-30T08:00:00', '', 'Arm-Assembly Workout'),
+          ('2023-08-28T06:30:00', '2023-08-28T08:00:00', '', 'Back-End Workout');`);
+
+    tableInitialisations += promise?.changes?.changes || 0;
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
@@ -128,6 +149,10 @@ export const dropTables = async () => {
   let tableDeletions = 0;
   try {
     let promise = await databaseStore
+      ?.getDatabase()
+      ?.run(`Drop Table Workout;`);
+    tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore
       .getDatabase()
       ?.run(`Drop Table WorkoutTemplate;`);
     tableDeletions += promise?.changes?.changes || 0;

@@ -33,7 +33,7 @@ onBeforeMount(async () => {
     await db?.open();
     databaseStore.setDatabase(db);
     await dropTables();
-    // console.log("Dropped Tables");
+    console.log("Dropped Tables");
     const createdTables = await createTables();
     console.log("Amount of created Tables: ", createdTables);
     if (createdTables >= 0) {

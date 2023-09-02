@@ -19,6 +19,7 @@
         :multiple="true"
         :highlighted-dates="highlightedDates"
         @ionChange="onDateChange"
+        v-if="highlightedDates.length > 0"
         ref="datetime">
         <ion-buttons slot="buttons">
           <ion-button color="danger" @click="reset()">
@@ -141,6 +142,7 @@ let operation = "";
 const datetime = ref();
 
 const queryResults = ref<any>(null);
+const queryDatesResult = ref<any>(null);
 const databaseStore = useDatabaseStore();
 
 const loadWorkouts = async () => {
@@ -150,8 +152,32 @@ const loadWorkouts = async () => {
   queryResults.value = resp?.values || [];
 };
 
+const loadDates = async () => {
+  const query = `SELECT Workout.startdate, WorkoutTemplate.Color FROM Workout INNER JOIN WorkoutTemplate ON Workout.workoutname = WorkoutTemplate.Name`;
+
+  const resp = await databaseStore.getDatabase()?.query(query);
+  queryDatesResult.value = resp?.values || [];
+
+  queryDatesResult.value.forEach(
+    (workout: { startdate: string; Color: string }) => {
+      if (
+        !highlightedDates.some(
+          (dateObj) => dateObj.date === workout.startdate.slice(0, 10)
+        )
+      ) {
+        highlightedDates.push({
+          date: workout.startdate.slice(0, 10),
+          textColor: `var(--${workout.Color}-color)`,
+          backgroundColor: `var(--${workout.Color}-background)`,
+        });
+      }
+    }
+  );
+};
+
 onBeforeMount(async () => {
   await loadWorkouts();
+  await loadDates();
   if (queryResults.value && queryResults.value.length > 0) {
     queryResults.value.reverse();
   }
