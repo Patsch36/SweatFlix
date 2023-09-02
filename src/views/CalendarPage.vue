@@ -13,40 +13,38 @@
         </ion-toolbar>
       </ion-header>
 
-      <div id="container">
-        <ion-datetime
-          style="margin-top: 15vh"
-          presentation="date"
-          :multiple="true"
-          :highlighted-dates="highlightedDates"
-          @ionChange="onDateChange"
-          ref="datetime">
-          <ion-buttons slot="buttons">
-            <ion-button color="danger" @click="reset()">
-              <ion-icon :icon="refresh"></ion-icon>
-              <ion-label>Reset</ion-label>
-            </ion-button>
-            <ion-button @click="confirm()">
-              <ion-icon :icon="add"></ion-icon>
-              <ion-label>Add</ion-label>
-            </ion-button>
-            <ion-button @click="removeSelected()">
-              <ion-icon :icon="trashOutline"></ion-icon>
-              <ion-label>Remove</ion-label>
-            </ion-button>
-          </ion-buttons>
-        </ion-datetime>
-        <div style="margin-top: 5vh">
-          <ion-chip
-            v-for="color in availableColors"
-            :key="color.color"
-            :style="{
-              color: color.color,
-              backgroundColor: color.background,
-            }">
-            {{ color.name }}</ion-chip
-          >
-        </div>
+      <ion-datetime
+        style="margin-top: 25px"
+        presentation="date"
+        :multiple="true"
+        :highlighted-dates="highlightedDates"
+        @ionChange="onDateChange"
+        ref="datetime">
+        <ion-buttons slot="buttons">
+          <ion-button color="danger" @click="reset()">
+            <ion-icon :icon="refresh"></ion-icon>
+            <ion-label>Reset</ion-label>
+          </ion-button>
+          <ion-button @click="confirm()">
+            <ion-icon :icon="add"></ion-icon>
+            <ion-label>Add</ion-label>
+          </ion-button>
+          <ion-button @click="removeSelected()">
+            <ion-icon :icon="trashOutline"></ion-icon>
+            <ion-label>Remove</ion-label>
+          </ion-button>
+        </ion-buttons>
+      </ion-datetime>
+      <div style="margin-top: 5vh">
+        <ion-chip
+          v-for="color in availableColors"
+          :key="color.color"
+          :style="{
+            color: color.color,
+            backgroundColor: color.background,
+          }">
+          {{ color.name }}</ion-chip
+        >
       </div>
       <ion-modal ref="modal" :isOpen="modalOpen" @willDismiss="onWillDismiss">
         <ion-header>
@@ -79,12 +77,12 @@
               interface="action-sheet"
               placeholder="Select One"
               ref="input">
-              <ion-select-option value="pull">Push</ion-select-option>
-              <ion-select-option value="push">Pull</ion-select-option>
-              <ion-select-option value="leg">Leg</ion-select-option>
-              <ion-select-option value="core">Core</ion-select-option>
-              <ion-select-option value="arms">Arms</ion-select-option>
-              <ion-select-option value="cardio">Cardio</ion-select-option>
+              <ion-select-option
+                v-for="item in queryResults"
+                key="item.Name"
+                :value="item.Color"
+                >{{ item.Name }}</ion-select-option
+              >
             </ion-select>
           </ion-item>
         </ion-content>
@@ -112,11 +110,12 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/vue";
-import { ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
 import { refresh, add, trashOutline } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core/components";
 import { DateObj, ColorInfo, availableColors } from "@/datatypes/CalendarTypes";
+import { useDatabaseStore } from "@/stores/databaseStore";
 
 const message = ref(
   "This modal example uses triggers to automatically open a modal when the button is clicked."
@@ -126,17 +125,41 @@ const modal = ref();
 const modalOpen = ref(false);
 const input = ref();
 
+const highlightedDates: DateObj[] = [];
+
+const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
+let operation = "";
+
+const datetime = ref();
+
+const queryResults = ref<any>(null);
+const databaseStore = useDatabaseStore();
+
+const loadWorkouts = async () => {
+  const query = `SELECT Name, Split, Color, active FROM WorkoutTemplate WHERE active = 1`;
+
+  const resp = await databaseStore.getDatabase()?.query(query);
+  queryResults.value = resp?.values || [];
+};
+
+onBeforeMount(async () => {
+  await loadWorkouts();
+  if (queryResults.value && queryResults.value.length > 0) {
+    queryResults.value.reverse();
+  }
+});
+
 const cancel = () => {
   modal.value.$el.dismiss(null, "cancel");
   modalOpen.value = false;
 };
 
 const confirmModal = () => {
-  const name = input.value.$el.value;
+  const color = input.value.$el.value;
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  addValues(name);
+  addValues(color);
 
   console.log(highlightedDates);
   datetime.value.$forceUpdate();
@@ -149,23 +172,12 @@ const onWillDismiss = (ev: CustomEvent<OverlayEventDetail>) => {
   }
 };
 
-const highlightedDates: DateObj[] = [
-  {
-    date: "2021-08-05",
-    textColor: "var(--rose-color)",
-    backgroundColor: "var(--rose-background)",
-  },
-];
-
-const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
-let operation = "";
-
-const datetime = ref();
 const reset = () => datetime.value.$el.reset();
 const confirm = () => {
   operation = "confirm";
   datetime.value.$el.confirm();
 };
+
 const removeSelected = () => {
   operation = "removeSelected";
   datetime.value.$el.confirm();
@@ -212,32 +224,32 @@ const addValues = (category: string) => {
   }
 
   // translate category to color
-  let color = "";
-  switch (category) {
-    case "pull":
-      color = "rose";
-      break;
-    case "push":
-      color = "mint";
-      break;
-    case "leg":
-      color = "violet";
-      break;
-    case "core":
-      color = "mindaro";
-      break;
-    case "arms":
-      color = "turquoise";
-      break;
-    case "cardio":
-      color = "orange";
-      break;
-    default:
-      color = "cerulean";
-      break;
-  }
+  // let color = "";
+  // switch (category) {
+  //   case "pull":
+  //     color = "rose";
+  //     break;
+  //   case "push":
+  //     color = "mint";
+  //     break;
+  //   case "leg":
+  //     color = "violet";
+  //     break;
+  //   case "core":
+  //     color = "mindaro";
+  //     break;
+  //   case "arms":
+  //     color = "turquoise";
+  //     break;
+  //   case "cardio":
+  //     color = "orange";
+  //     break;
+  //   default:
+  //     color = "cerulean";
+  //     break;
+  // }
 
-  const colorInfo: ColorInfo = availableColors[color];
+  const colorInfo: ColorInfo = availableColors[category];
 
   selectedDates.forEach((selectedDate: string) => {
     if (!highlightedDates.some((dateObj) => dateObj.date === selectedDate)) {
