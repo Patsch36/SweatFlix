@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true" style="margin-top: 500px">
+    <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Workouts</ion-title>
@@ -49,16 +49,10 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButton,
   IonLabel,
   IonItem,
   IonList,
   IonListHeader,
-  IonItemSliding,
-  IonItemOption,
-  IonItemOptions,
-  IonSegment,
-  IonSegmentButton,
   IonChip,
 } from "@ionic/vue";
 import { onBeforeMount, ref } from "vue";

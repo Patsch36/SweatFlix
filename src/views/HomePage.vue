@@ -36,7 +36,6 @@
       </ion-grid>
 
       <h2 @click="router.push('/weight')">Gewicht</h2>
-      <ion-tabs> </ion-tabs>
       <ion-grid @click="router.push('/weight')">
         <ion-row>
           <ion-col size="6" size-md="3">

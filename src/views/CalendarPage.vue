@@ -12,7 +12,6 @@
           <ion-title size="large">Calendar</ion-title>
         </ion-toolbar>
       </ion-header>
-
       <ion-datetime
         style="margin-top: 25px"
         presentation="date"
@@ -102,6 +101,15 @@ import {
   IonSelect,
   IonSelectOption,
   IonChip,
+  IonPage,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonButtons,
+  IonToolbar,
+  IonTitle,
+  IonHeader,
+  IonIcon,
 } from "@ionic/vue";
 import { ref, onBeforeMount } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
@@ -129,8 +137,13 @@ const loadWorkouts = async () => {
 
 const loadDates = async () => {
   const query = `SELECT Workout.startdate, WorkoutTemplate.Color FROM Workout INNER JOIN WorkoutTemplate ON Workout.workoutname = WorkoutTemplate.Name`;
-  const resp = await databaseStore.getDatabase()?.query(query);
-  queryDatesResult.value = resp?.values || [];
+
+  try {
+    const resp = await databaseStore.getDatabase()?.query(query);
+    queryDatesResult.value = resp?.values || [];
+  } catch (error) {
+    alert("ERROR loading dates from DB " + JSON.stringify(error));
+  }
 
   queryDatesResult.value.forEach(
     (workout: { startdate: string; Color: string }) => {

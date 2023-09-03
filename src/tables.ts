@@ -4,6 +4,11 @@ export const createTables = async () => {
   const databaseStore = useDatabaseStore();
   let tableCreations = 0;
   try {
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM MuscleGroup;");
+    } catch {
+      tableCreations += 1;
+    }
     let promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS MuscleGroup (
 		    ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,8 +18,11 @@ export const createTables = async () => {
         focused INTEGER
     );`);
 
-    tableCreations += promise?.changes?.changes || 0;
-
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM Plan;");
+    } catch {
+      tableCreations += 1;
+    }
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS Plan (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,8 +34,13 @@ export const createTables = async () => {
         scheme TEXT
     );`);
 
-    tableCreations += promise?.changes?.changes || 0;
-
+    try {
+      await databaseStore
+        .getDatabase()
+        ?.query("SELECT * FROM WorkoutTemplate;");
+    } catch {
+      tableCreations += 1;
+    }
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS WorkoutTemplate (
         Name TEXT PRIMARY KEY,
@@ -39,16 +52,22 @@ export const createTables = async () => {
         FOREIGN KEY (PlanID) REFERENCES Plan(ID)
     );`);
 
-    tableCreations += promise?.changes?.changes || 0;
-
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM weight;");
+    } catch {
+      tableCreations += 1;
+    }
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS weight (
       timestamp DEFAULT (datetime('now','localtime')) PRIMARY KEY,
       weight REAL NOT NULL
     );`);
 
-    tableCreations += promise?.changes?.changes || 0;
-
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM Workout;");
+    } catch {
+      tableCreations += 1;
+    }
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS Workout (
         startdate DATETIME PRIMARY KEY,
@@ -58,7 +77,19 @@ export const createTables = async () => {
         FOREIGN KEY (workoutname) REFERENCES WorkoutTemplate(Name)
     );`);
 
-    tableCreations += promise?.changes?.changes || 0;
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM Exercise;");
+    } catch {
+      tableCreations += 1;
+    }
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS Exercise(
+        name TEXT PRIMARY KEY,
+        description TEXT,
+        image TEXT,
+        muscleGroup INTEGER,
+        FOREIGN KEY (muscleGroup) REFERENCES MuscleGroup(ID)
+    );`);
   } catch (e) {
     alert("ERROR Creating DB " + JSON.stringify(e));
   }
@@ -138,6 +169,35 @@ export const initTables = async () => {
           ('2023-08-28T06:30:00', '2023-08-28T08:00:00', '', 'Back-End Workout');`);
 
     tableInitialisations += promise?.changes?.changes || 0;
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO Exercise (MuscleGroup, Name, Description, Image)
+      VALUES
+          (1, 'Incline Bench Press', 'An exercise that targets the upper chest muscles.', ''),
+          (2, 'Bench Press', 'An exercise that targets the middle chest muscles.', ''),
+          (3, 'Decline Bench Press', 'An exercise that targets the lower chest muscles.', ''),
+          (4, 'Pull-Up', 'An exercise that targets the upper latissimus dorsi muscles.', ''),
+          (5, 'Seated Row', 'An exercise that targets the lower latissimus dorsi muscles.', ''),
+          (6, 'Shrug', 'An exercise that targets the trapezius muscles.', ''),
+          (7, 'Neck Extension', 'An exercise that targets the neck muscles.', ''),
+          (8, 'Incline Dumbbell Curl', 'An exercise that targets the long head of the biceps brachii muscle.', ''),
+          (9, 'Preacher Curl', 'An exercise that targets the short head of the bicUeps brachii muscle.', ''),
+          (10, 'Hammer Curl', 'An exercise that targets the brachialis muscle.', ''),
+          (11, 'Overhead Triceps Extension', 'An exercise that targets the long head of the triceps brachii muscle.', ''),
+          (12, 'Triceps Pushdown', 'An exercise that targets the medial head of the triceps brachii muscle.', ''),
+          (13, 'Skull Crusher', 'An exercise that targets the lateral head of the triceps brachii muscle.', ''),
+          (14, 'Leg Extension', 'An exercise that targets the leg extensor muscles.', ''),
+          (15, 'Leg Curl', 'An exercise that targets the leg flexor muscles.', ''),
+          (16, 'Hip Adduction', 'An exercise that targets the leg adductor muscles.', ''),
+          (17, 'Calf Raise', 'An exercise that targets the calf muscles.', ''),
+          (18, 'Front Raise', 'An exercise that targets the anterior deltoid muscle.', ''),
+          (19, 'Reverse Fly', 'An exercise that targets the posterior deltoid muscle.', ''),
+          (20, 'Lateral Raise', 'An exercise that targets the lateral deltoid muscle.', ''),
+          (21,'Crunch','An exercise that targets the upper rectus abdominis muscle.',''),
+          (22,'Reverse Crunch','An exercise that targets the lower rectus abdominis muscle.',''),
+          (23,'Russian Twist','An exercise that targets the internal and external oblique muscles.','');`);
+
+    tableInitialisations += promise?.changes?.changes || 0;
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
@@ -150,7 +210,9 @@ export const dropTables = async () => {
   try {
     let promise = await databaseStore
       ?.getDatabase()
-      ?.run(`Drop Table Workout;`);
+      ?.run(`Drop Table Exercise;`);
+    tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
     tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore
       .getDatabase()
