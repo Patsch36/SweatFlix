@@ -59,8 +59,7 @@
         </ion-segment-button>
       </ion-segment>
 
-      <Diagram :weights="queryResults" v-if="queryResults" ref="diagram" />
-
+      <Diagram :weights="queryResults" v-if="queryResults" />
       <ion-list class="fixed-height-list">
         <ion-list-header>
           <ion-label>Date</ion-label>
@@ -123,7 +122,7 @@ const databaseStore = useDatabaseStore();
 let latestWeight = ref<number>(0);
 const inputWidth = ref<string>("5rem");
 
-const diagram = ref<any>(null);
+// const diagram = ref<any>(null);
 const timeSegment = ref<string>("week");
 
 const loadWeight = async () => {

@@ -21,17 +21,20 @@
         ref="datetime"
         :key="componentKey">
         <ion-buttons slot="buttons">
-          <ion-button color="danger" @click="reset">
-            <ion-icon :icon="refresh"></ion-icon>
-            <ion-label>Reset</ion-label>
+          <ion-button color="danger" @click="removeSelected">
+            <ion-icon :icon="trashOutline"></ion-icon>
           </ion-button>
           <ion-button @click="confirm">
             <ion-icon :icon="add"></ion-icon>
             <ion-label>Add</ion-label>
           </ion-button>
-          <ion-button @click="removeSelected">
-            <ion-icon :icon="trashOutline"></ion-icon>
-            <ion-label>Remove</ion-label>
+          <ion-button @click="reset">
+            <ion-icon :icon="refresh"></ion-icon>
+            <ion-label>Reset</ion-label>
+          </ion-button>
+          <ion-button @click="reset">
+            <ion-icon :icon="informationCircleOutline"></ion-icon>
+            <ion-label>Info</ion-label>
           </ion-button>
         </ion-buttons>
       </ion-datetime>
@@ -214,7 +217,12 @@ import {
 } from "@ionic/vue";
 import { ref, onBeforeMount, watch } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
-import { refresh, add, trashOutline } from "ionicons/icons";
+import {
+  refresh,
+  add,
+  trashOutline,
+  informationCircleOutline,
+} from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core/components";
 import { DateObj, ColorInfo, availableColors } from "@/datatypes/CalendarTypes";
 import { useDatabaseStore } from "@/stores/databaseStore";

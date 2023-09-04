@@ -282,6 +282,18 @@ export const initTables = async () => {
           ('Full-Body Pull Workout', 'Hammer Curl', 3, '8-12');`);
 
     tableInitialisations += promise?.changes?.changes || 0;
+
+    // promise = await databaseStore.getDatabase()
+    //   ?.run(`INSERT INTO Weight (timestamp, weight)
+    //   VALUES
+    //   (datetime('now', '-1 days'), 80),
+    //   (datetime('now', '-2 days'), 81),
+    //   (datetime('now', '-3 days'), 82),
+    //   (datetime('now', '-4 days'), 83),
+    //   (datetime('now', '-5 days'), 85),
+    //   (datetime('now', '-20 days'), 86),
+    //   (datetime('now', '-75 days'), 88),
+    //   (datetime('now', '-100 days'), 99);`);
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
