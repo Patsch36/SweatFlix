@@ -46,14 +46,24 @@
               new Date(
                 new Date(workoutQueryResult.enddate).getTime() -
                   new Date(workoutQueryResult.startdate).getTime()
-              ).getHours()
+              ).getUTCHours()
             }}:{{
               new Date(
                 new Date(workoutQueryResult.enddate).getTime() -
                   new Date(workoutQueryResult.startdate).getTime()
-              ).getMinutes()
+              ).getUTCMinutes()
             }}
             Stunden
+          </ion-col>
+          <ion-col>
+            <b>Overall Weight:</b>
+            <br />
+            {{ allOverallWeights[0].OverAllSum }} kg (x{{
+              (
+                allOverallWeights[0].OverAllSum /
+                allOverallWeights[1].OverAllSum
+              ).toFixed(2)
+            }})
           </ion-col>
         </ion-row>
         <ion-row>
@@ -64,7 +74,19 @@
           </ion-col>
         </ion-row>
       </ion-grid>
-      <ion-button color="primary" router-link="/home">Home</ion-button>
+
+      <ion-list v-if="workoutExercises.length">
+        <ion-list-header>
+          <ion-label>Exercises</ion-label>
+          <ion-label style="text-align: end; margin-right: 24px">Set</ion-label>
+        </ion-list-header>
+        <ion-item v-for="(exercise, index) in workoutExercises" :key="index">
+          <ion-label>{{ exercise.exercise }}</ion-label>
+          <ion-label slot="end">
+            {{ exercise.reps }} x {{ exercise.weight }} {{ exercise.unit }}
+          </ion-label>
+        </ion-item>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
@@ -83,6 +105,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonList,
+  IonItem,
 } from "@ionic/vue";
 import { chevronBack } from "ionicons/icons";
 import { onBeforeMount, ref } from "vue";
@@ -98,7 +122,8 @@ const workoutQueryResult = ref<{
   enddate: string;
   note: string;
 }>({ workoutname: "No Workout found", startdate: "", enddate: "", note: "" });
-const workoutname = ref<string>("No Workout found");
+const workoutExercises = ref<any>([]);
+const allOverallWeights = ref<any>([]);
 
 const loadWorkout = async () => {
   const date = route.params.id;
@@ -109,11 +134,45 @@ const loadWorkout = async () => {
   workoutQueryResult.value = workout?.values
     ? workout?.values[0]
     : { workoutname: "No Workout found" };
-  workoutname.value = workoutQueryResult.value.workoutname;
+};
+
+const loadExercises = async () => {
+  const date = route.params.id;
+  const exercises = await databaseStore.getDatabase()?.query(`SELECT * 
+    FROM WorkoutExercise
+    WHERE DATE(workout) = '${date.slice(0, 10)}';
+    `);
+  workoutExercises.value = exercises?.values || [];
+};
+
+const getOverallWeightsOfWorkout = async () => {
+  const date = route.params.id;
+  const exercises = await databaseStore.getDatabase()?.query(
+    `SELECT
+        we.workout AS Workout_Datum,
+        SUM(we.weight * we.reps) AS OverAllSum
+    FROM
+        WorkoutExercise we
+    JOIN
+        Workout w ON we.workout = w.startdate
+    WHERE
+        w.workoutname = '${workoutQueryResult.value.workoutname}'
+    GROUP BY
+        we.workout
+    HAVING
+        OverAllSum <> 0
+    ORDER BY
+        we.workout;
+    `
+  );
+  allOverallWeights.value = exercises?.values || [];
+  allOverallWeights.value.reverse();
 };
 
 onBeforeMount(async () => {
   await loadWorkout();
+  await loadExercises();
+  await getOverallWeightsOfWorkout();
 });
 </script>
 

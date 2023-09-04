@@ -117,20 +117,13 @@
 
           <ion-item v-if="workout">
             <ion-label>End Time</ion-label>
-            <!-- <ion-button
-              @click="
-                showEndTimeModal = !showEndTimeModal;
-                showStartTimeModal = false;
-              "
-              >{{ new Date(endtime).toLocaleTimeString() }}</ion-button
-            > -->
             <ion-datetime-button datetime="datetime"></ion-datetime-button>
 
             <ion-modal :keep-contents-mounted="true">
               <ion-datetime
                 presentation="date-time"
                 id="datetime"
-                v-model="starttime"></ion-datetime>
+                v-model="endtime"></ion-datetime>
             </ion-modal>
           </ion-item>
 
@@ -187,7 +180,6 @@
               </div>
             </ion-item>
           </h2>
-          <p>{{ SetResults }}, {{ sets }}</p>
         </ion-content>
       </ion-modal>
     </ion-content>
