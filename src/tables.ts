@@ -90,6 +90,43 @@ export const createTables = async () => {
         muscleGroup INTEGER,
         FOREIGN KEY (muscleGroup) REFERENCES MuscleGroup(ID)
     );`);
+
+    try {
+      await databaseStore
+        .getDatabase()
+        ?.query("SELECT * FROM WorkoutExercise;");
+    } catch {
+      tableCreations += 1;
+    }
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS WorkoutExercise (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise TEXT,
+        workout DATETIME,
+        setNumber INTEGER,
+        reps INTEGER,
+        weight INTEGER,
+        unit TEXT,
+        FOREIGN KEY (exercise) REFERENCES Exercise(name)
+        FOREIGN KEY (workout) REFERENCES Workout(startdate)
+    );`);
+
+    try {
+      await databaseStore.getDatabase()?.query("SELECT * FROM WorkoutList;");
+    } catch {
+      tableCreations += 1;
+    }
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS WorkoutList (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workoutPlan TEXT,
+    exerciseName TEXT,
+    sets INTEGER,
+    reps TEXT,
+    UNIQUE (workoutPlan, exerciseName),
+    FOREIGN KEY (workoutPlan) REFERENCES WorkoutTemplate(Name),
+    FOREIGN KEY (exerciseName) REFERENCES Exercise(Name)
+  );`);
   } catch (e) {
     alert("ERROR Creating DB " + JSON.stringify(e));
   }
@@ -198,6 +235,53 @@ export const initTables = async () => {
           (23,'Russian Twist','An exercise that targets the internal and external oblique muscles.','');`);
 
     tableInitialisations += promise?.changes?.changes || 0;
+
+    // ('Chest-Code Workout', 'Bench Press', 3, '8-12'),
+    // ('Chest-Code Workout', 'Decline Bench Press', 3, '8-12'),
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps)
+      VALUES 
+          ('Chest-Code Workout', 'Incline Bench Press', 2, '8-12'),
+          ('Back-End Workout', 'Pull-Up', 3, '8-12'),
+          ('Back-End Workout', 'Seated Row', 3, '8-12'),
+          ('Back-End Workout', 'Shrug', 3, '8-12'),
+          ('Arm-Assembly Workout', 'Incline Dumbbell Curl', 3, '8-12'),
+          ('Arm-Assembly Workout', 'Preacher Curl', 3, '8-12'),
+          ('Arm-Assembly Workout', 'Hammer Curl', 3, '8-12'),
+          ('Leg-acy Code Workout', 'Leg Extension', 3, '8-12'),
+          ('Leg-acy Code Workout', 'Leg Curl', 3, '8-12'),
+          ('Leg-acy Code Workout', 'Hip Adduction', 3, '8-12'),
+          ('Push-Request Workout', 'Incline Bench Press', 3, '8-12'),
+          ('Push-Request Workout', 'Overhead Triceps Extension', 3, '8-12'),
+          ('Push-Request Workout', 'Front Raise', 3, '8-12'),
+          ('Pull-Request Workout', 'Pull-Up', 3, '8-12'),
+          ('Pull-Request Workout', 'Seated Row', 3, '8-12'),
+          ('Pull-Request Workout', 'Incline Dumbbell Curl', 3, '8-12'),
+          ('Pull-Request Workout', 'Hammer Curl', 3, '8-12'),
+          ('Leg-Endary Code Workout', 'Leg Extension', 3, '8-12'),
+          ('Leg-Endary Code Workout', 'Leg Curl', 3, '8-12'),
+          ('Leg-Endary Code Workout', 'Calf Raise', 3, '8-12'),
+          ('Full-Body Debugging Workout', 'Incline Bench Press', 3, '8-12'),
+          ('Full-Body Debugging Workout', 'Pull-Up', 3, '8-12'),
+          ('Full-Body Debugging Workout', 'Incline Dumbbell Curl', 3, '8-12'),
+          ('Full-Body Debugging Workout', 'Overhead Triceps Extension', 3, '8-12'),
+          ('Full-Body Debugging Workout', 'Leg Extension', 3, '8-12'),
+          ('Upper-Body Programming Workout', 'Incline Bench Press', 3, '8-12'),
+          ('Upper-Body Programming Workout', 'Pull-Up', 3, '8-12'),
+          ('Upper-Body Programming Workout', 'Incline Dumbbell Curl', 3, '8-12'),
+          ('Upper-Body Programming Workout', 'Overhead Triceps Extension', 3, '8-12'),
+          ('Lower-Body Programming Workout', 'Leg Extension', 3, '8-12'),
+          ('Lower-Body Programming Workout', 'Leg Curl', 3, '8-12'),
+          ('Lower-Body Programming Workout', 'Calf Raise', 3, '8-12'),
+          ('Full-Body Push Workout', 'Incline Bench Press', 3, '8-12'),
+          ('Full-Body Push Workout', 'Overhead Triceps Extension', 3, '8-12'),
+          ('Full-Body Push Workout', 'Front Raise', 3, '8-12'),
+          ('Full-Body Pull Workout', 'Pull-Up', 3, '8-12'),
+          ('Full-Body Pull Workout', 'Seated Row', 3, '8-12'),
+          ('Full-Body Pull Workout', 'Incline Dumbbell Curl', 3, '8-12'),
+          ('Full-Body Pull Workout', 'Hammer Curl', 3, '8-12');`);
+
+    tableInitialisations += promise?.changes?.changes || 0;
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
@@ -210,7 +294,13 @@ export const dropTables = async () => {
   try {
     let promise = await databaseStore
       ?.getDatabase()
-      ?.run(`Drop Table Exercise;`);
+      ?.run(`Drop Table WorkoutList;`);
+    tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore
+      ?.getDatabase()
+      ?.run(`Drop Table WorkoutExercise;`);
+    tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore?.getDatabase()?.run(`Drop Table Exercise;`);
     tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
     tableDeletions += promise?.changes?.changes || 0;

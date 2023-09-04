@@ -131,6 +131,8 @@ http://ionicframework.com/docs/theming/ */
   --coral-background: #ffcccb;
   --olive-color: #808000;
   --olive-background: #d3d86d;
+  --gray-color: #777777;
+  --gray-background: #d0d0d0;
 }
 
 @media (prefers-color-scheme: dark) {

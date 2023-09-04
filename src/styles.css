@@ -38,6 +38,11 @@ ion-datetime {
     color: var(--ion-color-accent);
   }
 
+  ion-datetime-button::part(native) {
+    background: transparent;
+    border: 1px solid var(--ion-color-medium-shade)
+}
+
   ion-list-header {
     color: var(--ion-color-light-shade)
   }

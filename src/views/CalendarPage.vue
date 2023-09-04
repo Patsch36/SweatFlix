@@ -15,11 +15,11 @@
       <ion-datetime
         style="margin-top: 25px"
         presentation="date"
-        :multiple="true"
         :highlighted-dates="highlightedDates"
         @ionChange="onDateChange"
         v-if="highlightedDates.length > 0"
-        ref="datetime">
+        ref="datetime"
+        :key="componentKey">
         <ion-buttons slot="buttons">
           <ion-button color="danger" @click="reset">
             <ion-icon :icon="refresh"></ion-icon>
@@ -48,7 +48,8 @@
         </ion-chip>
       </div>
 
-      <ion-modal ref="modal" :isOpen="modalOpen" @willDismiss="onWillDismiss">
+      <ion-modal ref="modal" :isOpen="modalOpen">
+        <!-- @willDismiss="onWillDismiss"> -->
         <ion-header>
           <ion-toolbar>
             <ion-buttons slot="start">
@@ -56,37 +57,134 @@
             </ion-buttons>
             <ion-title>Add Workout</ion-title>
             <ion-buttons slot="end">
-              <ion-button :strong="true" @click="confirmModal()"
-                >Confirm</ion-button
+              <ion-button
+                :strong="true"
+                @click="confirmModal()"
+                :disabled="
+                  SetResults.length !== sets ||
+                  SetResults.some((elem) => {
+                    return !('weight' in elem && 'reps' in elem);
+                  })
+                ">
+                Confirm</ion-button
               >
             </ion-buttons>
           </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
           <h4>Selected Dates:</h4>
-          <ul>
-            <li v-for="item in datepick">
-              {{ new Date(item).toLocaleDateString() }}
-            </li>
-          </ul>
+          <p>{{ new Date(datepick).toLocaleString() }}</p>
           <ion-item>
             <ion-select
               label="Choose Workout"
               :interface-options="{
-                header: 'Colors',
-                subHeader: 'Select your favorite color',
+                header: 'Workouts',
+                subHeader: 'Select your workout',
               }"
               interface="action-sheet"
               placeholder="Select One"
-              ref="input">
+              ref="input"
+              v-model="workout">
               <ion-select-option
                 v-for="item in queryResults"
                 key="item.Name"
-                :value="item.Color"
+                :value="item.Name"
                 >{{ item.Name }}</ion-select-option
               >
             </ion-select>
           </ion-item>
+          <ion-item v-if="workout">
+            <ion-label>Start Time</ion-label>
+            <!-- <ion-button
+              @click="
+                showStartTimeModal = !showStartTimeModal;
+                showEndTimeModal = false;
+              "
+              >{{ new Date(starttime).toLocaleTimeString() }}</ion-button
+            > -->
+            <ion-datetime-button datetime="time"></ion-datetime-button>
+
+            <ion-modal :keep-contents-mounted="true">
+              <ion-datetime
+                presentation="time"
+                id="time"
+                v-model="starttime"></ion-datetime>
+            </ion-modal>
+          </ion-item>
+
+          <ion-item v-if="workout">
+            <ion-label>End Time</ion-label>
+            <!-- <ion-button
+              @click="
+                showEndTimeModal = !showEndTimeModal;
+                showStartTimeModal = false;
+              "
+              >{{ new Date(endtime).toLocaleTimeString() }}</ion-button
+            > -->
+            <ion-datetime-button datetime="datetime"></ion-datetime-button>
+
+            <ion-modal :keep-contents-mounted="true">
+              <ion-datetime
+                presentation="date-time"
+                id="datetime"
+                v-model="starttime"></ion-datetime>
+            </ion-modal>
+          </ion-item>
+
+          <ion-item v-if="workout">
+            <ion-textarea
+              label="Notes"
+              placeholder="Enter text"
+              style="height: 150px"
+              v-model="notes"></ion-textarea>
+          </ion-item>
+          <h2
+            v-if="showExercises"
+            v-for="(exercise, index) in exercises"
+            :key="index"
+            style="margin-top: 50px">
+            {{ exercise.exerciseName }}, {{ index }}
+            <ion-item v-for="set in exercise.sets" key="set">
+              <div style="display: flex; flex-direction: column">
+                <h5>Set {{ set }}</h5>
+                <div style="display: flex; flex-direction: row">
+                  <ion-input
+                    label="Reps"
+                    type="number"
+                    :placeholder="exercise.reps.slice(0, 1)"
+                    @ion-blur="
+                      leaveReps(exercise.exerciseName, set, $event.target.value)
+                    "></ion-input>
+                  <ion-input
+                    label="Weight"
+                    type="number"
+                    placeholder="100"
+                    @ion-blur="
+                      leaveWeight(
+                        exercise.exerciseName,
+                        set,
+                        $event.target.value
+                      )
+                    "></ion-input>
+                  <ion-select
+                    label="Unit"
+                    :interface-options="{
+                      header: 'Units',
+                    }"
+                    interface="action-sheet"
+                    placeholder="Unit"
+                    @ion-blur="
+                      leaveUnit(exercise.exerciseName, set, $event.target.value)
+                    ">
+                    <ion-select-option value="kg">kg</ion-select-option>
+                    <ion-select-option value="lbs">lbs</ion-select-option>
+                    <ion-select-option value="sec">Seconds</ion-select-option>
+                  </ion-select>
+                </div>
+              </div>
+            </ion-item>
+          </h2>
+          <p>{{ SetResults }}, {{ sets }}</p>
         </ion-content>
       </ion-modal>
     </ion-content>
@@ -110,8 +208,11 @@ import {
   IonTitle,
   IonHeader,
   IonIcon,
+  IonDatetimeButton,
+  IonTextarea,
+  IonInput,
 } from "@ionic/vue";
-import { ref, onBeforeMount } from "vue";
+import { ref, onBeforeMount, watch } from "vue";
 import { DatetimeCustomEvent } from "@ionic/core";
 import { refresh, add, trashOutline } from "ionicons/icons";
 import { OverlayEventDetail } from "@ionic/core/components";
@@ -119,7 +220,7 @@ import { DateObj, ColorInfo, availableColors } from "@/datatypes/CalendarTypes";
 import { useDatabaseStore } from "@/stores/databaseStore";
 
 const highlightedDates: DateObj[] = [];
-const datepick = ref<string | string[] | null | undefined>(["2023-08-05"]);
+const datepick = ref<string>("2023-08-05");
 let operation = "";
 const datetime = ref();
 const modal = ref();
@@ -129,6 +230,59 @@ const queryResults = ref<any>(null);
 const queryDatesResult = ref<any>(null);
 const databaseStore = useDatabaseStore();
 
+const starttime = ref(
+  new Date().toISOString().slice(0, 10) +
+    "T" +
+    new Date().toTimeString().slice(0, 8)
+);
+// const showStartTimeModal = ref(false);
+const endtime = ref(
+  new Date().toISOString().slice(0, 10) +
+    "T" +
+    new Date().toTimeString().slice(0, 8)
+);
+// const showEndTimeModal = ref(false);
+const notes = ref<string>("Workout was great!");
+const workout = ref();
+const sets = ref(0);
+let counter = 0;
+
+const SetResults = ref<
+  {
+    exerciseName: string;
+    set: number;
+    reps?: number;
+    weight?: number;
+    unit?: string;
+  }[]
+>([]);
+
+const exercises = ref();
+const showExercises = ref(false);
+
+let componentKey = ref(0);
+
+watch(
+  workout,
+  async () => {
+    if (!workout.value) return [];
+    const result = await databaseStore
+      .getDatabase()
+      ?.query(
+        `SELECT * FROM WorkoutList WHERE WorkoutPlan = '${workout.value}'`
+      );
+
+    exercises.value = result?.values || [];
+    showExercises.value = true;
+
+    sets.value = 0;
+    exercises.value.forEach((exercise: any) => {
+      sets.value += exercise.sets;
+    });
+  },
+  { deep: true }
+);
+
 const loadWorkouts = async () => {
   const query = `SELECT Name, Split, Color, active FROM WorkoutTemplate WHERE active = 1`;
   const resp = await databaseStore.getDatabase()?.query(query);
@@ -136,7 +290,7 @@ const loadWorkouts = async () => {
 };
 
 const loadDates = async () => {
-  const query = `SELECT Workout.startdate, WorkoutTemplate.Color FROM Workout INNER JOIN WorkoutTemplate ON Workout.workoutname = WorkoutTemplate.Name`;
+  const query = `SELECT Workout.startdate, WorkoutTemplate.Color, WorkoutTemplate.active FROM Workout INNER JOIN WorkoutTemplate ON Workout.workoutname = WorkoutTemplate.Name`;
 
   try {
     const resp = await databaseStore.getDatabase()?.query(query);
@@ -146,14 +300,22 @@ const loadDates = async () => {
   }
 
   queryDatesResult.value.forEach(
-    (workout: { startdate: string; Color: string }) => {
+    (workout: { startdate: string; Color: string; active: number }) => {
       const date = workout.startdate.slice(0, 10);
       if (!highlightedDates.some((dateObj) => dateObj.date === date)) {
-        highlightedDates.push({
-          date,
-          textColor: `var(--${workout.Color}-color)`,
-          backgroundColor: `var(--${workout.Color}-background)`,
-        });
+        if (workout.active) {
+          highlightedDates.push({
+            date,
+            textColor: `var(--${workout.Color}-color)`,
+            backgroundColor: `var(--${workout.Color}-background)`,
+          });
+        } else {
+          highlightedDates.push({
+            date,
+            textColor: `var(--gray-color)`,
+            backgroundColor: `var(--gray-background)`,
+          });
+        }
       }
     }
   );
@@ -180,9 +342,12 @@ const removeSelected = () => {
 };
 
 const onDateChange = (event: DatetimeCustomEvent) => {
+  if (typeof event.detail.value !== "string") {
+    return;
+  }
   datepick.value = event.detail.value;
   if (datepick.value === null || datepick.value === undefined) {
-    datepick.value = [];
+    datepick.value = "";
   }
 
   if (operation == "removeSelected") removeValues();
@@ -192,74 +357,126 @@ const onDateChange = (event: DatetimeCustomEvent) => {
   reset();
 };
 
-const removeValues = () => {
-  const selectedDates = datepick.value;
+const removeValues = async () => {
+  const selectedDate = datepick.value;
+  console.log(selectedDate);
 
-  if (typeof selectedDates === "string" || !selectedDates) {
-    return;
-  }
+  // selectedDates.forEach(async (selectedDate) => {
+  const indexToRemove = highlightedDates.findIndex(
+    (dateObj) => dateObj.date === selectedDate.slice(0, 10)
+  );
+  if (indexToRemove !== -1) {
+    highlightedDates.splice(indexToRemove, 1);
 
-  selectedDates.forEach(async (selectedDate) => {
-    const indexToRemove = highlightedDates.findIndex(
-      (dateObj) => dateObj.date === selectedDate
-    );
-    if (indexToRemove !== -1) {
-      highlightedDates.splice(indexToRemove, 1);
-
-      try {
-        await databaseStore
-          .getDatabase()
-          ?.query(
-            `DELETE FROM Workout WHERE DATE(startdate) = '${selectedDate}'`
-          );
-      } catch (error) {
-        alert("ERROR deleting in DB " + JSON.stringify(error));
-      }
+    // Remove all exercises from WorkoutExercise where workout = selectedDate
+    try {
+      await databaseStore
+        .getDatabase()
+        ?.query(
+          `DELETE FROM WorkoutExercise WHERE DATE(workout) = DATE('${selectedDate}')`
+        );
+    } catch (error) {
+      alert("ERROR deleting in DB " + JSON.stringify(error));
     }
-  });
+
+    console.log("DELETE FROM Workout WHERE DATE(startdate) = ", selectedDate);
+
+    try {
+      await databaseStore
+        .getDatabase()
+        ?.query(
+          `DELETE FROM Workout WHERE DATE(startdate) = DATE('${selectedDate}')`
+        );
+    } catch (error) {
+      alert("ERROR deleting in DB " + JSON.stringify(error));
+    }
+  }
+  // });
 };
 
 const addValues = async (category: string) => {
-  const selectedDates = datepick.value;
+  const selectedDate = datepick.value;
 
-  if (!selectedDates || typeof selectedDates === "string") {
+  console.log(SetResults);
+
+  if (!selectedDate || typeof selectedDate !== "string") {
     return;
   }
 
-  const colorInfo: ColorInfo = availableColors[category];
+  const colorQueryResult =
+    (await databaseStore
+      .getDatabase()
+      ?.query(
+        `SELECT Color FROM WorkoutTemplate WHERE Name = '${category}'`
+      )) || [];
 
-  selectedDates.forEach(async (selectedDate: string) => {
+  let colorInfo: ColorInfo = {
+    color: "var(--gray-color)",
+    background: "var(--gray-background)",
+    name: "",
+  };
+  if (
+    Array.isArray(colorQueryResult.values) &&
+    colorQueryResult.values.length > 0
+  ) {
+    const selectedColor = colorQueryResult.values[0]?.Color;
+    if (selectedColor) {
+      colorInfo = availableColors[selectedColor];
+      // Jetzt können Sie colorInfo sicher verwenden
+    }
+
+    // selectedDates.forEach(async (selectedDate: string) => {
     if (!highlightedDates.some((dateObj) => dateObj.date === selectedDate)) {
       highlightedDates.push({
-        date: selectedDate,
+        date: selectedDate.slice(0, 10),
         textColor: colorInfo.color,
         backgroundColor: colorInfo.background,
       });
 
+      console.log(starttime.value);
+
+      const startdaytime =
+        selectedDate.slice(0, 10) + starttime.value.slice(10, 19);
+      const enddaytime =
+        selectedDate.slice(0, 10) + endtime.value.slice(10, 19);
+
       try {
-        await databaseStore
-          .getDatabase()
-          ?.run(
-            `INSERT INTO Workout (workoutname, startdate, enddate, note) SELECT Name, '${selectedDate}T06:30:00', '${selectedDate}T08:00:00', '' FROM WorkoutTemplate WHERE color = '${input.value.$el.value}' AND active = 1;`
-          );
+        console.log(
+          `INSERT INTO Workout (startdate, enddate, note, workoutname)
+      VALUES
+          ('${startdaytime}', '${enddaytime}', '${notes.value}', '${category}'),`
+        );
+        await databaseStore.getDatabase()?.run(
+          `INSERT INTO Workout (startdate, enddate, note, workoutname)
+      VALUES
+          ('${startdaytime}', '${enddaytime}', '${notes.value}', '${category}');`
+        );
+
+        insertWorkoutExercisesToDB();
       } catch (error) {
         alert("ERROR inserting in DB " + JSON.stringify(error));
       }
+      componentKey.value += 1;
+      workout.value = null;
+      showExercises.value = false;
     }
-  });
+    // });
+  }
 };
 
 const cancel = () => {
   modal.value.$el.dismiss(null, "cancel");
   modalOpen.value = false;
+  workout.value = null;
 };
 
 const confirmModal = () => {
-  const color = input.value.$el.value;
+  // alert(workout.value);
+  // const color = input.value.$el.value;
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  addValues(color);
+  addValues(workout.value);
 
   datetime.value.$forceUpdate();
   reset();
@@ -270,6 +487,98 @@ const onWillDismiss = (ev: CustomEvent<OverlayEventDetail>) => {
     // Handle modal confirmation
     // message.value = `Hello, ${ev.detail.data}!`;
   }
+};
+
+const leaveReps = (
+  exerciseName: string,
+  set: number,
+  value: string | number | null | undefined
+) => {
+  console.log(exerciseName, set, value, SetResults);
+  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
+  const index = SetResults.value.findIndex(
+    (obj) => obj.exerciseName === exerciseName && obj.set === set
+  );
+  console.log(index);
+  if (index !== -1) {
+    value === "" || value === null || value === undefined
+      ? SetResults.value[index].weight
+        ? (SetResults.value[index].reps = 0)
+        : SetResults.value.splice(index, 1)
+      : (SetResults.value[index].reps = Number(value));
+  } else {
+    SetResults.value.push({
+      exerciseName,
+      set,
+      reps: Number(value),
+    });
+  }
+};
+
+const leaveWeight = (
+  exerciseName: string,
+  set: number,
+  value: string | number | null | undefined
+) => {
+  console.log(exerciseName, set, value, SetResults);
+  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
+  const index = SetResults.value.findIndex(
+    (obj) => obj.exerciseName === exerciseName && obj.set === set
+  );
+  if (index !== -1) {
+    value === "" || value === null || value === undefined
+      ? SetResults.value[index].reps
+        ? (SetResults.value[index].weight = 0)
+        : SetResults.value.splice(index, 1)
+      : (SetResults.value[index].weight = Number(value));
+  } else {
+    SetResults.value.push({
+      exerciseName,
+      set,
+      weight: Number(value),
+    });
+  }
+};
+
+const leaveUnit = (
+  xerciseName: string,
+  set: number,
+  value: string | number | null | undefined
+) => {
+  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
+  const index = SetResults.value.findIndex(
+    (obj) => obj.exerciseName === xerciseName && obj.set === set
+  );
+  if (index !== -1) {
+    SetResults.value[index].unit = value?.toString();
+  } else {
+    SetResults.value.push({
+      exerciseName: xerciseName,
+      set,
+      unit: value?.toString(),
+    });
+  }
+};
+
+const insertWorkoutExercisesToDB = async () => {
+  const selectedDate = datepick.value;
+  // exercise TEXT, workout DATETIME,setNumber INTEGER,reps INTEGER,weight INTEGER,unit TEXT,
+  SetResults.value.forEach((exercise) => {
+    if (exercise.reps === undefined) exercise.reps = 0;
+    if (exercise.weight === undefined) exercise.weight = 0;
+    if (exercise.unit === undefined) exercise.unit = "kg";
+
+    const query = `INSERT INTO WorkoutExercise ( exercise, workout, setNumber, reps, weight, unit)
+    VALUES
+    ('${exercise.exerciseName}', '${
+      selectedDate.slice(0, 10) + starttime.value.slice(10, 19)
+    }', ${exercise.set}, ${exercise.reps}, ${exercise.weight}, '${
+      exercise.unit
+    }')`;
+    console.log(query);
+    databaseStore.getDatabase()?.run(query);
+  });
+  SetResults.value.length = 0;
 };
 </script>
 
