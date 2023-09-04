@@ -57,13 +57,17 @@
           </ion-col>
           <ion-col>
             <b>Overall Weight:</b>
-            <br />
-            {{ allOverallWeights[0].OverAllSum }} kg (x{{
-              (
-                allOverallWeights[0].OverAllSum /
-                allOverallWeights[1].OverAllSum
-              ).toFixed(2)
-            }})
+            <div style="display: flex; flex-direction: row; height: 20px">
+              <p>{{ allOverallWeights[0].OverAllSum }} kg</p>
+              <p v-if="allOverallWeights.length > 1">
+                (x{{
+                  (
+                    allOverallWeights[0].OverAllSum /
+                    allOverallWeights[1].OverAllSum
+                  ).toFixed(2)
+                }})
+              </p>
+            </div>
           </ion-col>
         </ion-row>
         <ion-row>
@@ -74,6 +78,8 @@
           </ion-col>
         </ion-row>
       </ion-grid>
+
+      <Diagram :weights="queryResults" v-if="queryResults" />
 
       <ion-list v-if="workoutExercises.length">
         <ion-list-header>
@@ -92,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import Diagram from "@/components/Diagram.vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import {
   IonContent,
@@ -123,7 +130,9 @@ const workoutQueryResult = ref<{
   note: string;
 }>({ workoutname: "No Workout found", startdate: "", enddate: "", note: "" });
 const workoutExercises = ref<any>([]);
-const allOverallWeights = ref<any>([]);
+const allOverallWeights = ref<any>([1, 1]); // Init with 1, because before db is loaded, it is 0/0
+
+const queryResults = ref<any>([]);
 
 const loadWorkout = async () => {
   const date = route.params.id;
@@ -146,25 +155,22 @@ const loadExercises = async () => {
 };
 
 const getOverallWeightsOfWorkout = async () => {
-  const date = route.params.id;
-  const exercises = await databaseStore.getDatabase()?.query(
-    `SELECT
-        we.workout AS Workout_Datum,
-        SUM(we.weight * we.reps) AS OverAllSum
-    FROM
-        WorkoutExercise we
-    JOIN
-        Workout w ON we.workout = w.startdate
-    WHERE
-        w.workoutname = '${workoutQueryResult.value.workoutname}'
-    GROUP BY
-        we.workout
-    HAVING
-        OverAllSum <> 0
-    ORDER BY
-        we.workout;
-    `
-  );
+  const query = `SELECT
+    we.workout AS WorkoutDatum,
+    SUM(we.weight * we.reps) AS OverAllSum
+      FROM
+          WorkoutExercise we
+      JOIN
+          Workout w ON we.workout = w.startdate
+      WHERE
+          w.workoutname = '${workoutQueryResult.value.workoutname}' 
+          AND DATE(w.startdate)  <= '${workoutQueryResult.value.startdate}'
+      GROUP BY
+          we.workout
+      ORDER BY
+          we.workout;
+    `;
+  const exercises = await databaseStore.getDatabase()?.query(query);
   allOverallWeights.value = exercises?.values || [];
   allOverallWeights.value.reverse();
 };
@@ -173,6 +179,15 @@ onBeforeMount(async () => {
   await loadWorkout();
   await loadExercises();
   await getOverallWeightsOfWorkout();
+
+  if (allOverallWeights.value.length > 1) {
+    allOverallWeights.value.forEach((element: any) => {
+      queryResults.value.push({
+        timestamp: element.WorkoutDatum,
+        weight: element.OverAllSum,
+      });
+    });
+  }
 });
 </script>
 
@@ -181,5 +196,10 @@ onBeforeMount(async () => {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+p {
+  height: inherit !important;
+  margin: 0;
 }
 </style>
