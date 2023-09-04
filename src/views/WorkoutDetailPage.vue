@@ -57,7 +57,12 @@
           </ion-col>
           <ion-col>
             <b>Overall Weight:</b>
-            <div style="display: flex; flex-direction: row; height: 20px">
+            <div
+              style="display: flex; flex-direction: row; height: 20px"
+              v-if="
+                allOverallWeights.length >= 1 &&
+                allOverallWeights[0].OverAllSum !== 1
+              ">
               <p>{{ allOverallWeights[0].OverAllSum }} kg</p>
               <p v-if="allOverallWeights.length > 1">
                 (x{{
@@ -67,6 +72,9 @@
                   ).toFixed(2)
                 }})
               </p>
+            </div>
+            <div v-else>
+              <p>No exercises found</p>
             </div>
           </ion-col>
         </ion-row>
@@ -106,7 +114,7 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  IonButton,
+  IonListHeader,
   IonIcon,
   IonLabel,
   IonGrid,
@@ -130,7 +138,7 @@ const workoutQueryResult = ref<{
   note: string;
 }>({ workoutname: "No Workout found", startdate: "", enddate: "", note: "" });
 const workoutExercises = ref<any>([]);
-const allOverallWeights = ref<any>([1, 1]); // Init with 1, because before db is loaded, it is 0/0
+const allOverallWeights = ref([{ OverAllSum: 1 }, { OverAllSum: 1 }]); // Init with 1, because before db is loaded, it is 0/0
 
 const queryResults = ref<any>([]);
 
@@ -171,7 +179,10 @@ const getOverallWeightsOfWorkout = async () => {
           we.workout;
     `;
   const exercises = await databaseStore.getDatabase()?.query(query);
-  allOverallWeights.value = exercises?.values || [];
+  allOverallWeights.value = exercises?.values || [
+    { OverAllSum: 1 },
+    { OverAllSum: 1 },
+  ];
   allOverallWeights.value.reverse();
 };
 
