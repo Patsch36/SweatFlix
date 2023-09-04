@@ -5,6 +5,7 @@ import CalendarPage from "../views/CalendarPage.vue";
 import ProfilePage from "../views/ProfilePage.vue";
 import WorkoutPage from "@/views/WorkoutPage.vue";
 import WeightPage from "@/views/WeightPage.vue";
+import WorkoutDetailPage from "@/views/WorkoutDetailPage.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -35,6 +36,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/weight",
     name: "Weight",
     component: WeightPage,
+  },
+  {
+    path: "/workoutdetails/:id",
+    name: "Workoutdetails",
+    component: WorkoutDetailPage,
   },
 ];
 

@@ -32,7 +32,7 @@
             <ion-icon :icon="refresh"></ion-icon>
             <ion-label>Reset</ion-label>
           </ion-button>
-          <ion-button @click="reset">
+          <ion-button @click="route">
             <ion-icon :icon="informationCircleOutline"></ion-icon>
             <ion-label>Info</ion-label>
           </ion-button>
@@ -226,6 +226,9 @@ import {
 import { OverlayEventDetail } from "@ionic/core/components";
 import { DateObj, ColorInfo, availableColors } from "@/datatypes/CalendarTypes";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const highlightedDates: DateObj[] = [];
 const datepick = ref<string>("2023-08-05");
@@ -347,6 +350,12 @@ const confirm = () => {
 const removeSelected = () => {
   operation = "removeSelected";
   datetime.value.$el.confirm();
+};
+
+const route = () => {
+  operation = "";
+  datetime.value.$el.confirm();
+  router.push(`/workoutdetails/${datepick.value}`);
 };
 
 const onDateChange = (event: DatetimeCustomEvent) => {
