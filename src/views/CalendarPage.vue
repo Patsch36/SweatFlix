@@ -98,13 +98,6 @@
           </ion-item>
           <ion-item v-if="workout">
             <ion-label>Start Time</ion-label>
-            <!-- <ion-button
-              @click="
-                showStartTimeModal = !showStartTimeModal;
-                showEndTimeModal = false;
-              "
-              >{{ new Date(starttime).toLocaleTimeString() }}</ion-button
-            > -->
             <ion-datetime-button datetime="time"></ion-datetime-button>
 
             <ion-modal :keep-contents-mounted="true">
@@ -347,7 +340,11 @@ const removeSelected = () => {
 const route = () => {
   operation = "";
   datetime.value.$el.confirm();
-  router.push(`/workoutdetails/${datepick.value}`);
+  if (
+    highlightedDates.some((date) => date.date === datepick.value.slice(0, 10))
+  )
+    router.push(`/workoutdetails/${datepick.value}`);
+  else alert("No workout on this date");
 };
 
 const onDateChange = (event: DatetimeCustomEvent) => {
