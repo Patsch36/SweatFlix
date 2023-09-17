@@ -221,7 +221,11 @@
                     interface="action-sheet"
                     placeholder="Unit"
                     @ion-blur="
-                      leaveUnit(exercise.exerciseName, set, $event.target.value)
+                      leaveUnit(
+                        exercise.exerciseName,
+                        exercise.set,
+                        $event.target.value
+                      )
                     ">
                     <ion-select-option value="kg">kg</ion-select-option>
                     <ion-select-option value="lbs">lbs</ion-select-option>
