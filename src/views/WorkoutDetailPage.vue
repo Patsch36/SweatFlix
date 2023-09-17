@@ -102,10 +102,10 @@
 
       <Diagram :weights="queryResults" v-if="queryResults" />
 
-      <!-- <p>{{ lastWorkoutExercises }}</p>
-      <p>{{ workoutExercises }}</p> -->
+      <!-- <p>{{ lastWorkoutExercises }}</p> -->
+      <!-- <p>{{ workoutExercises.length }}</p> -->
 
-      <ion-list v-if="workoutExercises.length">
+      <ion-list v-show="workoutExercises.length">
         <ion-list-header>
           <ion-label>Exercises</ion-label>
           <ion-label style="text-align: end; margin-right: 24px">Set</ion-label>
@@ -181,7 +181,7 @@
               style="height: 150px"
               v-model="modalNotes"></ion-textarea>
           </ion-item>
-          <p>{{ modalPlaceholder }}</p>
+          <p>{{ exercises }}</p>
           <h5
             v-if="exercises.length > 0"
             v-for="(exercise, index) in modalPlaceholder"
@@ -194,7 +194,7 @@
                   <ion-input
                     label="Reps"
                     type="number"
-                    :placeholder="exercise.reps?.toString() || '0'"
+                    :value="exercise.reps?.toString() || '0'"
                     @ion-blur="
                       leaveReps(
                         exercise.exerciseName,
@@ -205,7 +205,7 @@
                   <ion-input
                     label="Weight"
                     type="number"
-                    :placeholder="exercise.weight?.toString() || '0'"
+                    :value="exercise.weight?.toString() || '0'"
                     @ion-blur="
                       leaveWeight(
                         exercise.exerciseName,
@@ -271,6 +271,7 @@ import {
   IonSelectOption,
   IonInput,
 } from "@ionic/vue";
+import { type } from "cypress/types/jquery";
 import { chevronBack, pencilOutline, trash } from "ionicons/icons";
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -336,7 +337,7 @@ watch(modalOpen, (value) => {
           unit: exercise.unit,
         });
       });
-    } else {
+    } else if (lastWorkoutExercises.value.length) {
       lastWorkoutExercises.value.forEach((exercise: any) => {
         modalPlaceholder.value.push({
           exerciseName: exercise.exercise,
@@ -345,6 +346,18 @@ watch(modalOpen, (value) => {
           weight: exercise.weight,
           unit: exercise.unit,
         });
+      });
+    } else {
+      exercises.value.forEach((exercise: any) => {
+        for (let i = 1; i <= exercise.sets; i++) {
+          modalPlaceholder.value.push({
+            exerciseName: exercise.exerciseName,
+            reps: parseInt(exercise.reps.split("-")),
+            weight: 0,
+            set: i,
+            unit: "kg",
+          });
+        }
       });
     }
   }
@@ -468,29 +481,34 @@ const confirmModal = async () => {
       WHERE startdate = '${workoutQueryResult.value.startdate}';`
   );
 
-  console.log(SetResults.value);
+  console.log(SetResults.value, typeof SetResults.value);
+  console.log(
+    workoutExercises.value,
+    typeof workoutExercises.value,
+    workoutExercises.value.length
+  );
 
-  if (workoutExercises.length === 0) {
-    SetResults.value.forEach((exercise: any) => {
+  if (workoutExercises.value.length === 0) {
+    await SetResults.value.map(async (exercise: any) => {
       exercise.reps ? exercise.reps : (exercise.reps = 0);
       exercise.weight ? exercise.weight : (exercise.weight = 0);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
       console.log("insert");
-      databaseStore.getDatabase()?.execute(
+      await databaseStore.getDatabase()?.execute(
         `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
           VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
           ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`
       );
     });
   } else if (SetResults.value.length !== 0) {
-    SetResults.value.forEach((exercise: any) => {
+    await SetResults.value.map(async (exercise: any) => {
       exercise.reps ? exercise.reps : (exercise.reps = 0);
       exercise.weight ? exercise.weight : (exercise.weight = 0);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
       console.log("update");
-      databaseStore.getDatabase()?.execute(
+      await databaseStore.getDatabase()?.execute(
         `UPDATE WorkoutExercise
           SET reps = ${exercise.reps},
               weight = ${exercise.weight},
