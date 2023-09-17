@@ -591,13 +591,22 @@ const deleteWeightEntry = async (exercise: string, set: number) => {
   //       val.setNumber === set
   //   ).ID
   // );
+  // console.log(
+  //   `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
+  // );
+  // await databaseStore
+  //   .getDatabase()
+  //   ?.execute(
+  //     `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
+  //   );
+
   console.log(
-    `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
+    `UPDATE WorkoutExercise SET reps = 0, weight = 0 WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
   );
   await databaseStore
     .getDatabase()
     ?.execute(
-      `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
+      `UPDATE WorkoutExercise SET reps = 0, weight = 0 WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
     );
 
   // await databaseStore
