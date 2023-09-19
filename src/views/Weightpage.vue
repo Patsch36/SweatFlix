@@ -335,26 +335,4 @@ ion-card-header {
 ion-card canvas {
   height: 100%;
 }
-
-ion-segment-button::part(indicator-background) {
-  background: var(--ion-color-primary);
-}
-
-/* Material Design styles */
-ion-segment-button.md::part(native),
-ion-segment-button.ios::part(native) {
-  color: white;
-}
-
-.segment-button-checked.md::part(native),
-.segment-button-checked.ios::part(native) {
-  color: var(--ion-color-primary-contrast);
-}
-
-ion-segment-button.md::part(indicator-background) {
-  height: 4px;
-}
-ion-segment-button.ios::part(indicator-background) {
-  border-radius: 20px;
-}
 </style>

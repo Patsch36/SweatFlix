@@ -271,7 +271,6 @@ import {
   IonSelectOption,
   IonInput,
 } from "@ionic/vue";
-import { type } from "cypress/types/jquery";
 import { chevronBack, pencilOutline, trash } from "ionicons/icons";
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
