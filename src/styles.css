@@ -67,11 +67,3 @@ ion-datetime {
   ion-segment-button.ios::part(indicator-background) {
     border-radius: 20px;
   }
-
-
-ion-backdrop {
-  opacity: 0.7;
-  background-color: var(--ion-background-color);
-  z-index: 99;
-  /* height: 9999999999999999999999999999999999999999999px; */
-}

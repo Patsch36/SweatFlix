@@ -121,4 +121,11 @@ ion-radio.radio-checked::part(mark) {
 
   transform: rotate(45deg);
 }
+
+ion-backdrop {
+  opacity: 0.7;
+  background-color: var(--ion-background-color);
+  z-index: 99;
+  /* height: 9999999999999999999999999999999999999999999px; */
+}
 </style>

@@ -489,8 +489,16 @@ const confirmModal = async () => {
 
   if (workoutExercises.value.length === 0) {
     await SetResults.value.map(async (exercise: any) => {
-      exercise.reps ? exercise.reps : (exercise.reps = 0);
-      exercise.weight ? exercise.weight : (exercise.weight = 0);
+      const index = workoutExercises.value.findIndex(
+        (obj: any) =>
+          obj.exercise === exercise.exerciseName && obj.set === exercise.set
+      );
+      exercise.reps
+        ? exercise.reps
+        : (exercise.reps = workoutExercises.value[index].reps);
+      exercise.weight
+        ? exercise.weight
+        : (exercise.weight = workoutExercises.value[index].weight);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
       console.log("insert");
@@ -502,8 +510,16 @@ const confirmModal = async () => {
     });
   } else if (SetResults.value.length !== 0) {
     await SetResults.value.map(async (exercise: any) => {
-      exercise.reps ? exercise.reps : (exercise.reps = 0);
-      exercise.weight ? exercise.weight : (exercise.weight = 0);
+      const index = workoutExercises.value.findIndex(
+        (obj: any) =>
+          obj.exercise === exercise.exerciseName && obj.set === exercise.set
+      );
+      exercise.reps
+        ? exercise.reps
+        : (exercise.reps = workoutExercises.value[index].reps);
+      exercise.weight
+        ? exercise.weight
+        : (exercise.weight = workoutExercises.value[index].weight);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
       console.log("update");
