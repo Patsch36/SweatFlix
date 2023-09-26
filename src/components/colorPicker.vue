@@ -15,8 +15,7 @@
           v-for="color in availableColors"
           :value="color.name"
           labelPlacement="end"
-          :style="`color: ${color.color}; background-color: ${color.background}; width: 50px; height: 50px; --color-checked: ${color.color}`">
-        </ion-radio>
+          :style="`color: ${color.color}; background-color: ${color.background}; width: 50px; height: 50px; --color-checked: ${color.color}`"></ion-radio>
       </ion-radio-group>
     </p>
     <ion-button @click="submit"> Choose color</ion-button>
@@ -47,6 +46,10 @@ const submit = () => {
     emit("color", color.value.value);
   }
 };
+
+onMounted(() => {
+  console.log(availableColors);
+});
 </script>
 
 <style scoped>

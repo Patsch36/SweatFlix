@@ -1,4 +1,3 @@
-
 export interface ColorInfo {
   name: string;
   color: string;
@@ -10,7 +9,6 @@ export interface DateObj {
   textColor: string;
   backgroundColor: string;
 }
-
 
 export const availableColors: Record<string, ColorInfo> = {
   rose: {
@@ -48,10 +46,10 @@ export const availableColors: Record<string, ColorInfo> = {
     color: "var(--cerulean-color)",
     background: "var(--cerulean-background)",
   },
-  navy: {
-    name: "Navy",
-    color: "var(--navy-color)",
-    background: "var(--navy-background)",
+  magenta: {
+    name: "magenta",
+    color: "var(--magenta-color)",
+    background: "var(--magenta-background)",
   },
   indigo: {
     name: "Indigo",

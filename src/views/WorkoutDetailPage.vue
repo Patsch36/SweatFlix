@@ -181,7 +181,6 @@
               style="height: 150px"
               v-model="modalNotes"></ion-textarea>
           </ion-item>
-          <p>{{ exercises }}</p>
           <h5
             v-if="exercises.length > 0"
             v-for="(exercise, index) in modalPlaceholder"
@@ -472,26 +471,27 @@ const confirmModal = async () => {
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  databaseStore.getDatabase()?.execute(
-    `UPDATE Workout
+  const query = `UPDATE Workout
       SET startdate = '${modalStarttime.value}',
           enddate = '${modalEndtime.value}',
           note = '${modalNotes.value}'
-      WHERE startdate = '${workoutQueryResult.value.startdate}';`
-  );
+      WHERE startdate = '${workoutQueryResult.value.startdate}';`;
+  console.log(query);
+  await databaseStore.getDatabase()?.execute(query);
 
-  console.log(SetResults.value, typeof SetResults.value);
-  console.log(
-    workoutExercises.value,
-    typeof workoutExercises.value,
-    workoutExercises.value.length
-  );
+  // console.log(SetResults.value, typeof SetResults.value);
+  // console.log(
+  //   workoutExercises.value,
+  //   typeof workoutExercises.value,
+  //   workoutExercises.value.length
+  // );
 
   if (workoutExercises.value.length === 0) {
     await SetResults.value.map(async (exercise: any) => {
       const index = workoutExercises.value.findIndex(
         (obj: any) =>
-          obj.exercise === exercise.exerciseName && obj.set === exercise.set
+          obj.exercise === exercise.exerciseName &&
+          obj.setNumber === exercise.set
       );
       exercise.reps
         ? exercise.reps
@@ -512,8 +512,11 @@ const confirmModal = async () => {
     await SetResults.value.map(async (exercise: any) => {
       const index = workoutExercises.value.findIndex(
         (obj: any) =>
-          obj.exercise === exercise.exerciseName && obj.set === exercise.set
+          obj.exercise === exercise.exerciseName &&
+          obj.setNumber === exercise.set
       );
+      console.log("workoutExercises.value[index]", workoutExercises.value);
+      console.log("exercise", exercise);
       exercise.reps
         ? exercise.reps
         : (exercise.reps = workoutExercises.value[index].reps);
@@ -523,14 +526,14 @@ const confirmModal = async () => {
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
       console.log("update");
-      await databaseStore.getDatabase()?.execute(
-        `UPDATE WorkoutExercise
+      const query = `UPDATE WorkoutExercise
           SET reps = ${exercise.reps},
               weight = ${exercise.weight},
               unit = '${exercise.unit}'
           WHERE workout = '${modalStarttime.value}'
-            AND exercise = '${exercise.exerciseName}' AND setNumber = ${exercise.set};`
-      );
+            AND exercise = '${exercise.exerciseName}' AND setNumber = ${exercise.set};`;
+      console.log(query);
+      await databaseStore.getDatabase()?.execute(query);
     });
   }
 

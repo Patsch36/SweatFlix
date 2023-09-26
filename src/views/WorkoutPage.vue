@@ -63,7 +63,7 @@
           v-for="item in queryResults"
           :key="item.Name"
           ref="slidingItems">
-          <ion-item>
+          <ion-item @click="router.push(`/workouttemplate/${item.Name}`)">
             <ion-label>
               <div class="item-content">
                 <div class="chip-container">
@@ -111,7 +111,6 @@
 <script setup lang="ts">
 import { availableColors } from "@/datatypes/CalendarTypes";
 import { useDatabaseStore } from "@/stores/databaseStore";
-// import { useScrollLock } from "@vueuse/core";
 import {
   IonContent,
   IonHeader,
@@ -144,8 +143,10 @@ import {
   removeCircleOutline,
   addCircleOutline,
   repeatOutline,
+  navigate,
 } from "ionicons/icons";
 import ColorPicker from "@/components/colorPicker.vue";
+import { useRouter } from "vue-router";
 
 const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
@@ -155,6 +156,8 @@ const slidingItems = ref<any>(null);
 const showList = ref<boolean>(true);
 const popOverShow = ref<any>(null);
 let itemNameUpdate: String;
+
+const router = useRouter();
 
 const loadWorkouts = async () => {
   let query = "";
@@ -237,6 +240,7 @@ const handleWorkoutChange = (itemActive: Boolean, itemName: String) => {
 
 const setWorkoutColor = (event: any) => {
   const query = `UPDATE WorkoutTemplate SET active = 1, Color = '${event.toLowerCase()}' WHERE Name = '${itemNameUpdate}';`;
+  console.log(query);
   databaseStore.getDatabase()?.execute(query);
 
   popOverShow.value = false;

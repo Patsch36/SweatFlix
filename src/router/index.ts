@@ -4,8 +4,9 @@ import HomePage from "../views/HomePage.vue";
 import CalendarPage from "../views/CalendarPage.vue";
 import ProfilePage from "../views/ProfilePage.vue";
 import WorkoutPage from "@/views/WorkoutPage.vue";
-import WeightPage from "@/views/WeightPage.vue";
+import WeightPage from "@/views/Weightpage.vue";
 import WorkoutDetailPage from "@/views/WorkoutDetailPage.vue";
+import WorkoutTemplatePage from "@/views/WorkoutTemplatePage.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -30,7 +31,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/workouts",
     name: "Workouts",
-    component: () => WorkoutPage,
+    component: WorkoutPage,
   },
   {
     path: "/weight",
@@ -41,6 +42,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/workoutdetails/:id",
     name: "Workoutdetails",
     component: WorkoutDetailPage,
+  },
+  {
+    path: "/workouttemplate/:id",
+    name: "Workouttemplate",
+    component: WorkoutTemplatePage,
   },
 ];
 

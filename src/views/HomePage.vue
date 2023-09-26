@@ -1,5 +1,5 @@
 <template>
-  <ion-page style="padding-inline: 0.75rem; height: calc(100vh - 100px)">
+  <ion-page style="height: calc(100vh - 100px)">
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>Home</ion-title>
@@ -12,52 +12,56 @@
           <ion-title size="large">Home</ion-title>
         </ion-toolbar>
       </ion-header>
+      <div style="padding-inline: 0.75rem">
+        <h1>Dashboard</h1>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6" size-md="3">
+              <ion-card color="primary">
+                <ion-card-header>
+                  <ion-card-subtitle>Last Workout</ion-card-subtitle>
+                  <ion-card-title>Push</ion-card-title>
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+            <ion-col size="6" size-md="3">
+              <ion-card color="primary">
+                <ion-card-header>
+                  <ion-card-subtitle>Next Workout</ion-card-subtitle>
+                  <ion-card-title>Pull</ion-card-title>
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
 
-      <h1>Dashboard</h1>
-      <ion-grid>
-        <ion-row>
-          <ion-col size="6" size-md="3">
-            <ion-card color="primary">
-              <ion-card-header>
-                <ion-card-subtitle>Last Workout</ion-card-subtitle>
-                <ion-card-title>Push</ion-card-title>
-              </ion-card-header>
-            </ion-card>
-          </ion-col>
-          <ion-col size="6" size-md="3">
-            <ion-card color="primary">
-              <ion-card-header>
-                <ion-card-subtitle>Next Workout</ion-card-subtitle>
-                <ion-card-title>Pull</ion-card-title>
-              </ion-card-header>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-
-      <h2 @click="router.push('/weight')">Gewicht</h2>
-      <ion-grid @click="router.push('/weight')">
-        <ion-row>
-          <ion-col size="6" size-md="3">
-            <ion-card color="primary">
-              <ion-card-header>
-                <ion-card-subtitle>Current</ion-card-subtitle>
-                <ion-card-title v-if="queryCurrentWeightResults.length > 0"
-                  >{{ queryCurrentWeightResults[0].weight }} kg</ion-card-title
-                >
-              </ion-card-header>
-            </ion-card>
-          </ion-col>
-          <ion-col size="6" size-md="3">
-            <ion-card color="primary">
-              <ion-card-header>
-                <ion-card-subtitle>Goal</ion-card-subtitle>
-                <ion-card-title>85 kg</ion-card-title>
-              </ion-card-header>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+        <h2 @click="router.push('/weight')">Gewicht</h2>
+        <ion-grid @click="router.push('/weight')">
+          <ion-row>
+            <ion-col size="6" size-md="3">
+              <ion-card color="primary">
+                <ion-card-header>
+                  <ion-card-subtitle>Current</ion-card-subtitle>
+                  <ion-card-title v-if="queryCurrentWeightResults.length > 0"
+                    >{{
+                      queryCurrentWeightResults[0].weight
+                    }}
+                    kg</ion-card-title
+                  >
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+            <ion-col size="6" size-md="3">
+              <ion-card color="primary">
+                <ion-card-header>
+                  <ion-card-subtitle>Goal</ion-card-subtitle>
+                  <ion-card-title>85 kg</ion-card-title>
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
     </ion-content>
   </ion-page>
 
