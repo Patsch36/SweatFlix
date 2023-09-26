@@ -501,7 +501,6 @@ const confirmModal = async () => {
         : (exercise.weight = workoutExercises.value[index].weight);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
-      console.log("insert");
       await databaseStore.getDatabase()?.execute(
         `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
           VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
@@ -515,8 +514,6 @@ const confirmModal = async () => {
           obj.exercise === exercise.exerciseName &&
           obj.setNumber === exercise.set
       );
-      console.log("workoutExercises.value[index]", workoutExercises.value);
-      console.log("exercise", exercise);
       exercise.reps
         ? exercise.reps
         : (exercise.reps = workoutExercises.value[index].reps);

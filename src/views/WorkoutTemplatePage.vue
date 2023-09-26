@@ -38,7 +38,7 @@
             </ion-col>
             <ion-col>
               <b>Color</b>
-              <br />
+
               <p
                 v-if="template.active"
                 :style="{
@@ -50,7 +50,7 @@
                 }">
                 {{ template.Color }}
               </p>
-              <p v-else>Not Active</p>
+              <p v-else style="margin: 0">Not Active</p>
             </ion-col>
           </ion-row>
           <ion-row>
