@@ -149,9 +149,25 @@ export const splits: string[] = [
   "Chest",
   "Back",
   "Arms",
+  "Abs - Arms",
+  "Abs - Shoulders",
+  "Abs - Biceps",
+  "Abs - Triceps",
+  "Abs - Arms - Shoulders",
   "Legs",
   "Push",
   "Pull",
+  "Chest - Shoulders",
+  "Back - Biceps",
+  "Legs - Abs",
+  "Chest - Triceps",
+  "Back - Shoulders",
+  "Shoulder - Arms",
+  "Chest - Back",
+  "Back - Arms",
+  "Chest - Shoulders - Triceps",
+  "Chest - Shoulders - Arms",
+  "Chest - Back - Arms",
   "UpperBody",
   "LowerBody",
   "Fullbody - Push",
@@ -195,49 +211,159 @@ export const getPossibleSplits = (muscles: number[]) => {
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Biceps"
     );
+
   if (muscles.some((item) => ![11, 12, 13].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Triceps"
     );
+
   if (muscles.some((item) => ![18, 19, 20].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Shoulders"
     );
-  if (muscles.some((item) => ![21, 22, 23].includes(item)))
-    possibleSplits = possibleSplits.filter((split: string) => split !== "Abs");
+
+  if (muscles.some((item) => ![8, 9, 10, 11, 12, 13].includes(item)))
+    if (muscles.some((item) => ![21, 22, 23].includes(item)))
+      possibleSplits = possibleSplits.filter(
+        (split: string) => split !== "Abs"
+      );
+
+  if (muscles.some((item) => ![18, 19, 20, 31, 22, 23].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Abs - Shoulders"
+    );
+
+  if (muscles.some((item) => ![8, 9, 10, 21, 22, 23].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Abs - Biceps"
+    );
+
+  if (muscles.some((item) => ![11, 12, 13, 21, 22, 23].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Abs - Triceps"
+    );
+
+  if (
+    muscles.some((item) => ![8, 9, 10, 11, 12, 13, 21, 22, 23].includes(item))
+  )
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Abs - Arms"
+    );
+
+  if (
+    muscles.some((item) => ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(item))
+  )
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Back - Arms"
+    );
+
+  if (
+    muscles.some(
+      (item) => ![8, 9, 10, 11, 12, 13, 18, 19, 20, 21, 22, 23].includes(item)
+    )
+  )
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Abs - Arms - Shoulders"
+    );
+
   if (muscles.some((muscle: number) => muscle > 3))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Chest"
     );
+
   if (muscles.some((item) => ![8, 9, 10, 11, 12, 13].includes(item)))
     possibleSplits = possibleSplits.filter((split: string) => split !== "Arms");
 
   if (muscles.some((item) => ![4, 5, 6, 7].includes(item)))
     possibleSplits = possibleSplits.filter((split: string) => split !== "Back");
+
   if (muscles.some((item) => ![14, 15, 16, 17].includes(item)))
     possibleSplits = possibleSplits.filter((split: string) => split !== "Legs");
+
   if (muscles.some((item) => ![1, 2, 3, 11, 12, 13].includes(item)))
     possibleSplits = possibleSplits.filter((split: string) => split !== "Push");
+
   if (muscles.some((item) => ![4, 5, 6, 7, 8, 9, 10].includes(item)))
     possibleSplits = possibleSplits.filter((split: string) => split !== "Pull");
+
+  if (muscles.some((item) => ![1, 2, 3, 4, 5, 6].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Back"
+    );
+
+  if (muscles.some((item) => ![1, 2, 3, 18, 19, 20].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Shoulders"
+    );
+
+  if (muscles.some((item) => ![4, 5, 6, 7, 8, 9, 10].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Back - Biceps"
+    );
+
+  if (muscles.some((item) => ![14, 15, 16, 17, 21, 22, 23].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Legs - Abs"
+    );
+
+  if (muscles.some((item) => ![1, 2, 3, 11, 12, 13].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Triceps"
+    );
+
+  if (muscles.some((item) => ![4, 5, 6, 7, 18, 19, 20].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Back - Shoulders"
+    );
+
+  if (
+    muscles.some((item) => ![8, 9, 10, 11, 12, 13, 18, 19, 20].includes(item))
+  )
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Shoulder - Arms"
+    );
+
+  if (muscles.some((item) => ![1, 2, 3, 11, 12, 13, 18, 19, 20].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Shoulders - Triceps"
+    );
+
+  if (muscles.some((item) => ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Back - Arms"
+    );
+
+  if (
+    muscles.some(
+      (item) => ![1, 2, 3, 8, 9, 10, 11, 12, 13, 18, 19, 20].includes(item)
+    )
+  )
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Chest - Shoulders - Arms"
+    );
+
   // Remove UpperBody if any exercise is leg exercise
   if (muscles.some((item) => [14, 15, 16, 17].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "UpperBody"
     );
+
   if (muscles.some((item) => ![14, 15, 16, 17].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "LowerBody"
     );
+
   // Remove Fullbody-Push if any exercise is not a push exercise
   if (muscles.some((item) => ![1, 2, 3, 11, 12, 13, 14, 16, 19].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Fullbody - Push"
     );
+
   if (muscles.some((item) => [1, 2, 3, 11, 12, 13, 14, 16, 19].includes(item)))
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "FullBody - Pull"
     );
+
   return possibleSplits;
 };
 
@@ -292,6 +418,23 @@ export const getAllMusclesFromSplit = (split: string) => {
     Triceps: [11, 12, 13],
     Shoulders: [18, 19, 20],
     Abs: [21, 22, 23],
+    Arm: [8, 9, 10, 11, 12, 13],
+    "Abs - Shoulders": [18, 19, 20, 21, 22, 23],
+    "Abs - Biceps": [8, 9, 10, 21, 22, 23],
+    "Abs - Triceps": [11, 12, 13, 21, 22, 23],
+    "Abs - Arms": [8, 9, 10, 11, 12, 13, 21, 22, 23],
+    "Abs - Arms - Shoulders": [8, 9, 10, 11, 12, 13, 18, 19, 20, 21, 22, 23],
+    "Chest - Shoulders": [1, 2, 3, 18, 19, 20],
+    "Back - Biceps": [4, 5, 6, 7, 8, 9, 10],
+    "Legs - Abs": [14, 15, 16, 17, 21, 22, 23],
+    "Chest - Triceps": [1, 2, 3, 11, 12, 13],
+    "Back - Shoulders": [4, 5, 6, 7, 18, 19, 20],
+    "Back - Arms": [4, 5, 6, 7, 8, 9, 10],
+    "Shoulder - Arms": [8, 9, 10, 11, 12, 13, 18, 19, 20],
+    "Chest - Shoulders - Triceps": [1, 2, 3, 11, 12, 13, 18, 19, 20],
+    "Chest - Shoulders - Arms": [1, 2, 3, 8, 9, 10, 11, 12, 13, 18, 19, 20],
+    "Chest - Back": [1, 2, 3, 4, 5, 6, 7],
+    "Chest - Back - Arms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     Chest: [1, 2, 3],
     Back: [4, 5, 6, 7],
     Arms: [8, 9, 10, 11, 12, 13],
