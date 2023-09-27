@@ -15,10 +15,14 @@
           v-for="color in availableColors"
           :value="color.name"
           labelPlacement="end"
+          :disabled="usedColors.includes(color.name.toLowerCase())"
           :style="`color: ${color.color}; background-color: ${color.background}; width: 50px; height: 50px; --color-checked: ${color.color}`"></ion-radio>
       </ion-radio-group>
     </p>
-    <ion-button @click="submit"> Choose color</ion-button>
+
+    <ion-button @click="submit" :disabled="usedColors.length === 16">
+      Choose color</ion-button
+    >
   </div>
 </template>
 
@@ -29,12 +33,24 @@ import { useRouter } from "vue-router";
 
 import { availableColors } from "@/datatypes/CalendarTypes";
 import { onMounted, ref, watch } from "vue";
+import { useDatabaseStore } from "@/stores/databaseStore";
+const databaseStore = useDatabaseStore();
 
 const router = useRouter();
 
 const color = ref<any>(null);
 
 const emit = defineEmits(["close", "color"]);
+
+const usedColors = ref<any>([]);
+
+const loadUsedColors = async () => {
+  const query = `SELECT DISTINCT color FROM WorkoutTemplate Where active = 1`;
+
+  const resp = await databaseStore.getDatabase()?.query(query);
+  usedColors.value = resp?.values ? resp.values : [];
+  usedColors.value = usedColors.value.map((color: any) => color.Color);
+};
 
 const close = () => {
   emit("close");
@@ -48,6 +64,7 @@ const submit = () => {
 };
 
 onMounted(() => {
+  loadUsedColors();
   console.log(availableColors);
 });
 </script>
