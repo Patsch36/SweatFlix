@@ -82,7 +82,11 @@
             </ion-item>
             <ion-item-options>
               <ion-item-option color="danger">
-                <ion-button color="transparent">
+                <ion-button
+                  color="transparent"
+                  @click="
+                    remove(exercise.exerciseName, exercise.sets, exercise.reps)
+                  ">
                   <ion-icon slot="icon-only" :icon="trash"></ion-icon>
                 </ion-button>
               </ion-item-option>
@@ -244,6 +248,12 @@ const handleInput = (event: any) => {
       );
     }
   }
+};
+
+const remove = async (name: any, sets: any, reps: any) => {
+  const query = `DELETE FROM WorkoutList WHERE exerciseName = '${name}' AND sets = ${sets} AND reps = '${reps}' AND workoutPlan = '${workout.value}'`;
+  await databaseStore.getDatabase()?.run(query);
+  loadWorkoutExcercises();
 };
 </script>
 
