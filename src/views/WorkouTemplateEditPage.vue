@@ -61,7 +61,12 @@
           </div>
         </ion-item>
         <ion-item>
-          <ion-input label="Name" v-model="name"></ion-input>
+          <ion-input
+            label="Name"
+            v-model="name"
+            @ion-input="isTemplateNameUnique()"
+            error-text="Existing Workout Namz"
+            ref="inputReferenceName"></ion-input>
         </ion-item>
         <ion-item>
           <ion-textarea
@@ -185,6 +190,7 @@
           </ion-list>
         </ion-content>
       </ion-modal>
+      <p></p>
     </ion-content>
   </ion-page>
 </template>
@@ -241,6 +247,8 @@ const popOverShow = ref<boolean>(false);
 const showAddExerciseModal = ref<boolean>(false);
 const modal = ref<any>(null);
 const missingMusclesFlag = ref<boolean>(true);
+const inputReferenceName = ref<any>(null);
+const disableSaveButton = ref<boolean>(false);
 
 const name = ref<string>("");
 const description = ref<string>("");
@@ -311,25 +319,29 @@ const setWorkoutColor = (event: any) => {
 };
 
 const saveWorkout = async () => {
-  const query = `UPDATE WorkoutTemplate SET name = '${
-    name.value
-  }', Description = '${
-    description.value
-  }', Color = '${color.value.toLowerCase()}' WHERE name = '${workout.value}'`;
-  await databaseStore.getDatabase()?.run(query);
+  if (!disableSaveButton.value) {
+    const query = `UPDATE WorkoutTemplate SET name = '${
+      name.value
+    }', Description = '${
+      description.value
+    }', Color = '${color.value.toLowerCase()}' WHERE name = '${workout.value}'`;
+    console.log(query);
+    await databaseStore.getDatabase()?.run(query);
+    // Delete every entry from workoutlist where workout is workout
+    const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
+    await databaseStore.getDatabase()?.run(deleteQuery);
 
-  // Delete every entry from workoutlist where workout is workout
-  const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
-  await databaseStore.getDatabase()?.run(deleteQuery);
+    // Set new exercises
+    for (let i = 0; i < exercises.value.length; i++) {
+      const exercise = exercises.value[i];
+      const insertQuery = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
+      await databaseStore.getDatabase()?.run(insertQuery);
+    }
 
-  // Set new exercises
-  for (let i = 0; i < exercises.value.length; i++) {
-    const exercise = exercises.value[i];
-    const insertQuery = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
-    await databaseStore.getDatabase()?.run(insertQuery);
+    router.go(-1);
+  } else {
+    alert("Name already exists");
   }
-
-  router.go(-1);
 };
 
 const generateNumbers = (upperLimit: any) => {
@@ -399,6 +411,28 @@ const confirmModal = async () => {
   setTimeout(() => {
     missingMusclesFlag.value = true;
   }, 1);
+};
+
+const isTemplateNameUnique = async () => {
+  const query = `SELECT name FROM WorkoutTemplate`;
+
+  const result = await databaseStore.getDatabase()?.query(query);
+
+  let res = result?.values ? result.values : [];
+  res = res.map((item) => item.Name);
+  res = res.filter((item) => item !== workout.value);
+  console.log(res);
+  console.log(res.includes(name.value));
+
+  if (res.includes(name.value)) {
+    inputReferenceName.value.$el.classList.remove("ion-valid");
+    inputReferenceName.value.$el.classList.add("ion-invalid");
+    disableSaveButton.value = true;
+  } else {
+    inputReferenceName.value.$el.classList.remove("ion-invalid");
+    inputReferenceName.value.$el.classList.add("ion-valid");
+    disableSaveButton.value = false;
+  }
 };
 </script>
 

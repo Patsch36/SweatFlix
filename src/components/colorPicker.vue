@@ -32,7 +32,7 @@ import { closeOutline } from "ionicons/icons";
 import { useRouter } from "vue-router";
 
 import { availableColors } from "@/datatypes/CalendarTypes";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 const databaseStore = useDatabaseStore();
 
