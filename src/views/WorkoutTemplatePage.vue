@@ -11,7 +11,11 @@
             color="primary"></ion-icon>
           <ion-label @click="router.go(-1)" color="primary">Back</ion-label>
         </div>
-        <div class="icon" slot="end" style="margin-right: 16px">
+        <div
+          @click="router.push(`/workouttemplateEdit/${workout}`)"
+          class="icon"
+          slot="end"
+          style="margin-right: 16px">
           <ion-icon
             :icon="pencilOutline"
             style="font-size: 24px; margin-right: 8px"

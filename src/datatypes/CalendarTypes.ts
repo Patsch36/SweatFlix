@@ -47,7 +47,7 @@ export const availableColors: Record<string, ColorInfo> = {
     background: "var(--cerulean-background)",
   },
   magenta: {
-    name: "magenta",
+    name: "Magenta",
     color: "var(--magenta-color)",
     background: "var(--magenta-background)",
   },
