@@ -75,7 +75,9 @@
           </ion-list-header>
           <ion-item-sliding v-for="(exercise, index) in exercises" :key="index">
             <ion-item>
-              <ion-label>{{ exercise.exerciseName }}</ion-label>
+              <ion-label
+                >{{ exercise.exerciseName }}, {{ exercise.id }}</ion-label
+              >
               <ion-label slot="end">
                 {{ exercise.sets }} x {{ exercise.reps }}
               </ion-label>
@@ -159,10 +161,11 @@ const loadWorkoutTemplate = async () => {
 };
 
 const loadWorkoutExcercises = async () => {
-  const query = `SELECT exerciseName, sets, reps FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
+  const query = `SELECT exerciseName, sets, reps, ID FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
+  exercises.value.sort((a: any, b: any) => a.id - b.id);
 };
 
 const loadWorkoutDates = async () => {

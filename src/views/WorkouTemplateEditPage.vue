@@ -93,36 +93,46 @@
               >Sets</ion-label
             >
           </ion-list-header>
-          <ion-item v-for="exercise in exercises" key="exercise.ID">
-            <ion-label>{{ exercise.exerciseName || exercise.name }}</ion-label>
-            <ion-label
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                margin-left: auto;
-              ">
-              <ion-input
-                v-model="exercise.sets"
-                placeholder="2"
+          <ion-reorder-group
+            :disabled="false"
+            @ionItemReorder="handleReorder($event)">
+            <ion-item v-for="exercise in exercises" key="exercise.ID">
+              <ion-label>{{
+                exercise.exerciseName || exercise.name
+              }}</ion-label>
+              <ion-label
                 style="
-                  border: 1px solid #fff;
-                  border-radius: 5px;
-                  max-width: 50px;
-                  text-align: center;
-                "></ion-input>
-              <span style="margin: 0 5px">x</span>
-              <ion-input
-                v-model="exercise.reps"
-                placeholder="8-12"
-                style="
-                  border: 1px solid #fff;
-                  border-radius: 5px;
-                  max-width: 80px;
-                  text-align: center;
-                "></ion-input>
-            </ion-label>
-          </ion-item>
+                  display: flex;
+                  align-items: center;
+                  justify-content: flex-end;
+                  margin-left: auto;
+                ">
+                <ion-input
+                  v-model="exercise.sets"
+                  label=""
+                  placeholder="2"
+                  style="
+                    border: 1px solid #fff;
+                    border-radius: 5px;
+                    max-width: 50px;
+                    text-align: center;
+                  "></ion-input>
+                <span style="margin: 0 5px">x</span>
+                <ion-input
+                  v-model="exercise.reps"
+                  label=""
+                  placeholder="8-12"
+                  style="
+                    border: 1px solid #fff;
+                    border-radius: 5px;
+                    max-width: 80px;
+                    text-align: center;
+                  "></ion-input>
+              </ion-label>
+
+              <ion-reorder slot="end"></ion-reorder>
+            </ion-item>
+          </ion-reorder-group>
         </ion-list>
       </div>
       <ion-modal ref="modal" :isOpen="showAddExerciseModal">
@@ -217,6 +227,8 @@ import {
   IonButton,
   IonButtons,
   IonBackdrop,
+  IonReorderGroup,
+  IonReorder,
 } from "@ionic/vue";
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
@@ -262,12 +274,14 @@ const loadWorkoutTemplate = async () => {
 };
 
 const loadWorkoutExcercises = async () => {
-  const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID
+  const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID, WorkoutList.ID as WID
   FROM WorkoutList INNER JOIN MuscleGroup INNER JOIN Exercise on WorkoutList.exerciseName == Exercise.name
   AND Exercise.MuscleGroup = MuscleGroup.ID WHERE workoutPlan = '${workout.value}'`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
+
+  exercises.value.sort((a: any, b: any) => a.WID - b.WID);
 };
 
 const loadAllExercises = async () => {
@@ -433,6 +447,37 @@ const isTemplateNameUnique = async () => {
     inputReferenceName.value.$el.classList.add("ion-valid");
     disableSaveButton.value = false;
   }
+};
+
+const handleReorder = async (event: CustomEvent) => {
+  // The `from` and `to` properties contain the index of the item
+  // when the drag started and ended, respectively
+  await console.log(
+    "Dragged from index",
+    event.detail.from,
+    "to",
+    event.detail.to
+  );
+
+  const item1 = exercises.value[event.detail.from];
+  const item2 = exercises.value[event.detail.to];
+
+  // Change ID of both elements in database
+  const query1 = `UPDATE WorkoutList SET ID = -1 WHERE workoutPlan = '${workout.value}' AND ID = ${item1.WID}`;
+  const query2 = `UPDATE WorkoutList SET ID = ${item1.WID} WHERE workoutPlan = '${workout.value}' AND ID = ${item2.WID}`;
+  const query3 = `UPDATE WorkoutList SET ID = ${item2.WID} WHERE workoutPlan = '${workout.value}' AND ID = -1`;
+  await databaseStore.getDatabase()?.run(query1);
+  await databaseStore.getDatabase()?.run(query2);
+  await databaseStore.getDatabase()?.run(query3);
+
+  await console.log("Changed", item1, item2);
+
+  await loadWorkoutExcercises();
+
+  // Finish the reorder and position the item in the DOM based on
+  // where the gesture ended. This method can also be called directly
+  // by the reorder group
+  await event.detail.complete();
 };
 </script>
 

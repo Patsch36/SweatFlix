@@ -13,17 +13,13 @@
         </ion-toolbar>
       </ion-header>
 
-      <strong>Ready to create an app?</strong>
-      <p>
-        Start with Ionic
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://ionicframework.com/docs/components"
-          >UI Components</a
-        >
-      </p>
-      <ion-button color="primary" router-link="/home">Home</ion-button>
+      <ion-textarea
+        placeholder="Enter some text..."
+        :auto-grow="true"
+        v-model="query"
+        :rows="1"></ion-textarea>
+      <ion-button @click="executeQuery()">Execute</ion-button>
+      <p>{{ data }}</p>
     </ion-content>
   </ion-page>
 
@@ -41,7 +37,25 @@ import {
   IonTitle,
   IonToolbar,
   IonButton,
+  IonTextarea,
 } from "@ionic/vue";
+import { ref } from "vue";
+import { useDatabaseStore } from "@/stores/databaseStore";
+const databaseStore = useDatabaseStore();
+
+const query = ref("");
+const data = ref();
+
+const executeQuery = async () => {
+  try {
+    const resp = await databaseStore.getDatabase()?.query(query.value);
+    data.value = resp?.values ? resp.values : [];
+  } catch (e) {
+    console.log(e);
+    data.value = e;
+  }
+  query.value = "";
+};
 </script>
 
 <style scoped></style>
