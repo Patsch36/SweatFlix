@@ -308,14 +308,14 @@ export const dropTables = async () => {
       ?.getDatabase()
       ?.run(`Drop Table WorkoutList;`);
     tableDeletions += promise?.changes?.changes || 0;
-    promise = await databaseStore
-      ?.getDatabase()
-      ?.run(`Drop Table WorkoutExercise;`);
+    // promise = await databaseStore
+    //   ?.getDatabase()
+    //   ?.run(`Drop Table WorkoutExercise;`);
     tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore?.getDatabase()?.run(`Drop Table Exercise;`);
     tableDeletions += promise?.changes?.changes || 0;
-    promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
-    tableDeletions += promise?.changes?.changes || 0;
+    // promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
+    // tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore
       .getDatabase()
       ?.run(`Drop Table WorkoutTemplate;`);

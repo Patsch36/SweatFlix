@@ -11,7 +11,7 @@
   <ion-page style="height: calc(100vh - 100px)">
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>Edit {{ name }}</ion-title>
+        <ion-title>Edit {{ workout }}</ion-title>
         <div class="icon">
           <ion-icon
             :icon="chevronBack"
@@ -37,7 +37,7 @@
       <ion-header collapse="condense" style="padding-inline: 0.75rem">
         <ion-toolbar>
           <!-- <ion-title size="large">{{ workout }}</ion-title> -->
-          <h1 style="font-weight: bold; font-size: 32px">Edit {{ name }}</h1>
+          <h1 style="font-weight: bold; font-size: 32px">Edit {{ workout }}</h1>
         </ion-toolbar>
       </ion-header>
       <div style="padding-inline: 0.75rem" v-if="template">
@@ -65,7 +65,7 @@
             label="Name"
             v-model="name"
             @ion-input="isTemplateNameUnique()"
-            error-text="Existing Workout Namz"
+            error-text="Existing Workout Name"
             ref="inputReferenceName"></ion-input>
         </ion-item>
         <ion-item>
@@ -230,7 +230,7 @@ import {
   IonReorderGroup,
   IonReorder,
 } from "@ionic/vue";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, ref, shallowRef } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import {
   getPossibleSplits,
@@ -238,8 +238,10 @@ import {
 } from "@/datatypes/splitCalculator";
 import ColorPicker from "@/components/colorPicker.vue";
 import { Exercise } from "@/datatypes/Exercise";
+import { useActiveWorkoutsStore } from "@/stores/activeWorkoutsStore";
 
 const databaseStore = useDatabaseStore();
+const activeWorkoutsStore = useActiveWorkoutsStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -262,6 +264,8 @@ const missingMusclesFlag = ref<boolean>(true);
 const inputReferenceName = ref<any>(null);
 const disableSaveButton = ref<boolean>(false);
 
+const newWorkout = shallowRef<boolean>(false);
+
 const name = ref<string>("");
 const description = ref<string>("");
 const color = ref<string>("");
@@ -270,7 +274,19 @@ const loadWorkoutTemplate = async () => {
   const query = `SELECT Split, Description, Color FROM WorkoutTemplate WHERE name = '${workout.value}'`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
+  if (resp?.values && resp.values.length === 0) {
+    newWorkout.value = true;
+    console.log("Workout not found");
+    // Init template values with boilerplates
+    template.value = {
+      Split: "Push",
+      Description: "No description",
+      Color: "Magenta",
+    };
+    return "NOWORKOUT";
+  }
   template.value = resp?.values ? resp.values[0] : {};
+  return "WORKOUT";
 };
 
 const loadWorkoutExcercises = async () => {
@@ -293,8 +309,13 @@ const loadAllExercises = async () => {
 
 onBeforeMount(async () => {
   workout.value = route.params.id as string;
-  await loadWorkoutTemplate();
-  await loadWorkoutExcercises();
+  if ((await loadWorkoutTemplate()) === "NOWORKOUT") {
+    console.log("Workout not found: ", template);
+    exercises.value = [];
+    popOverShow.value = true;
+  } else {
+    await loadWorkoutExcercises();
+  }
   await loadAllExercises();
   muscles.value = exercises.value.map((exercise: any) => exercise.ID);
   currentSplits.value = getPossibleSplits(muscles.value);
@@ -325,6 +346,7 @@ const initBuffers = () => {
   color.value =
     template.value.Color.charAt(0).toUpperCase() +
     template.value.Color.slice(1);
+  console.log(name.value, description.value, color.value);
 };
 
 const setWorkoutColor = (event: any) => {
@@ -334,11 +356,53 @@ const setWorkoutColor = (event: any) => {
 
 const saveWorkout = async () => {
   if (!disableSaveButton.value) {
+    if (name.value === "") {
+      alert("Please enter a name");
+      return;
+    }
+
+    if (name.value === "New Workout") {
+      alert("Please enter a different name");
+      return;
+    }
+
+    console.log(newWorkout.value);
+    if (newWorkout.value) {
+      const activeWorkouts = activeWorkoutsStore.getActiveWorkouts();
+
+      const query = `INSERT INTO WorkoutTemplate (Name, Description, Color, active) VALUES ('${
+        name.value
+      }', '${description.value}', '${color.value.toLowerCase()}', ${
+        activeWorkouts < 16 ? 1 : 0
+      })`;
+      await databaseStore.getDatabase()?.run(query);
+
+      if (exercises.value.length > 0) {
+        // Set new Exercises in workoutlist if exercises are chosen
+        for (let i = 0; i < exercises.value.length; i++) {
+          const exercise = exercises.value[i];
+          const insertQuery = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
+          await databaseStore.getDatabase()?.run(insertQuery);
+        }
+
+        // Update Split in WorkoutTemplate
+        const updateQuery = `UPDATE WorkoutTemplate SET Split = '${currentSplits.value[0]}' WHERE Name = '${name.value}'`;
+        await databaseStore.getDatabase()?.run(updateQuery);
+      }
+
+      router.go(-1);
+      setTimeout(() => {
+        router.push(`/workouttemplate/${name.value}`);
+      }, 40);
+    }
+
     const query = `UPDATE WorkoutTemplate SET name = '${
       name.value
     }', Description = '${
       description.value
-    }', Color = '${color.value.toLowerCase()}' WHERE name = '${workout.value}'`;
+    }', Color = '${color.value.toLowerCase()}', Split = '${
+      currentSplits.value[0]
+    }' WHERE name = '${workout.value}'`;
     console.log(query);
     await databaseStore.getDatabase()?.run(query);
     // Delete every entry from workoutlist where workout is workout
@@ -438,7 +502,7 @@ const isTemplateNameUnique = async () => {
   console.log(res);
   console.log(res.includes(name.value));
 
-  if (res.includes(name.value)) {
+  if (res.includes(name.value) && name.value === "New Workout") {
     inputReferenceName.value.$el.classList.remove("ion-valid");
     inputReferenceName.value.$el.classList.add("ion-invalid");
     disableSaveButton.value = true;

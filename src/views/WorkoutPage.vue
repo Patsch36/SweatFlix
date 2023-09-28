@@ -20,6 +20,11 @@
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Workouts</ion-title>
+          <ion-icon
+            :icon="addCircleOutline"
+            slot="end"
+            class="newWorkoutIcon"
+            @click="router.push(`/workouttemplate/New Workout`)"></ion-icon>
         </ion-toolbar>
       </ion-header>
 
@@ -90,14 +95,27 @@
                 color="transparent"
                 id="colorpickerTrigger">
                 <ion-icon
-                  v-if="item.active"
+                  v-if="item.active && amountOfActiveWorkouts < 16"
                   slot="icon-only"
                   :icon="removeCircleOutline"
                   style="font-size: 36px"></ion-icon>
                 <ion-icon
-                  v-else
+                  v-if="!item.active"
                   slot="icon-only"
                   :icon="addCircleOutline"
+                  style="font-size: 36px"></ion-icon>
+              </ion-button>
+            </ion-item-option>
+          </ion-item-options>
+          <ion-item-options side="end">
+            <ion-item-option color="danger">
+              <ion-button
+                @click="deleteWorkout(item.Name)"
+                color="transparent"
+                id="colorpickerTrigger">
+                <ion-icon
+                  slot="icon-only"
+                  :icon="trashOutline"
                   style="font-size: 36px"></ion-icon>
               </ion-button>
             </ion-item-option>
@@ -143,13 +161,16 @@ import {
   removeCircleOutline,
   addCircleOutline,
   repeatOutline,
-  navigate,
+  trashOutline,
 } from "ionicons/icons";
 import ColorPicker from "@/components/colorPicker.vue";
 import { useRouter } from "vue-router";
 
+import { useActiveWorkoutsStore } from "@/stores/activeWorkoutsStore";
+
 const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
+const activeWorkoutsStore = useActiveWorkoutsStore();
 
 const workoutDisplaySegment = ref<string>("all");
 const slidingItems = ref<any>(null);
@@ -204,8 +225,13 @@ watch(workoutDisplaySegment, async (newValue) => {
 
 const amountOfActiveWorkouts = computed(() => {
   if (queryResults.value && queryResults.value.length > 0) {
-    return queryResults.value.filter((item: any) => item.active === 1).length;
+    const amount = queryResults.value.filter(
+      (item: any) => item.active === 1
+    ).length;
+    activeWorkoutsStore?.setActiveWorkouts(amount);
+    return amount;
   }
+  if (activeWorkoutsStore) activeWorkoutsStore.setActiveWorkouts(0);
   return 0;
 });
 
@@ -244,6 +270,24 @@ const setWorkoutColor = (event: any) => {
   databaseStore.getDatabase()?.execute(query);
 
   popOverShow.value = false;
+  loadWorkouts();
+  // Reset List in Dom for closing all slides (little timeout needed)
+  showList.value = false;
+  setTimeout(() => {
+    showList.value = true;
+  }, 0.01);
+};
+
+const deleteWorkout = (name: String) => {
+  // First delete all exercises from WorkoutList
+  const query1 = `DELETE FROM WorkoutList WHERE workoutPlan = '${name}';`;
+  console.log(query1);
+  databaseStore.getDatabase()?.execute(query1);
+
+  const query2 = `DELETE FROM WorkoutTemplate WHERE Name = '${name}';`;
+  console.log(query2);
+  databaseStore.getDatabase()?.execute(query2);
+
   loadWorkouts();
   // Reset List in Dom for closing all slides (little timeout needed)
   showList.value = false;
@@ -294,5 +338,10 @@ const setWorkoutColor = (event: any) => {
   flex-direction: row;
   align-items: center;
   margin-bottom: 5px;
+}
+
+.newWorkoutIcon {
+  font-size: 36px;
+  margin-right: 10px;
 }
 </style>
