@@ -15,6 +15,7 @@ import Tabbar from "./views/Tabbar.vue";
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "./stores/databaseStore";
 import { createTables, initTables, dropTables } from "./tables";
+import { store, initKeyValuePairs } from "./stores/IonicStorage";
 
 const dbInitialized = ref(false);
 const databaseStore = useDatabaseStore();
@@ -45,6 +46,12 @@ onBeforeMount(async () => {
   } catch (e) {
     alert("ERROR OPENING DB " + JSON.stringify(e));
   }
+
+  await store.create();
+  if (store.get("Active Plan") === undefined) {
+    await initKeyValuePairs();
+  }
+
   return {};
 });
 </script>

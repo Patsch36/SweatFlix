@@ -8,6 +8,8 @@ import WeightPage from "@/views/Weightpage.vue";
 import WorkoutDetailPage from "@/views/WorkoutDetailPage.vue";
 import WorkoutTemplatePage from "@/views/WorkoutTemplatePage.vue";
 import WorkoutTemplateEditPage from "@/views/WorkouTemplateEditPage.vue";
+import PlansView from "@/views/PlansView.vue";
+import PlanView from "@/views/PlanView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -53,6 +55,16 @@ const routes: Array<RouteRecordRaw> = [
     path: "/workouttemplateEdit/:id",
     name: "Workouttemplateedit",
     component: WorkoutTemplateEditPage,
+  },
+  {
+    path: "/plans",
+    name: "plans",
+    component: PlansView,
+  },
+  {
+    path: "/plan/:id",
+    name: "plan",
+    component: PlanView,
   },
 ];
 

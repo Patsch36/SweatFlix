@@ -30,7 +30,7 @@
 
       <ion-grid class="ion-margin-bottom">
         <ion-row>
-          <ion-col size="6" size-md="3">
+          <ion-col size="4" size-md="3">
             <ion-card color="primary">
               <ion-card-header>
                 <ion-card-subtitle>Active Workouts</ion-card-subtitle>
@@ -41,11 +41,19 @@
               </ion-card-header>
             </ion-card>
           </ion-col>
-          <ion-col size="6" size-md="3">
-            <ion-card color="primary">
+          <ion-col size="8" size-md="3">
+            <ion-card color="primary" @click="router.push('/plans')">
               <ion-card-header class="plan-card">
                 <ion-card-subtitle>Active Plan</ion-card-subtitle>
-                <ion-card-title>No Plan</ion-card-title>
+                <ion-card-title
+                  style="font-size: 22px"
+                  :class="{ biggerFont: activePlan.length < 12 }"
+                  >{{
+                    activePlan.length > 25
+                      ? activePlan.slice(0, 25) + "..."
+                      : activePlan
+                  }}</ion-card-title
+                >
                 <ion-icon :icon="repeatOutline" class="plan-icon"></ion-icon>
               </ion-card-header>
             </ion-card>
@@ -167,6 +175,7 @@ import ColorPicker from "@/components/colorPicker.vue";
 import { useRouter } from "vue-router";
 
 import { useActiveWorkoutsStore } from "@/stores/activeWorkoutsStore";
+import { store } from "@/stores/IonicStorage";
 
 const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
@@ -179,6 +188,8 @@ const popOverShow = ref<any>(null);
 let itemNameUpdate: String;
 
 const router = useRouter();
+
+const activePlan = ref<string>("");
 
 const loadWorkouts = async () => {
   let query = "";
@@ -209,6 +220,7 @@ const filterQueryResults = () => {
 
 onBeforeMount(async () => {
   workoutDisplaySegment.value = "active";
+  activePlan.value = await store.get("Active Plan");
 });
 
 watch(workoutDisplaySegment, async (newValue) => {
@@ -248,6 +260,8 @@ const handleWorkoutChange = (itemActive: Boolean, itemName: String) => {
   itemNameUpdate = itemName;
 
   popOverShow.value = true;
+  activePlan.value = "No Plan";
+  store.set("Active Plan", "No Plan");
 
   if (itemActive) {
     const query = `UPDATE WorkoutTemplate SET active = ${
@@ -256,6 +270,7 @@ const handleWorkoutChange = (itemActive: Boolean, itemName: String) => {
     databaseStore.getDatabase()?.execute(query);
     popOverShow.value = false;
     loadWorkouts();
+
     // Reset List in Dom for closing all slides (little timeout needed)
     showList.value = false;
     setTimeout(() => {
@@ -298,6 +313,22 @@ const deleteWorkout = (name: String) => {
 </script>
 
 <style scoped>
+ion-card {
+  height: 100px;
+}
+
+ion-card-subtitle {
+  font-size: 10px;
+}
+
+ion-card-title {
+  min-height: 40px;
+}
+
+.biggerFont {
+  font-size: 28px !important;
+}
+
 .noscroll {
   overflow: hidden !important;
   height: 80vh;

@@ -43,6 +43,7 @@
         <ion-chip
           v-for="workout in queryResults"
           :key="workout.Name"
+          @click="router.push(`/workouttemplate/${workout.Name}`)"
           :style="{
             color: `var(--${workout.Color}-color)`,
             backgroundColor: `var(--${workout.Color}-background)`,
@@ -127,12 +128,13 @@
               style="height: 150px"
               v-model="notes"></ion-textarea>
           </ion-item>
+          <p>{{ workout }}</p>
           <h2
             v-if="showExercises"
             v-for="(exercise, index) in exercises"
             :key="index"
             style="margin-top: 50px">
-            {{ exercise.exerciseName }}, {{ index }}
+            {{ exercise.exerciseName }}
             <ion-item v-for="set in exercise.sets" key="set">
               <div style="display: flex; flex-direction: column">
                 <h5>Set {{ set }}</h5>

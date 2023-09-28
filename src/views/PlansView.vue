@@ -1,0 +1,171 @@
+<template>
+  <ion-page style="height: calc(100vh - 100px)">
+    <ion-header :translucent="true">
+      <ion-toolbar>
+        <ion-title>Plans</ion-title>
+        <div class="icon">
+          <ion-icon
+            :icon="chevronBack"
+            @click="router.go(-1)"
+            size="large"
+            color="primary"></ion-icon>
+          <ion-label @click="router.go(-1)" color="primary">Cancel</ion-label>
+        </div>
+        <!-- <div
+          @click="saveWorkout()"
+          class="icon"
+          slot="end"
+          style="margin-right: 16px">
+          <ion-label color="primary">Save</ion-label>
+          <ion-icon
+            :icon="saveOutline"
+            style="font-size: 24px; margin-left: 8px"
+            color="primary"></ion-icon>
+        </div> -->
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content :fullscreen="true">
+      <ion-header collapse="condense">
+        <ion-toolbar>
+          <ion-title size="large">Plans</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <div style="padding-inline: 0.75rem">
+        <ion-grid class="ion-margin-bottom">
+          <ion-row>
+            <ion-col size="4" size-md="3">
+              <ion-card color="primary">
+                <ion-card-header>
+                  <ion-card-subtitle>Add new Plan</ion-card-subtitle>
+                  <ion-card-title style="text-align: center">+</ion-card-title>
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+            <ion-col size="8" size-md="3">
+              <ion-card
+                color="primary"
+                @click="router.push('/plans')"
+                v-if="activePlan">
+                <ion-card-header class="plan-card">
+                  <ion-card-subtitle>Active Plan</ion-card-subtitle>
+                  <ion-card-title
+                    style="font-size: 22px"
+                    :class="{ biggerFont: activePlan.length < 12 }">
+                    {{
+                      activePlan.length > 25
+                        ? activePlan.slice(0, 25) + "..."
+                        : activePlan
+                    }}</ion-card-title
+                  >
+                </ion-card-header>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+        <ion-list>
+          <ion-list-header>
+            <ion-label>Choose a plan:</ion-label>
+          </ion-list-header>
+          <ion-item-sliding v-for="plan in availablePlans" :key="plan.ID">
+            <ion-item @click="router.push(`/plan/${plan.ID}`)">
+              <ion-label>{{ plan.name }}</ion-label>
+            </ion-item>
+            <ion-item-options side="start">
+              <ion-item-option color="accent">
+                <ion-button color="transparent" @click="activatePlan(plan)">
+                  <ion-icon
+                    slot="icon-only"
+                    :icon="checkmarkCircleOutline"></ion-icon>
+                </ion-button>
+              </ion-item-option>
+            </ion-item-options>
+            <ion-item-options side="end">
+              <ion-item-option color="danger">
+                <ion-button color="transparent" @click="deletePlan(plan)">
+                  <ion-icon slot="icon-only" :icon="trash"></ion-icon>
+                </ion-button>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        </ion-list>
+      </div>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { useDatabaseStore } from "@/stores/databaseStore";
+import {
+  IonContent,
+  IonHeader,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonList,
+  IonListHeader,
+  IonItem,
+  IonLabel,
+  IonItemSliding,
+  IonItemOption,
+  IonItemOptions,
+  IonIcon,
+} from "@ionic/vue";
+import { useRoute, useRouter } from "vue-router";
+import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
+import { onBeforeMount, ref } from "vue";
+import { store } from "@/stores/IonicStorage";
+
+const router = useRouter();
+const databaseStore = useDatabaseStore();
+
+const activePlan = ref();
+const availablePlans = ref();
+
+const loadPlans = async () => {
+  const query = `SELECT * FROM Plan`;
+  const result = await databaseStore.getDatabase()?.query(query);
+  availablePlans.value = result?.values ? result.values : [];
+};
+
+const activatePlan = (plan: { ID: any; name: any }) => {
+  activePlan.value = plan.name;
+  store.set("Active Plan", plan.name);
+  router.go(-1);
+};
+
+const deletePlan = async (plan: { ID: any }) => {
+  const query = `DELETE FROM Plan WHERE id = ${plan.ID}`;
+  await databaseStore.getDatabase()?.execute(query);
+  await loadPlans();
+};
+
+onBeforeMount(async () => {
+  activePlan.value = await store.get("Active Plan");
+  activePlan.value ? activePlan.value : "No Active Plan";
+  await loadPlans();
+});
+</script>
+
+<style scoped>
+.icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+ion-card {
+  height: 100px;
+}
+
+ion-card-subtitle {
+  font-size: 10px;
+}
+
+ion-card-title {
+  min-height: 40px;
+}
+
+.biggerFont {
+  font-size: 28px !important;
+}
+</style>
