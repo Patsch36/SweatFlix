@@ -177,6 +177,7 @@
                   margin-left: auto;
                 ">
                 <ion-input
+                  label=""
                   v-model="exercise.sets"
                   placeholder="2"
                   style="
@@ -187,6 +188,7 @@
                   "></ion-input>
                 <span style="margin: 0 5px">x</span>
                 <ion-input
+                  label=""
                   v-model="exercise.reps"
                   placeholder="8-12"
                   style="
@@ -368,12 +370,12 @@ const saveWorkout = async () => {
 
     console.log(newWorkout.value);
     if (newWorkout.value) {
-      const activeWorkouts = activeWorkoutsStore.getActiveWorkouts();
+      const activeexercises = activeWorkoutsStore.getActiveWorkouts();
 
       const query = `INSERT INTO WorkoutTemplate (Name, Description, Color, active) VALUES ('${
         name.value
       }', '${description.value}', '${color.value.toLowerCase()}', ${
-        activeWorkouts < 16 ? 1 : 0
+        activeexercises < 16 ? 1 : 0
       })`;
       await databaseStore.getDatabase()?.run(query);
 
@@ -458,18 +460,17 @@ const confirmModal = async () => {
   let ids: any[] = [];
   modalExercises.value = modalExercises.value.map((exercise) => {
     if (exercise.sets || exercise.reps) {
-      exercises.value.push({
-        exerciseName: exercise.name,
-        sets: exercise.sets,
-        reps: exercise.reps,
-      });
       console.log(exercise);
+      const query = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
+      databaseStore.getDatabase()?.run(query);
+
       if (exercise.SubMuscle) ids.push(exercise.SubMuscle);
       exercise.sets = undefined;
       exercise.reps = "";
     }
     return exercise;
   });
+  await loadWorkoutExcercises();
   cancel();
 
   for (let i = 0; i < ids.length; i++) {
@@ -480,7 +481,7 @@ const confirmModal = async () => {
 
     muscles.value.push(answer[0].ID);
   }
-
+  muscles.value = exercises.value.map((exercise: any) => exercise.ID);
   currentSplits.value = getPossibleSplits(muscles.value);
   allMusclesOfSplit.value = getAllMusclesFromSplit(currentSplits.value[0]);
   missingMuscles.value = await musclesWithSubgroup(allMusclesOfSplit.value);
@@ -523,20 +524,54 @@ const handleReorder = async (event: CustomEvent) => {
     event.detail.to
   );
 
-  const item1 = exercises.value[event.detail.from];
-  const item2 = exercises.value[event.detail.to];
+  // const item1 = exercises.value[event.detail.from];
+  // const item2 = exercises.value[event.detail.to];
 
-  // Change ID of both elements in database
-  const query1 = `UPDATE WorkoutList SET ID = -1 WHERE workoutPlan = '${workout.value}' AND ID = ${item1.WID}`;
-  const query2 = `UPDATE WorkoutList SET ID = ${item1.WID} WHERE workoutPlan = '${workout.value}' AND ID = ${item2.WID}`;
-  const query3 = `UPDATE WorkoutList SET ID = ${item2.WID} WHERE workoutPlan = '${workout.value}' AND ID = -1`;
-  await databaseStore.getDatabase()?.run(query1);
-  await databaseStore.getDatabase()?.run(query2);
-  await databaseStore.getDatabase()?.run(query3);
+  const to = event.detail.to;
+  const from = event.detail.from;
 
-  await console.log("Changed", item1, item2);
+  const WIDs = exercises.value.map((e: { WID: any }) => e.WID);
+  console.log(WIDs);
 
-  await loadWorkoutExcercises();
+  const ind = exercises.value.findIndex(
+    (e: { WID: any }) => e.WID === WIDs[from]
+  );
+  const draggedItem = exercises.value[ind];
+  console.log(draggedItem);
+
+  if (from < to) {
+    for (let i = from; i < to; i++) {
+      const index = exercises.value.findIndex(
+        (e: { WID: any }) => e.WID === WIDs[i + 1]
+      );
+      console.log(i - 1, exercises.value[index]);
+      exercises.value[index].WID = WIDs[i];
+    }
+    exercises.value[ind].WID = WIDs[to];
+  } else if (from > to) {
+    for (let i = from - 1; i >= to; i--) {
+      const index = exercises.value.findIndex(
+        (e: { WID: any }) => e.WID === WIDs[i]
+      );
+      console.log(i + 1, exercises.value[index]);
+      exercises.value[index].WID = WIDs[i + 1];
+    }
+    exercises.value[ind].WID = WIDs[to];
+  }
+
+  // Delete all existing Exercises from Database
+  const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
+  await databaseStore.getDatabase()?.run(deleteQuery);
+  //Save new Exercis Order to Database WorkoutList
+  for (let i = 0; i < exercises.value.length; i++) {
+    const exercise = exercises.value[i];
+    const insertQuery = `INSERT INTO WorkoutList (ID, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}, ${exercise.sets}, '${exercise.reps}')`;
+    await databaseStore.getDatabase()?.run(insertQuery);
+  }
+
+  // await console.log("Changed", item1, item2);
+
+  // await loadWorkoutExcercises();
 
   // Finish the reorder and position the item in the DOM based on
   // where the gesture ended. This method can also be called directly
