@@ -86,6 +86,7 @@
                 subHeader: 'Select your workout',
               }"
               interface="action-sheet"
+              class="my-custom-class"
               placeholder="Select One"
               ref="input"
               v-model="workout">
@@ -162,6 +163,7 @@
                       header: 'Units',
                     }"
                     interface="action-sheet"
+                    class="my-custom-class"
                     placeholder="Unit"
                     @ion-blur="
                       leaveUnit(exercise.exerciseName, set, $event.target.value)

@@ -72,13 +72,20 @@ ion-datetime {
     border-radius: 20px;
   }
 
-  ion-action-sheet.my-custom-class {
+  ion-action-sheet {
     --background: var(--ion-color-dark-shade);
     margin-inline: auto;
     --ion-action-sheet-header-background: var(--ion-color-dark-shade);
     color: var(--ion-color-dark-contrast);
   }
-  ion-action-sheet.my-custom-class .action-sheet-group {
+
+  .action-sheet-group
+  {
+    --background: var(--ion-color-dark-shade);
+    --ion-action-sheet-header-background: var(--ion-color-dark-shade);
+  }
+
+  ion-action-sheet .action-sheet-group {
     border-radius: 16px;
     border: 5px solid var(--ion-color-primary); 
     -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
@@ -87,28 +94,28 @@ ion-datetime {
     5px 6px 33px 4px rgba(0, 0, 0, 0.33);
   }
 
-  ion-action-sheet.my-custom-class .action-sheet-button,
-    ion-action-sheet.my-custom-class .action-sheet-button.ion-focused {
-      color: var(--ion-color-dark-contrast);
+  .action-sheet-button,
+     .action-sheet-button.ion-focused {
+      color: var(--ion-color-dark-contrast) !important;
       --ion-action-sheet-cancel-button-color: var(--ion-color-accent);
     }
 
-  ion-action-sheet.my-custom-class .action-sheet-destructive {
+  ion-action-sheet .action-sheet-destructive {
     color: var(--ion-color-danger);
   }
 
-  ion-action-sheet.my-custom-class .action-sheet-cancel {
+  ion-action-sheet .action-sheet-cancel {
     /* color: var(--ion-color-danger); */
-    color: var(--ion-color-accent)
+    color: var(--ion-color-accent) !important
   }
 
   @media (any-hover: hover) {
-    ion-action-sheet.my-custom-class .action-sheet-button:hover {
-      color: var(--ion-color-accent);
+    ion-action-sheet .action-sheet-button:hover {
+      color: var(--ion-color-accent) !important;
     }
   }
 
-  ion-action-sheet.my-custom-class ion-backdrop {
+  ion-action-sheet ion-backdrop {
     opacity: 0.6;
   }
 
