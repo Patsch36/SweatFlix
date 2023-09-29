@@ -15,7 +15,6 @@
 
       <div style="padding-inline: 0.75rem">
         <h1>Dashboard</h1>
-        <p>{{ showNextLastWorkout }}</p>
         <ion-segment
           ref="NextLastWorkoutSlider"
           :value="showNextLastWorkout"
@@ -35,13 +34,15 @@
                 v-if="lastWorkout"
                 class="adaptive-card"
                 @click="
-                  router.push(
-                    `/workoutdetails/${lastWorkout.startdate.slice(0, 10)}`
+                  handleCardClick(
+                    lastWorkout.startdate,
+                    lastWorkout.workoutname
                   )
                 ">
                 <ion-card-header>
                   <ion-card-subtitle>Last Workout</ion-card-subtitle>
                   <ion-card-title
+                    v-if="lastWorkout.workoutname"
                     style="font-size: 22px"
                     class="adaptive-title"
                     :class="{
@@ -61,14 +62,16 @@
                 color="primary"
                 class="adaptive-card"
                 @click="
-                  router.push(
-                    `/workoutdetails/${lastWorkout.startdate.slice(0, 10)}`
+                  handleCardClick(
+                    nextWorkout.startdate,
+                    nextWorkout.workoutname
                   )
                 "
                 v-if="nextWorkout">
                 <ion-card-header>
                   <ion-card-subtitle>Next Workout</ion-card-subtitle>
                   <ion-card-title
+                    v-if="nextWorkout.workoutname"
                     style="font-size: 22px"
                     class="adaptive-title"
                     :class="{
@@ -86,7 +89,7 @@
           </ion-row>
         </ion-grid>
 
-        <h2 @click="router.push('/weight')">Gewicht</h2>
+        <h2 @click="router.push('/weight')">Weight</h2>
         <ion-grid @click="router.push('/weight')">
           <ion-row>
             <ion-col size="6" size-md="3">
@@ -115,11 +118,6 @@
       </div>
     </ion-content>
   </ion-page>
-
-  <!-- <BaseLayout pageTitle="Home">
-    <ion-button color="primary" router-link="/calendar">Home</ion-button>
-    test
-    </BaseLayout>  -->
 </template>
 
 <script setup lang="ts">
@@ -138,6 +136,9 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonIcon,
 } from "@ionic/vue";
 import { useRouter } from "vue-router";
 import { onBeforeMount, onMounted, ref } from "vue";
@@ -145,7 +146,7 @@ import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
-import { newspaper } from "ionicons/icons";
+import { newspaper, today } from "ionicons/icons";
 
 const NextLastWorkoutSlider = ref();
 
@@ -157,22 +158,45 @@ const nextWorkout = ref<any>();
 const showNextLastWorkout = ref();
 
 const getLastWorkout = async () => {
-  try {
-    const resp = await databaseStore.getDatabase()
-      ?.query(`SELECT WorkoutName, startdate FROM workout
+  if (NextLastWorkoutSlider.value.$el.value === "calendar") {
+    try {
+      const resp = await databaseStore.getDatabase()
+        ?.query(`SELECT WorkoutName, startdate FROM workout
     ORDER BY startdate DESC
     LIMIT 1;`);
 
-    lastWorkout.value = resp?.values
-      ? resp.values[0]
-      : { workoutname: "No Workout", startdate: "" };
-  } catch (e) {
-    alert("ERROR initializing DB " + JSON.stringify(e));
+      lastWorkout.value = resp?.values
+        ? resp.values[0]
+        : { workoutname: "No Workout", startdate: "" };
+    } catch (e) {
+      alert("ERROR initializing DB " + JSON.stringify(e));
+    }
+  } else {
+    const activePlan = await store.get("Active Plan");
+    const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
+    const resp = await databaseStore.getDatabase()?.query(query);
+    const scheme = resp?.values ? resp.values[0].scheme : "";
+    const wi = await store.get("Current Workout Index");
+    const workoutIndex = scheme.length + ((wi - 1) % scheme.length);
+    const todaysSchemeValue = scheme[workoutIndex];
+
+    if (todaysSchemeValue === "r") {
+      lastWorkout.value = { workoutname: "Restday", startdate: "" };
+    } else {
+      // count how many 't' are in scheme before todaysSchemeValue + 1
+      const count = scheme.slice(0, workoutIndex).split("t").length;
+      const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
+      const resp = await databaseStore.getDatabase()?.query(query);
+      lastWorkout.value = resp?.values
+        ? { workoutname: resp.values[0].WorkoutTemplateName, startdate: "" }
+        : { workoutname: "No Workout", startdate: "" };
+    }
   }
 };
 
 const getNextWorkout = async () => {
-  const query = `
+  if (NextLastWorkoutSlider.value.$el.value === "calendar") {
+    const query = `
     SELECT *
     FROM Workout w
     JOIN WorkoutTemplate wt ON w.WorkoutName = wt.name
@@ -186,10 +210,30 @@ const getNextWorkout = async () => {
     LIMIT 1;
   `;
 
-  const resp = await databaseStore.getDatabase()?.query(query);
-  nextWorkout.value = resp?.values
-    ? resp.values[0]
-    : { workoutname: "No Workout", startdate: "" };
+    const resp = await databaseStore.getDatabase()?.query(query);
+    nextWorkout.value = resp?.values
+      ? resp.values[0]
+      : { workoutname: "No Workout", startdate: "" };
+  } else {
+    const workoutIndex = await store.get("Current Workout Index");
+    const activePlan = await store.get("Active Plan");
+    const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
+    const resp = await databaseStore.getDatabase()?.query(query);
+    const scheme = resp?.values ? resp.values[0].scheme : "";
+    const todaysSchemeValue = scheme[workoutIndex];
+
+    if (todaysSchemeValue === "r") {
+      nextWorkout.value = { workoutname: "Restday", startdate: "" };
+    } else {
+      // count how many 't' are in scheme before todaysSchemeValue
+      const count = scheme.slice(0, workoutIndex).split("t").length - 1;
+      const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
+      const resp = await databaseStore.getDatabase()?.query(query);
+      nextWorkout.value = resp?.values
+        ? { workoutname: resp.values[0].WorkoutTemplateName, startdate: "" }
+        : { workoutname: "No Workout", startdate: "" };
+    }
+  }
 };
 
 const getCurrentWeight = async () => {
@@ -203,18 +247,31 @@ const getCurrentWeight = async () => {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
 };
+
+const handleCardClick = (startdate: string | any[], name: string) => {
+  if (startdate.length) {
+    router.push(`/workoutdetails/${startdate}`);
+  } else if (name !== "Restday" && name !== "No Workout") {
+    router.push(`/workouttemplate/${name}`);
+  }
+};
+
 onMounted(async () => {
   getCurrentWeight();
-  getLastWorkout();
-  getNextWorkout();
 
   showNextLastWorkout.value =
     (await store.get("showNextLastWorkout")) || "calendar";
+  NextLastWorkoutSlider.value.$el.value = showNextLastWorkout.value;
+  getLastWorkout();
+  getNextWorkout();
 });
 
 const storeNewValue = async () => {
-  console.log(NextLastWorkoutSlider.value.$el.value);
+  // console.log(NextLastWorkoutSlider.value.$el.value);
   await store.set("showNextLastWorkout", NextLastWorkoutSlider.value.$el.value);
+
+  getNextWorkout();
+  getLastWorkout();
 };
 </script>
 

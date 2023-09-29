@@ -20,6 +20,33 @@ import { store, initKeyValuePairs } from "./stores/IonicStorage";
 const dbInitialized = ref(false);
 const databaseStore = useDatabaseStore();
 
+const updateCurrentPlanIndex = async () => {
+  const currentWorkoutIndexChanged = await store.get("Current Workout Index");
+  let currentWorkoutIndex = await store.get("Current Workout Index");
+
+  const today = new Date().toLocaleDateString();
+
+  const activePlan = await store.get("Active Plan");
+  const query = `SELECT scheme FROM Plan WHERE Name = '${activePlan}'`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  const scheme = resp?.values ? resp.values[0][0] : "NotFound";
+
+  if (scheme !== "NotFound") {
+    const currentDate = new Date(today);
+    const changedDate = new Date(currentWorkoutIndexChanged);
+
+    const timeDifference = Math.abs(
+      changedDate.getTime() - currentDate.getTime()
+    );
+    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+    for (let i = 0; i < daysDifference; i++) {
+      currentWorkoutIndex = currentWorkoutIndex + (1 % scheme.length);
+    }
+    await store.set("Current Workout Index", currentWorkoutIndex);
+  }
+};
+
 onBeforeMount(async () => {
   try {
     const sqlite = new SQLiteConnection(CapacitorSQLite);
@@ -47,10 +74,14 @@ onBeforeMount(async () => {
     alert("ERROR OPENING DB " + JSON.stringify(e));
   }
 
+  document.body.classList.add("dark");
+
   await store.create();
   if (store.get("Active Plan") === undefined) {
     await initKeyValuePairs();
   }
+
+  updateCurrentPlanIndex();
 
   return {};
 });

@@ -1,5 +1,20 @@
 <template>
   <ion-page style="height: calc(100vh - 100px)">
+    <!-- <ion-action-sheet
+      :is-open="isAlertOpen"
+      class="my-custom-class"
+      header="Activate new Plan?"
+      sub-header="Your current plan will be overwritten."
+      :buttons="actionSheetButtons"
+      @didDismiss="isAlertOpen = false"></ion-action-sheet> -->
+
+    <ion-alert
+      :is-open="isAlertOpen"
+      header="Activate new plan?"
+      sub-header="Your current plan will be overwritten."
+      :buttons="alertButtons"
+      @didDismiss="logResult($event)"></ion-alert>
+
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>Plans</ion-title>
@@ -110,10 +125,19 @@ import {
   IonItemOption,
   IonItemOptions,
   IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonButton,
+  IonActionSheet,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, ref, shallowRef } from "vue";
 import { store } from "@/stores/IonicStorage";
 
 const router = useRouter();
@@ -121,6 +145,55 @@ const databaseStore = useDatabaseStore();
 
 const activePlan = ref();
 const availablePlans = ref();
+const plan = shallowRef();
+
+const isAlertOpen = ref(false);
+const actionSheetButtons = [
+  {
+    text: "Delete",
+    role: "destructive",
+    data: {
+      action: "delete",
+    },
+  },
+  {
+    text: "Share",
+    data: {
+      action: "share",
+    },
+  },
+  {
+    text: "Cancel",
+    role: "cancel",
+    data: {
+      action: "cancel",
+    },
+  },
+];
+const alertButtons = [
+  {
+    text: "Cancel",
+    role: "cancel",
+    handler: () => {
+      console.log("Alert canceled");
+    },
+  },
+  {
+    text: "OK",
+    role: "confirm",
+    handler: () => {
+      activePlan.value = plan.value.name;
+      store.set("Active Plan", plan.value.name);
+      store.set("Current Workout Index", 0);
+      router.go(-1);
+    },
+  },
+];
+
+const logResult = (ev: CustomEvent) => {
+  console.log(`Dismissed with role: ${ev.detail.role}`);
+  isAlertOpen.value = false;
+};
 
 const loadPlans = async () => {
   const query = `SELECT * FROM Plan`;
@@ -128,10 +201,9 @@ const loadPlans = async () => {
   availablePlans.value = result?.values ? result.values : [];
 };
 
-const activatePlan = (plan: { ID: any; name: any }) => {
-  activePlan.value = plan.name;
-  store.set("Active Plan", plan.name);
-  router.go(-1);
+const activatePlan = (_plan: { ID: any; name: any }) => {
+  isAlertOpen.value = true;
+  plan.value = _plan;
 };
 
 const deletePlan = async (plan: { ID: any }) => {

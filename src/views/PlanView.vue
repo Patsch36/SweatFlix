@@ -32,7 +32,53 @@
         </ion-toolbar>
       </ion-header>
       <div style="padding-inline: 0.75rem">
-        <h1>{{ plan }}</h1>
+        <ion-grid v-if="plan">
+          <ion-row>
+            <ion-col>
+              <b>Description:</b>
+              <br />
+              {{ plan.description }}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <b>Type:</b>
+              <br />
+              {{ plan.type }}
+            </ion-col>
+            <ion-col>
+              <b>Place:</b>
+              <br />
+              {{ plan.place }}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <b>Split:</b>
+              <br />
+              {{ plan.split }}
+            </ion-col>
+            <ion-col>
+              <b>Scheme:</b>
+              <br />
+              {{ plan.scheme }}
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+
+        <ion-list ref="list">
+          <ion-list-header>
+            <ion-label class="mt-0">Workout</ion-label>
+          </ion-list-header>
+          <ion-reorder-group
+            :disabled="false"
+            @ionItemReorder="handleReorder($event)">
+            <ion-item v-for="workout in workouts" key="workout.OrderIndex">
+              <ion-label>{{ workout.WorkoutTemplateName }} </ion-label>
+              <ion-reorder slot="end"></ion-reorder>
+            </ion-item>
+          </ion-reorder-group>
+        </ion-list>
       </div>
     </ion-content>
   </ion-page>
@@ -48,6 +94,15 @@ import {
   IonToolbar,
   IonLabel,
   IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonReorderGroup,
+  IonReorder,
+  IonInput,
+  IonList,
+  IonListHeader,
+  IonItem,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 import { chevronBack, saveOutline } from "ionicons/icons";
@@ -59,16 +114,120 @@ const databaseStore = useDatabaseStore();
 const route = useRoute();
 
 const plan = ref();
+const workouts = ref();
+
+const list = ref();
 
 const loadPlan = async () => {
   const query = `SELECT * FROM Plan WHERE ID = ${route.params.id}`;
   const resp = await databaseStore.getDatabase()?.query(query);
-  plan.value = resp?.values ? resp.values[0] : { name: "NotFound" };
+  plan.value = resp?.values
+    ? resp.values[0]
+    : {
+        name: "NotFound",
+        ID: 0,
+        description: "NotFound",
+        type: "NotFound",
+        place: "NotFound",
+        split: "NotFound",
+        scheme: "NotFound",
+      };
 };
 
-onBeforeMount(() => {
-  loadPlan();
+const loadWorkouts = async () => {
+  const query = `SELECT WorkoutTemplateName, OrderIndex FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID}`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  const ws = resp?.values ? resp.values : [];
+
+  ws.sort((a: any, b: any) => {
+    return a.OrderIndex - b.OrderIndex;
+  });
+
+  // Iterate through plan.value.scheme. If t, insert first element of ws and remove ist. if R, insert {WorkoutTemplateName: 'Restday'}. Make OrderIndex rising.
+  const newWs = [];
+  for (let i = 0; i < plan.value.scheme.length; i++) {
+    if (plan.value.scheme[i] === "t") {
+      newWs.push({
+        WorkoutTemplateName: ws[0].WorkoutTemplateName,
+        OrderIndex: i,
+      });
+      ws.shift();
+    } else if (plan.value.scheme[i] === "r") {
+      newWs.push({ WorkoutTemplateName: "Restday", OrderIndex: i });
+    }
+  }
+
+  workouts.value = newWs;
+};
+
+onBeforeMount(async () => {
+  await loadPlan();
+  await loadWorkouts();
 });
+
+const handleReorder = async (event: CustomEvent) => {
+  // The `from` and `to` properties contain the index of the item
+  // when the drag started and ended, respectively
+  await console.log(
+    "Dragged from index",
+    event.detail.from,
+    "to",
+    event.detail.to
+  );
+
+  const to = event.detail.to;
+  const from = event.detail.from;
+
+  const ind = workouts.value.findIndex(
+    (w: { OrderIndex: any }) => w.OrderIndex === from
+  );
+  const draggedItem = workouts.value[ind].WorkoutTemplateName;
+  console.log(draggedItem);
+
+  if (from < to) {
+    for (let i = from; i < to; i++) {
+      const index = workouts.value.findIndex(
+        (w: { OrderIndex: any }) => w.OrderIndex === i + 1
+      );
+      console.log(i - 1, workouts.value[index]);
+      workouts.value[index].OrderIndex = i;
+    }
+    workouts.value[ind].OrderIndex = to;
+  } else if (from > to) {
+    for (let i = from - 1; i >= to; i--) {
+      const index = workouts.value.findIndex(
+        (w: { OrderIndex: any }) => w.OrderIndex === i
+      );
+      console.log(i + 1, workouts.value[index]);
+      workouts.value[index].OrderIndex = i + 1;
+    }
+    workouts.value[ind].OrderIndex = to;
+  }
+
+  let newScheme = "";
+  let dbOrderIndex = 0;
+  for (let i = 0; i < workouts.value.length; i++) {
+    const itemIndex = workouts.value.findIndex(
+      (w: { OrderIndex: any }) => w.OrderIndex === i
+    );
+
+    if (workouts.value[itemIndex].WorkoutTemplateName === "Restday") {
+      newScheme += "r";
+    } else {
+      newScheme += "t";
+      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].WorkoutTemplateName}'`;
+      console.log(query);
+      await databaseStore.getDatabase()?.query(query);
+      dbOrderIndex += 1;
+    }
+  }
+
+  plan.value.scheme = newScheme;
+  const query = `UPDATE Plan SET Scheme = '${newScheme}' WHERE ID = ${plan.value.ID}`;
+  await databaseStore.getDatabase()?.query(query);
+
+  await event.detail.complete();
+};
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <template>
-  <ion-page>
+  <ion-page style="height: calc(100vh - 100px)">
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>Profile</ion-title>

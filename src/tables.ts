@@ -41,6 +41,7 @@ export const createTables = async () => {
     } catch {
       tableCreations += 1;
     }
+
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS WorkoutTemplate (
         Name TEXT PRIMARY KEY,
@@ -51,6 +52,23 @@ export const createTables = async () => {
         active INTEGER,
         FOREIGN KEY (PlanID) REFERENCES Plan(ID)
     );`);
+
+    try {
+      await databaseStore
+        .getDatabase()
+        ?.query("SELECT * FROM WorkoutTemplatePlan;");
+    } catch {
+      tableCreations += 1;
+    }
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS WorkoutTemplatePlan (
+    WorkoutTemplateName TEXT,
+    PlanID INTEGER,
+    OrderIndex INTEGER,
+    FOREIGN KEY (WorkoutTemplateName) REFERENCES WorkoutTemplate(Name),
+    FOREIGN KEY (PlanID) REFERENCES Plan(ID)
+  );`);
 
     try {
       await databaseStore.getDatabase()?.query("SELECT * FROM weight;");
@@ -182,20 +200,45 @@ export const initTables = async () => {
     promise = await databaseStore.getDatabase()
       ?.run(`INSERT INTO WorkoutTemplate (Name, PlanID, Split, Description, Color, active)
       VALUES 
-          ('Push-Request Workout', 3, 'Push', 'A push workout that will help you handle all your push requests.', 'navy', 0),
+          ('Push-Request Workout', 3, 'Push', 'A push workout that will help you handle all your push requests.', 'magenta', 0),
           ('Pull-Request Workout', 3, 'Pull', 'A pull workout that will help you handle all your pull requests.', 'lime', 0),
           ('Leg-Endary Code Workout', 3, 'Legs', 'A leg workout that will help you maintain your leg-endary code.', 'cerulean', 0),
           ('Full-Body Debugging Workout', 1, 'FullBody', 'A full-body workout that will help you debug your entire system.', 'coral', 0),
-          ('Upper-Body Programming Workout', 2, 'Upperbody', 'An upper-body workout that will help you program your upper body to be stronger.', 'navy', 0),
+          ('Upper-Body Programming Workout', 2, 'Upperbody', 'An upper-body workout that will help you program your upper body to be stronger.', 'magenta', 0),
           ('Lower-Body Programming Workout', 1, 'Lowerbody', 'A lower-body workout that will help you program your lower body to be stronger.', 'lime', 0),
           ('Full-Body Push Workout', 2, 'FullBodyPush', 'A full-body push workout that will help you push your limits.', 'cerulean', 0),
           ('Full-Body Pull Workout', 2, 'FullBodyPull', 'A full-body pull workout that will help you pull your weight.', 'coral', 0),
-          ('Chest-Code Workout', 4, 'Chest', 'A chest workout that will help you debug your upper body.', 'navy', 1),
+          ('Chest-Code Workout', 4, 'Chest', 'A chest workout that will help you debug your upper body.', 'magenta', 1),
           ('Back-End Workout', 4, 'Back', 'A back workout that will strengthen your back-end.', 'lime', 1),
           ('Arm-Assembly Workout', 4, 'Arms', 'An arm workout that will help you assemble stronger arms.', 'cerulean', 1),
           ('Leg-acy Code Workout', 4, 'Legs', 'A leg workout that will help you maintain your leg-acy code.', 'coral', 1);`);
 
     tableInitialisations += promise?.changes?.changes || 0;
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO WorkoutTemplatePlan (WorkoutTemplateName, PlanID, OrderIndex)
+      VALUES 
+        ('Push-Request Workout', 1, 1),
+        ('Pull-Request Workout', 1, 2),
+        ('Leg-Endary Code Workout', 1, 3),
+        ('Upper-Body Programming Workout', 2, 1),
+        ('Lower-Body Programming Workout', 2, 2),
+        ('Full-Body Debugging Workout', 3, 1),
+        ('Chest-Code Workout', 4, 1),
+        ('Back-End Workout', 4, 2),
+        ('Leg-Endary Code Workout', 4, 3),
+        ('Arm-Assembly Workout', 4, 4),
+        ('Full-Body Push Workout', 5, 1),
+        ('Full-Body Pull Workout', 5, 2),
+        ('Push-Request Workout', 6, 1),
+        ('Pull-Request Workout', 6, 2),
+        ('Leg-Endary Code Workout', 6, 3),
+        ('Full-Body Debugging Workout', 6, 4),
+        ('Push-Request Workout', 7, 1),
+        ('Pull-Request Workout', 7, 2),
+        ('Leg-Endary Code Workout', 7, 3),
+        ('Upper-Body Programming Workout', 7, 4),
+        ('Lower-Body Programming Workout', 7, 4);`);
 
     promise = await databaseStore.getDatabase()
       ?.run(`INSERT INTO Workout (startdate, enddate, note, workoutname)
@@ -210,29 +253,56 @@ export const initTables = async () => {
     promise = await databaseStore.getDatabase()
       ?.run(`INSERT INTO Exercise (MuscleGroup, Name, Description, Image)
       VALUES
-          (1, 'Incline Bench Press', 'An exercise that targets the upper chest muscles.', ''),
-          (2, 'Bench Press', 'An exercise that targets the middle chest muscles.', ''),
-          (3, 'Decline Bench Press', 'An exercise that targets the lower chest muscles.', ''),
-          (4, 'Pull-Up', 'An exercise that targets the upper latissimus dorsi muscles.', ''),
-          (5, 'Seated Row', 'An exercise that targets the lower latissimus dorsi muscles.', ''),
-          (6, 'Shrug', 'An exercise that targets the trapezius muscles.', ''),
-          (7, 'Neck Extension', 'An exercise that targets the neck muscles.', ''),
-          (8, 'Incline Dumbbell Curl', 'An exercise that targets the long head of the biceps brachii muscle.', ''),
-          (9, 'Preacher Curl', 'An exercise that targets the short head of the bicUeps brachii muscle.', ''),
-          (10, 'Hammer Curl', 'An exercise that targets the brachialis muscle.', ''),
-          (11, 'Overhead Triceps Extension', 'An exercise that targets the long head of the triceps brachii muscle.', ''),
-          (12, 'Triceps Pushdown', 'An exercise that targets the medial head of the triceps brachii muscle.', ''),
-          (13, 'Skull Crusher', 'An exercise that targets the lateral head of the triceps brachii muscle.', ''),
-          (14, 'Leg Extension', 'An exercise that targets the leg extensor muscles.', ''),
-          (15, 'Leg Curl', 'An exercise that targets the leg flexor muscles.', ''),
-          (16, 'Hip Adduction', 'An exercise that targets the leg adductor muscles.', ''),
-          (17, 'Calf Raise', 'An exercise that targets the calf muscles.', ''),
-          (18, 'Front Raise', 'An exercise that targets the anterior deltoid muscle.', ''),
-          (19, 'Reverse Fly', 'An exercise that targets the posterior deltoid muscle.', ''),
-          (20, 'Lateral Raise', 'An exercise that targets the lateral deltoid muscle.', ''),
-          (21,'Crunch','An exercise that targets the upper rectus abdominis muscle.',''),
-          (22,'Reverse Crunch','An exercise that targets the lower rectus abdominis muscle.',''),
-          (23,'Russian Twist','An exercise that targets the internal and external oblique muscles.','');`);
+          (1, 'Incline Bench Press', 'An exercise that targets the upper chest muscles. Lie on an incline bench and lift the barbell or dumbbells upwards, focusing on your upper chest.', ''),
+          (2, 'Bench Press', 'An exercise that targets the middle chest muscles. Lie flat on a bench and press the barbell or dumbbells upwards, engaging your middle chest muscles.', ''),
+          (3, 'Decline Bench Press', 'An exercise that targets the lower chest muscles. Lie on a decline bench and lift the barbell or dumbbells upwards, emphasizing your lower chest.', ''),
+          (4, 'Pull-Up', 'An exercise that targets the upper latissimus dorsi muscles. Hang from a pull-up bar and pull your body up, squeezing your upper lats.', ''),
+          (5, 'Seated Row', 'An exercise that targets the lower latissimus dorsi muscles. Sit down and row the weight towards your torso, engaging your lower lats.', ''),
+          (6, 'Shrug', 'An exercise that targets the trapezius muscles. Lift your shoulders upwards, holding weights in your hands, to work on your trapezius.', ''),
+          (7, 'Neck Extension', 'An exercise that targets the neck muscles. Tilt your head backward against resistance to strengthen your neck muscles.', ''),
+          (8, 'Incline Dumbbell Curl', 'An exercise that targets the long head of the biceps brachii muscle. Sit on an incline bench and curl dumbbells, focusing on the long head of your biceps.', ''),
+          (9, 'Preacher Curl', 'An exercise that targets the short head of the biceps brachii muscle. Use a preacher bench to isolate and work on the short head of your biceps.', ''),
+          (10, 'Hammer Curl', 'An exercise that targets the brachialis muscle. Curl dumbbells with a neutral grip to engage and strengthen your brachialis.', ''),
+          (11, 'Overhead Triceps Extension', 'An exercise that targets the long head of the triceps brachii muscle. Extend your arms overhead with a weight, focusing on the long head of your triceps.', ''),
+          (12, 'Triceps Pushdown', 'An exercise that targets the medial head of the triceps brachii muscle. Use a cable machine to push down the bar, working on your medial triceps.', ''),
+          (13, 'Skull Crusher', 'An exercise that targets the lateral head of the triceps brachii muscle. Lower a barbell towards your forehead, engaging your lateral triceps.', ''),
+          (14, 'Leg Extension', 'An exercise that targets the leg extensor muscles. Use a leg extension machine to straighten your legs against resistance, working on your leg extensors.', ''),
+          (15, 'Leg Curl', 'An exercise that targets the leg flexor muscles. Use a leg curl machine to curl your legs towards your buttocks, engaging your leg flexors.', ''),
+          (16, 'Hip Adduction', 'An exercise that targets the leg adductor muscles. Use a hip adduction machine to bring your legs together against resistance, working on your adductors.', ''),
+          (17, 'Calf Raise', 'An exercise that targets the calf muscles. Rise up on your toes while holding weights, focusing on your calf muscles.', ''),
+          (18, 'Front Raise', 'An exercise that targets the anterior deltoid muscle. Lift weights in front of you, working on your anterior deltoid.', ''),
+          (19, 'Reverse Fly', 'An exercise that targets the posterior deltoid muscle. Bend forward and lift weights to your sides, engaging your posterior deltoid.', ''),
+          (20, 'Lateral Raise', 'An exercise that targets the lateral deltoid muscle. Lift weights to your sides, focusing on your lateral deltoid.', ''),
+          (21, 'Crunch', 'An exercise that targets the upper rectus abdominis muscle. Lie on your back and crunch your upper body towards your knees, working on your upper abs.', ''),
+          (22, 'Reverse Crunch', 'An exercise that targets the lower rectus abdominis muscle. Lift your legs towards your chest, engaging your lower abs.', ''),
+          (23, 'Russian Twist', 'An exercise that targets the internal and external oblique muscles. Sit and twist your torso to work on your obliques.', '');`);
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO Exercise (MuscleGroup, Name, Description, Image)
+      VALUES
+          (1, 'Dumbbell Flyes', 'This exercise targets the upper chest muscles. Lie on an incline bench with a dumbbell in each hand. Extend your arms above you with a slight bend at the elbows. Lower your arms out to the sides in a wide arc until you feel a stretch in your chest. Return your arms back to the starting position.', ''),
+          (2, 'Chest Dips', 'This exercise targets the middle chest muscles. Hold onto the parallel bars of a dip station and lower your body until your upper arms are parallel to the floor. Push back up until your arms are fully extended.', ''),
+          (3, 'Cable Crossover', 'This exercise targets the lower chest muscles. Stand in the middle of a cable machine with the cables set to high. Grab the handles and pull them down and across your body. Return to the start position in a controlled manner.', ''),
+          (4, 'Lat Pulldown', 'This exercise targets the upper latissimus dorsi muscles. Sit at a lat pulldown station and grab the bar with an overhand grip that’s just beyond shoulder width. Pull the bar down to your chest, then return slowly to the start position.', ''),
+          (5, 'Deadlift', 'This exercise targets the lower latissimus dorsi muscles. Stand with feet hip-width apart and bend at your hips and knees to grab a barbell with an overhand grip. Keeping your lower back naturally arched, pull your torso up and thrust your hips forward as you stand up with the barbell.', ''),
+          (6, 'Dumbbell Shrug', 'This exercise targets the trapezius muscles. Stand holding dumbbells at arm’s length by your sides. Shrug your shoulders as high as you can.', ''),
+          (7, 'Neck Flexion', 'This exercise targets the neck muscles. Sit on a bench and place a weight plate on the back of your head. Slowly lower your head towards your chest, then lift it back up.', ''),
+          (8, 'Barbell Curl', 'This exercise targets the long head of the biceps brachii muscle. Stand up straight with a barbell in your hands at shoulder-width apart. Keeping your elbows close to your torso, curl the weights while contracting your biceps.', ''),
+          (9, 'Concentration Curl', 'This exercise targets the short head of the bicUeps brachii muscle. Sit on a flat bench with one dumbbell in front of you between your legs. Use your right arm to pick up the dumbbell and curl it towards your chest.', ''),
+          (10, 'Reverse Curl', 'This exercise targets the brachialis muscle. Hold a barbell or EZ-bar with palms facing down and hands shoulder-width apart. Curl the bar towards your chest, keeping elbows close to body.', ''),
+          (11, 'Close-Grip Bench Press', 'This exercise targets the long head of the triceps brachii muscle. Lie on a flat bench holding a barbell with hands shoulder-width apart. Lower it to your chest, then press it back up powerfully.', ''),
+          (12, 'Triceps Kickback', 'This exercise targets the medial head of the triceps brachii muscle. Hold a dumbbell in one hand and lean forward slightly. Keep elbow at 90 degrees as you extend arm straight back.', ''),
+          (13, 'Diamond Push-Up', 'This exercise targets the lateral head of the triceps brachii muscle. Get into push-up position with hands close together so thumbs and index fingers touch. Lower body until chest nearly touches floor and then push up.', ''),
+          (14, 'Squat', 'This exercise targets the leg extensor muscles. Stand tall with feet hip-width apart holding a barbell across upper back with overhand grip. Lower body until thighs are parallel to floor then push back up.', ''),
+          (15, 'Hamstring Curl', 'This exercise targets the leg flexor muscles. Lie face down on a leg curl machine with ankles against lower pad and legs fully extended. Without lifting waist or thighs off of bench, curl legs towards buttocks until fully flexed.', ''),
+          (16, 'Side Lunge', 'This exercise targets the leg adductor muscles. Stand tall holding two dumbbells at arm’s length by sides. Take big step to left and lower body by bending left hip and knee until thigh is parallel to floor.', ''),
+          (17, 'Seated Calf Raise', 'This exercise targets the calf muscles. Sit on machine and place toes on lower portion of platform with heels extending off it. Place lower thighs under lever pad and lift lever by extending ankles.', ''),
+          (18, 'Shoulder Press', 'This exercise targets the anterior deltoid muscle. Sit on a bench and hold a barbell at shoulder height. Press the barbell straight up until your arms are fully extended.', ''),
+          (19, 'Bent-Over Reverse Fly', 'This exercise targets the posterior deltoid muscle. Hold a pair of dumbbells and bend forward at your hips until your torso is nearly parallel to the floor. Let the dumbbells hang straight down. Raise both arms out to the sides as you squeeze your shoulder blades together.', ''),
+          (20, 'Dumbbell Lateral Raise', 'This exercise targets the lateral deltoid muscle. Stand holding a pair of dumbbells at arm’s length by your sides with palms facing each other. Without moving your torso, lift the dumbbells out to your sides.', ''),
+          (21,'Sit-Up','This exercise targets the upper rectus abdominis muscle. Lie down on your back and bend your legs with feet flat on the ground. Place your hands behind your head and lift your upper body towards your knees.',''),
+          (22,'Leg Raise','This exercise targets the lower rectus abdominis muscle. Lie on your back with your hands at your sides or under your glutes. Keeping legs straight, lift them all the way up to the ceiling.',''),
+          (23,'Side Plank','This exercise targets the internal and external oblique muscles. Start on your side with feet together and one forearm directly below shoulder. Contract core and raise hips until body is straight from head to feet.','');`);
 
     tableInitialisations += promise?.changes?.changes || 0;
 
@@ -308,14 +378,18 @@ export const dropTables = async () => {
       ?.getDatabase()
       ?.run(`Drop Table WorkoutList;`);
     tableDeletions += promise?.changes?.changes || 0;
-    // promise = await databaseStore
-    //   ?.getDatabase()
-    //   ?.run(`Drop Table WorkoutExercise;`);
+    promise = await databaseStore
+      ?.getDatabase()
+      ?.run(`Drop Table WorkoutExercise;`);
     tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore?.getDatabase()?.run(`Drop Table Exercise;`);
     tableDeletions += promise?.changes?.changes || 0;
-    // promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
-    // tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore?.getDatabase()?.run(`Drop Table Workout;`);
+    tableDeletions += promise?.changes?.changes || 0;
+    promise = await databaseStore
+      ?.getDatabase()
+      ?.run(`Drop Table WorkoutTemplatePlan;`);
+    tableDeletions += promise?.changes?.changes || 0;
     promise = await databaseStore
       .getDatabase()
       ?.run(`Drop Table WorkoutTemplate;`);

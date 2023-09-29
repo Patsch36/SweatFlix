@@ -1,15 +1,14 @@
 <template>
-  <ion-backdrop v-if="popOverShow"></ion-backdrop>
-  <color-picker
-    v-if="popOverShow"
-    id="box"
-    @close="popOverShow = false"
-    @color="setWorkoutColor($event)"
-    @wheel.prevent
-    @touchmove.prevent
-    @scroll.prevent />
-
   <ion-page style="height: calc(100vh - 100px)">
+    <ion-backdrop v-if="popOverShow"></ion-backdrop>
+    <color-picker
+      v-if="popOverShow"
+      id="box"
+      @close="popOverShow = false"
+      @color="setWorkoutColor($event)"
+      @wheel.prevent
+      @touchmove.prevent
+      @scroll.prevent />
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-title>Workouts</ion-title>
@@ -182,7 +181,7 @@ const databaseStore = useDatabaseStore();
 const activeWorkoutsStore = useActiveWorkoutsStore();
 
 const workoutDisplaySegment = ref<string>("all");
-const slidingItems = ref<any>(null);
+const slidingItems = ref<any>();
 const showList = ref<boolean>(true);
 const popOverShow = ref<any>(null);
 let itemNameUpdate: String;

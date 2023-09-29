@@ -128,7 +128,6 @@
               style="height: 150px"
               v-model="notes"></ion-textarea>
           </ion-item>
-          <p>{{ workout }}</p>
           <h2
             v-if="showExercises"
             v-for="(exercise, index) in exercises"
