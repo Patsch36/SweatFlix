@@ -217,28 +217,28 @@ export const initTables = async () => {
 
     promise = await databaseStore.getDatabase()
       ?.run(`INSERT INTO WorkoutTemplatePlan (WorkoutTemplateName, PlanID, OrderIndex)
-      VALUES 
-        ('Push-Request Workout', 1, 1),
-        ('Pull-Request Workout', 1, 2),
-        ('Leg-Endary Code Workout', 1, 3),
-        ('Upper-Body Programming Workout', 2, 1),
-        ('Lower-Body Programming Workout', 2, 2),
-        ('Full-Body Debugging Workout', 3, 1),
-        ('Chest-Code Workout', 4, 1),
-        ('Back-End Workout', 4, 2),
-        ('Leg-Endary Code Workout', 4, 3),
-        ('Arm-Assembly Workout', 4, 4),
-        ('Full-Body Push Workout', 5, 1),
-        ('Full-Body Pull Workout', 5, 2),
-        ('Push-Request Workout', 6, 1),
-        ('Pull-Request Workout', 6, 2),
-        ('Leg-Endary Code Workout', 6, 3),
-        ('Full-Body Debugging Workout', 6, 4),
-        ('Push-Request Workout', 7, 1),
-        ('Pull-Request Workout', 7, 2),
-        ('Leg-Endary Code Workout', 7, 3),
-        ('Upper-Body Programming Workout', 7, 4),
-        ('Lower-Body Programming Workout', 7, 4);`);
+  VALUES 
+    ('Push-Request Workout', 1, 0),
+    ('Pull-Request Workout', 1, 1),
+    ('Leg-Endary Code Workout', 1, 2),
+    ('Upper-Body Programming Workout', 2, 0),
+    ('Lower-Body Programming Workout', 2, 1),
+    ('Full-Body Debugging Workout', 3, 0),
+    ('Chest-Code Workout', 4, 0),
+    ('Back-End Workout', 4, 1),
+    ('Leg-Endary Code Workout', 4, 2),
+    ('Arm-Assembly Workout', 4, 3),
+    ('Full-Body Push Workout', 5, 0),
+    ('Full-Body Pull Workout', 5, 1),
+    ('Push-Request Workout', 6, 0),
+    ('Pull-Request Workout', 6, 1),
+    ('Leg-Endary Code Workout', 6, 2),
+    ('Full-Body Debugging Workout', 6, 3),
+    ('Push-Request Workout', 7, 0),
+    ('Pull-Request Workout', 7, 1),
+    ('Leg-Endary Code Workout', 7, 2),
+    ('Upper-Body Programming Workout', 7, 3),
+    ('Lower-Body Programming Workout', 7, 4);`);
 
     promise = await databaseStore.getDatabase()
       ?.run(`INSERT INTO Workout (startdate, enddate, note, workoutname)

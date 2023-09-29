@@ -27,6 +27,27 @@
           </ion-segment-button>
         </ion-segment>
         <ion-grid>
+          <ion-row v-if="showNextLastWorkout === 'plan'">
+            <ion-col size="4">
+              <ion-button
+                @click="next"
+                class="grid-button"
+                fill="outline"
+                size="small">
+                Next
+              </ion-button>
+            </ion-col>
+            <ion-col size="4">
+              <ion-button class="grid-button" fill="outline" size="small">
+                Skip
+              </ion-button>
+            </ion-col>
+            <ion-col size="4">
+              <ion-button class="grid-button" fill="outline" size="small">
+                Rest
+              </ion-button>
+            </ion-col>
+          </ion-row>
           <ion-row>
             <ion-col size="6" size-md="3">
               <ion-card
@@ -139,6 +160,7 @@ import {
   IonSegmentButton,
   IonLabel,
   IonIcon,
+  IonButton,
 } from "@ionic/vue";
 import { useRouter } from "vue-router";
 import { onBeforeMount, onMounted, ref } from "vue";
@@ -177,14 +199,15 @@ const getLastWorkout = async () => {
     const resp = await databaseStore.getDatabase()?.query(query);
     const scheme = resp?.values ? resp.values[0].scheme : "";
     const wi = await store.get("Current Workout Index");
-    const workoutIndex = scheme.length + ((wi - 1) % scheme.length);
+    const workoutIndex =
+      wi === 0 ? scheme.length + ((wi - 1) % scheme.length) : wi - 1;
     const todaysSchemeValue = scheme[workoutIndex];
 
     if (todaysSchemeValue === "r") {
       lastWorkout.value = { workoutname: "Restday", startdate: "" };
     } else {
       // count how many 't' are in scheme before todaysSchemeValue + 1
-      const count = scheme.slice(0, workoutIndex).split("t").length;
+      const count = scheme.slice(0, workoutIndex).split("t").length - 1;
       const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
       const resp = await databaseStore.getDatabase()?.query(query);
       lastWorkout.value = resp?.values
@@ -212,7 +235,7 @@ const getNextWorkout = async () => {
 
     const resp = await databaseStore.getDatabase()?.query(query);
     nextWorkout.value = resp?.values
-      ? resp.values[0]
+      ? { workoutname: resp.values[0].workoutname, startdate: "" }
       : { workoutname: "No Workout", startdate: "" };
   } else {
     const workoutIndex = await store.get("Current Workout Index");
@@ -249,9 +272,10 @@ const getCurrentWeight = async () => {
 };
 
 const handleCardClick = (startdate: string | any[], name: string) => {
-  if (startdate.length) {
+  if (startdate && startdate.length) {
     router.push(`/workoutdetails/${startdate}`);
   } else if (name !== "Restday" && name !== "No Workout") {
+    console.log("pushing");
     router.push(`/workouttemplate/${name}`);
   }
 };
@@ -269,7 +293,20 @@ onMounted(async () => {
 const storeNewValue = async () => {
   // console.log(NextLastWorkoutSlider.value.$el.value);
   await store.set("showNextLastWorkout", NextLastWorkoutSlider.value.$el.value);
+  showNextLastWorkout.value = NextLastWorkoutSlider.value.$el.value;
 
+  getNextWorkout();
+  getLastWorkout();
+};
+
+const next = async () => {
+  const query = `SELECT scheme from Plan WHERE name = '${await store.get(
+    "Active Plan"
+  )}'`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  const scheme = resp?.values ? resp.values[0].scheme : "";
+  const index = await store.get("Current Workout Index");
+  await store.set("Current Workout Index", (index + 1) % scheme.length);
   getNextWorkout();
   getLastWorkout();
 };
@@ -293,5 +330,10 @@ const storeNewValue = async () => {
 
 .biggerFont {
   font-size: 28px !important;
+}
+
+.grid-button {
+  width: 100%;
+  color: var(--ion-color-light-shade);
 }
 </style>
