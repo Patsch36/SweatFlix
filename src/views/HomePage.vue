@@ -182,8 +182,6 @@ import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
-import { today } from "ionicons/icons";
-import { last } from "cypress/types/lodash";
 
 const NextLastWorkoutSlider = ref();
 
@@ -290,7 +288,9 @@ const getCurrentWeight = async () => {
 };
 
 const handleCardClick = (startdate: string | any[], name: string) => {
+  console.log("startdate", startdate, "name", name);
   if (startdate && startdate.length) {
+    console.log("pushing to", `/workoutdetails/${startdate}`);
     router.push(`/workoutdetails/${startdate}`);
   } else if (name !== "Restday" && name !== "No Workout") {
     console.log("pushing to", `/workouttemplate/${name}`);
@@ -305,6 +305,7 @@ const getTodaysPlanValue = async () => {
   const resp = await databaseStore.getDatabase()?.query(query);
   const scheme = resp?.values ? resp.values[0].scheme : "";
   const todaysSchemeValue = scheme[workoutIndex];
+  console.log("todaysSchemeValue", scheme, workoutIndex, todaysSchemeValue);
 
   if (todaysSchemeValue === "r") {
     todayWorkout.value = { workoutname: "Restday", startdate: "" };
@@ -313,8 +314,44 @@ const getTodaysPlanValue = async () => {
     const count = scheme.slice(0, workoutIndex).split("t").length - 1;
     const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
     const resp = await databaseStore.getDatabase()?.query(query);
+    const workoutName = resp?.values
+      ? resp.values[0].WorkoutTemplateName
+      : "No Workout";
+    const query2 = `SELECT startdate FROM Workout WHERE WorkoutName = '${workoutName}' ORDER BY startdate DESC LIMIT 1`;
+    const resp2 = await databaseStore.getDatabase()?.query(query2);
+
+    console.log("resp2", resp2?.values);
+
+    const dbDate =
+      resp2?.values && resp2.values.length > 0
+        ? new Date(resp2.values[0].startdate)
+        : new Date(0);
+    dbDate.setHours(0, 0, 0, 0);
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    console.log(
+      "dbDate",
+      dbDate.toLocaleDateString(),
+      "todayDate",
+      todayDate.toLocaleDateString(),
+      dbDate.toLocaleDateString() === todayDate.toLocaleDateString()
+    );
+
+    const workoutStartdate =
+      resp2?.values &&
+      resp2.values.length > 0 &&
+      dbDate.toLocaleDateString() === todayDate.toLocaleDateString()
+        ? resp2.values[0].startdate
+        : "";
+    console.log("startdate", workoutStartdate);
+    // Test if
     todayWorkout.value = resp?.values
-      ? { workoutname: resp.values[0].WorkoutTemplateName, startdate: "" }
+      ? {
+          workoutname: resp.values[0].WorkoutTemplateName,
+          startdate: workoutStartdate,
+        }
       : { workoutname: "No Workout", startdate: "" };
   }
 };
@@ -376,7 +413,7 @@ const next = async () => {
 const rest = async () => {
   await store.set("Rest", `${new Date().toLocaleDateString()}`);
   nextWorkout.value = todayWorkout.value;
-  todayWorkout.value = { workoutname: "Rest", startdate: "" };
+  todayWorkout.value = { workoutname: "Restday", startdate: "" };
 };
 </script>
 
