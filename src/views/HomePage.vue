@@ -53,7 +53,11 @@
               </ion-button>
             </ion-col>
             <ion-col size="2">
-              <ion-button class="grid-button" fill="outline" size="small">
+              <ion-button
+                class="grid-button"
+                @click="rest"
+                fill="outline"
+                size="small">
                 Rest
               </ion-button>
             </ion-col>
@@ -178,6 +182,8 @@ import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
+import { today } from "ionicons/icons";
+import { last } from "cypress/types/lodash";
 
 const NextLastWorkoutSlider = ref();
 
@@ -330,6 +336,11 @@ onBeforeMount(async () => {
   getTodaysPlanValue();
 
   if (showNextLastWorkout.value === "plan") await getTodaysPlanValue();
+
+  if ((await store.get("Rest")) === new Date().toLocaleDateString()) {
+    nextWorkout.value = todayWorkout.value;
+    todayWorkout.value = { workoutname: "Restday", startdate: "" };
+  }
 });
 
 const storeNewValue = async () => {
@@ -343,16 +354,29 @@ const storeNewValue = async () => {
 };
 
 const next = async () => {
-  const query = `SELECT scheme from Plan WHERE name = '${await store.get(
-    "Active Plan"
-  )}'`;
-  const resp = await databaseStore.getDatabase()?.query(query);
-  const scheme = resp?.values ? resp.values[0].scheme : "";
-  const index = await store.get("Current Workout Index");
-  await store.set("Current Workout Index", (index + 1) % scheme.length);
-  getNextWorkout();
-  getLastWorkout();
-  getTodaysPlanValue();
+  if ((await store.get("Rest")) === new Date().toLocaleDateString()) {
+    lastWorkout.value = todayWorkout.value;
+    todayWorkout.value = nextWorkout.value;
+    getNextWorkout();
+    store.set("Rest", "");
+  } else {
+    const query = `SELECT scheme from Plan WHERE name = '${await store.get(
+      "Active Plan"
+    )}'`;
+    const resp = await databaseStore.getDatabase()?.query(query);
+    const scheme = resp?.values ? resp.values[0].scheme : "";
+    const index = await store.get("Current Workout Index");
+    await store.set("Current Workout Index", (index + 1) % scheme.length);
+    getNextWorkout();
+    getLastWorkout();
+    getTodaysPlanValue();
+  }
+};
+
+const rest = async () => {
+  await store.set("Rest", `${new Date().toLocaleDateString()}`);
+  nextWorkout.value = todayWorkout.value;
+  todayWorkout.value = { workoutname: "Rest", startdate: "" };
 };
 </script>
 

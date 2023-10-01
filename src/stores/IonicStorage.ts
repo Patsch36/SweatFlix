@@ -10,4 +10,5 @@ export const initKeyValuePairs = async () => {
     "Current Workout Index Changed",
     `${new Date().toLocaleDateString()}`
   );
+  await store.set("Rest", "");
 };
