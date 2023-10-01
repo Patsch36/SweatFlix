@@ -144,7 +144,7 @@
               <ion-card color="primary">
                 <ion-card-header>
                   <ion-card-subtitle>Goal</ion-card-subtitle>
-                  <ion-card-title>85 kg</ion-card-title>
+                  <ion-card-title>{{ weightGoal }} kg</ion-card-title>
                 </ion-card-header>
               </ion-card>
             </ion-col>
@@ -190,6 +190,7 @@ const queryCurrentWeightResults = ref<any>([]);
 const lastWorkout = ref<any>();
 const nextWorkout = ref<any>();
 const todayWorkout = ref<any>();
+const weightGoal = ref();
 
 const showNextLastWorkout = ref();
 const disablePlan = ref(false);
@@ -358,6 +359,7 @@ const getTodaysPlanValue = async () => {
 
 onBeforeMount(async () => {
   getCurrentWeight();
+  weightGoal.value = await store.get("Weight Goal");
 
   showNextLastWorkout.value =
     (await store.get("showNextLastWorkout")) || "calendar";

@@ -102,9 +102,6 @@
 
       <Diagram :weights="queryResults" v-if="queryResults" />
 
-      <!-- <p>{{ lastWorkoutExercises }}</p> -->
-      <!-- <p>{{ workoutExercises.length }}</p> -->
-
       <ion-list v-show="workoutExercises.length">
         <ion-list-header>
           <ion-label>Exercises</ion-label>
@@ -488,24 +485,28 @@ const confirmModal = async () => {
 
   if (workoutExercises.value.length === 0) {
     await SetResults.value.map(async (exercise: any) => {
-      const index = workoutExercises.value.findIndex(
+      console.log(exercise);
+      console.log("modalPlaceholder", modalPlaceholder.value);
+      const index = modalPlaceholder.value.findIndex(
         (obj: any) =>
-          obj.exercise === exercise.exerciseName &&
-          obj.setNumber === exercise.set
+          obj.exerciseName === exercise.exerciseName && obj.set === exercise.set
       );
+
+      console.log("Index", index);
       exercise.reps
         ? exercise.reps
-        : (exercise.reps = workoutExercises.value[index].reps);
+        : (exercise.reps = modalPlaceholder.value[index].reps);
       exercise.weight
         ? exercise.weight
-        : (exercise.weight = workoutExercises.value[index].weight);
+        : (exercise.weight = modalPlaceholder.value[index].weight);
       exercise.unit ? exercise.unit : (exercise.unit = "kg");
 
-      await databaseStore.getDatabase()?.execute(
-        `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
+      const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
           VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
-          ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`
-      );
+          ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`;
+
+      console.log(insertQuery);
+      await databaseStore.getDatabase()?.execute(insertQuery);
     });
   } else if (SetResults.value.length !== 0) {
     await SetResults.value.map(async (exercise: any) => {

@@ -1,12 +1,19 @@
 <template>
   <div class="canvas-box">
-    <canvas ref="weightChartEl" height="450px"></canvas>
+    <canvas ref="weightChartEl" height="900px" v-if="dataY2.length"></canvas>
   </div>
   <p ref="weightRef" v-show="false">{{ weights }}</p>
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch, nextTick, onMounted } from "vue";
+import {
+  ref,
+  shallowRef,
+  watch,
+  nextTick,
+  onMounted,
+  onBeforeMount,
+} from "vue";
 import {
   Chart,
   CategoryScale,
@@ -19,16 +26,7 @@ import {
 import "chartjs-adapter-date-fns";
 import WeightRecord from "../datatypes/weight";
 
-onMounted(() => {
-  Chart.register(
-    CategoryScale,
-    LineController,
-    PointElement,
-    LineElement,
-    LinearScale,
-    TimeScale
-  );
-});
+import { store } from "@/stores/IonicStorage";
 
 const weightChartEl = ref<HTMLCanvasElement | null>(null);
 const weightChart = shallowRef<Chart | null>(null);
@@ -39,6 +37,28 @@ const weightRef = ref<HTMLElement | null>(null);
 
 const x = ref([]);
 const y = ref([]);
+
+const min_x = ref(0);
+const max_x = ref(0);
+
+const weightGoal = ref();
+
+let dataY2: number[] = [];
+
+onBeforeMount(async () => {
+  weightGoal.value = await store.get("Weight Goal");
+});
+
+onMounted(() => {
+  Chart.register(
+    CategoryScale,
+    LineController,
+    PointElement,
+    LineElement,
+    LinearScale,
+    TimeScale
+  );
+});
 
 watch(
   weights,
@@ -58,12 +78,32 @@ watch(
 
     x.value = dataX;
     y.value = dataY;
+
+    while (dataY2.length < dataX.length) {
+      dataY2.push(weightGoal.value);
+    }
+    // if (weightGoal.value) {
+    //   for (let i = 0; i < dataX.length; i++) {
+    //     console.log("weightGoal.value", weightGoal.value);
+    //     dataY2.push(weightGoal.value);
+    //   }
+    // }
+
+    min_x.value = Math.min(...dataX);
+    max_x.value = Math.max(...dataX);
     // alert(dataX);
     // alert(dataY);
+
+    // find the lowest und highest Value of dataY and dataY2 as min_y and max_y
+    let min_y = Math.min(...dataY);
+    let max_y = Math.max(...dataY);
+    let min_y2 = Math.min(...dataY2);
+    let max_y2 = Math.max(...dataY2);
 
     if (weightChart.value) {
       weightChart.value.data.labels = dataX;
       weightChart.value.data.datasets[0].data = dataY;
+      // weightChart.value.data.datasets[1].data = dataY2;
 
       weightChart.value.update();
       return;
@@ -85,12 +125,21 @@ watch(
                   borderColor: "rgba(147, 30, 21, 1)",
                   borderWidth: 1,
                   fill: true,
-                  pointRadius: 1, // Radius der Punkte
+                  pointRadius: 2, // Radius der Punkte
                   pointBackgroundColor: "rgba(227,36,0, 0.2)", // Farbe der Punkte
                   pointBorderColor: "rgba(227,36,0, 1)", // Randfarbe der Punkte
                   pointBorderWidth: 1, // Breite des Randes der Punkte
                   tension: 0.4,
                 },
+                // {
+                //   label: "Goal",
+                //   data: dataY2,
+                //   backgroundColor: "rgba(206,176,78, 0.2)",
+                //   borderColor: "rgba(206,176,78, 1)",
+                //   borderWidth: 1,
+                //   pointRadius: 0,
+                //   tension: 0.4,
+                // },
               ],
             },
             options: {
@@ -109,13 +158,19 @@ watch(
                   },
                 },
                 y: {
+                  type: "linear",
                   grid: {
                     color: "#444",
                   },
+                  // ticks: {
+                  //   stepSize: 1,
+                  // },
                 },
               },
             },
           });
+
+          console.log("weightGoal.value", weightGoal.value);
         }
       }
     });
@@ -125,7 +180,6 @@ watch(
 
 // watch(() => weightRef.value?.innerText, (newWeights)
 const updateChart = () => {
-  // alert("watch");
   if (!weightRef.value?.innerText) return;
   let list = JSON.parse(weightRef.value.innerText);
   const ws = list.sort(
@@ -141,17 +195,28 @@ const updateChart = () => {
   y.value = dataY;
   // alert(dataX);
   // alert(dataY);
+  let dataY2 = [];
+  while (dataY2.length < dataX.length) {
+    dataY2.push(weightGoal.value);
+  }
+  // if (weightGoal.value) {
+  //   for (let i = 0; i < dataX.length; i++) {
+  //     console.log("weightGoal.value", weightGoal.value);
+  //     dataY2.push(weightGoal.value);
+  //   }
+  // }
 
   if (weightChart.value) {
     weightChart.value.data.labels = dataX;
     weightChart.value.data.datasets[0].data = dataY;
+    // weightChart.value.data.datasets[1].data = dataY2;
 
     weightChart.value.update();
     return;
   }
 };
 
-setInterval(updateChart, 500);
+setInterval(updateChart, 100);
 
 const averagedQueryResults = () => {
   const sortedQueryResults = weights

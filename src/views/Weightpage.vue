@@ -121,6 +121,7 @@ const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
 let latestWeight = ref<number>(0);
 const inputWidth = ref<string>("5rem");
+const weightGoalFromStore = ref();
 
 // const diagram = ref<any>(null);
 const timeSegment = ref<string>("week");
@@ -155,6 +156,7 @@ const loadWeight = async () => {
 
 onBeforeMount(async () => {
   await loadWeight();
+
   if (queryResults.value && queryResults.value.length > 0) {
     queryResults.value.sort((a: any, b: any) => b.id > a.id);
     queryResults.value.sort(

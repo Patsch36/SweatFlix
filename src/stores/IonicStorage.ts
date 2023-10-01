@@ -11,4 +11,5 @@ export const initKeyValuePairs = async () => {
     `${new Date().toLocaleDateString()}`
   );
   await store.set("Rest", "");
+  await store.set("Weight Goal", 0);
 };
