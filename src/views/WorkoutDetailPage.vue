@@ -100,7 +100,7 @@
         </ion-row>
       </ion-grid>
 
-      <Diagram :weights="queryResults" v-if="queryResults" />
+      <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
 
       <ion-list v-show="workoutExercises.length">
         <ion-list-header>
@@ -274,6 +274,8 @@ import { useRoute, useRouter } from "vue-router";
 const databaseStore = useDatabaseStore();
 const route = useRoute();
 const router = useRouter();
+
+const showDiagram = ref(true);
 
 const workoutQueryResult = ref<{
   workoutname: string;
@@ -468,13 +470,18 @@ const confirmModal = async () => {
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  const query = `UPDATE Workout
-      SET startdate = '${modalStarttime.value}',
-          enddate = '${modalEndtime.value}',
-          note = '${modalNotes.value}'
-      WHERE startdate = '${workoutQueryResult.value.startdate}';`;
+  const query = `INSERT INTO Workout (workoutname, startdate, enddate, note) VALUES ('${workoutQueryResult.value.workoutname}', '${modalStarttime.value}', '${modalEndtime.value}', '${modalNotes.value}');`;
   console.log(query);
   await databaseStore.getDatabase()?.execute(query);
+
+  // update WorkoutExercise Table where workout = workoutQueryResult.value.startdate to modalStarttime.value
+  const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE workout = '${workoutQueryResult.value.startdate}';`;
+  console.log(updateWEQuery);
+  await databaseStore.getDatabase()?.execute(updateWEQuery);
+
+  const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
+  console.log(deleteQuery);
+  await databaseStore.getDatabase()?.execute(deleteQuery);
 
   // console.log(SetResults.value, typeof SetResults.value);
   // console.log(
@@ -535,9 +542,11 @@ const confirmModal = async () => {
     });
   }
 
+  showDiagram.value = false;
   await loadWorkout();
   await loadExercises();
   await getOverallWeightsOfWorkout();
+  showDiagram.value = true;
 };
 
 const leaveReps = (
