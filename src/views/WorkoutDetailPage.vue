@@ -470,18 +470,32 @@ const confirmModal = async () => {
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
-  const query = `INSERT INTO Workout (workoutname, startdate, enddate, note) VALUES ('${workoutQueryResult.value.workoutname}', '${modalStarttime.value}', '${modalEndtime.value}', '${modalNotes.value}');`;
-  console.log(query);
-  await databaseStore.getDatabase()?.execute(query);
+  // Test if stardate is in Workout Table
+  const resp = await databaseStore.getDatabase()?.query(`SELECT *
+    FROM Workout
+    WHERE startdate = '${modalStarttime.value}';
+    `);
+  const workout = resp?.values ? resp.values[0] : null;
+  console.log(workout?.values);
 
-  // update WorkoutExercise Table where workout = workoutQueryResult.value.startdate to modalStarttime.value
-  const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE workout = '${workoutQueryResult.value.startdate}';`;
-  console.log(updateWEQuery);
-  await databaseStore.getDatabase()?.execute(updateWEQuery);
+  if (workout.startdate) {
+    const updateQuery = `UPDATE Workout SET workoutname = '${workoutQueryResult.value.workoutname}', startdate = '${modalStarttime.value}', enddate = '${modalEndtime.value}', note = '${modalNotes.value}' WHERE startdate = '${modalStarttime.value}';`;
+    console.log(updateQuery);
+    await databaseStore.getDatabase()?.execute(updateQuery);
+  } else {
+    const query = `INSERT INTO Workout (workoutname, startdate, enddate, note) VALUES ('${workoutQueryResult.value.workoutname}', '${modalStarttime.value}', '${modalEndtime.value}', '${modalNotes.value}');`;
+    console.log(query);
+    await databaseStore.getDatabase()?.execute(query);
 
-  const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
-  console.log(deleteQuery);
-  await databaseStore.getDatabase()?.execute(deleteQuery);
+    // update WorkoutExercise Table where workout = workoutQueryResult.value.startdate to modalStarttime.value
+    const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE workout = '${workoutQueryResult.value.startdate}';`;
+    console.log(updateWEQuery);
+    await databaseStore.getDatabase()?.execute(updateWEQuery);
+
+    const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
+    console.log(deleteQuery);
+    await databaseStore.getDatabase()?.execute(deleteQuery);
+  }
 
   // console.log(SetResults.value, typeof SetResults.value);
   // console.log(

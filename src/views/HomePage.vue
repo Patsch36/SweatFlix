@@ -365,7 +365,9 @@ onBeforeMount(async () => {
     (await store.get("showNextLastWorkout")) || "calendar";
   NextLastWorkoutSlider.value.$el.value = showNextLastWorkout.value;
 
-  if ((await store.get("Active Plan")) === "No Plan") {
+  const plan = await store.get("Active Plan");
+  console.log(await store.get("Active Plan"), plan === "No Plan");
+  if (plan == "No Plan") {
     showNextLastWorkout.value = "calendar";
     disablePlan.value = true;
   }
