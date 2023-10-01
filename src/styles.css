@@ -140,7 +140,7 @@ ion-datetime {
   color: var(--ion-color-medium-tint) !important;
 }
 
-.alert-button-role-confirm {
+.alert-button-role-confirm, .alert-button.ion-activa {
   background-color: var(--ion-color-primary) !important;
   color: var(--ion-color-primary-contrast) !important;
   border-color: var(--ion-color-primary) !important;
@@ -167,4 +167,33 @@ ion-datetime {
 .ios .alert-button-role-confirm {
   border-bottom-right-radius: 13px;
   border-top-right-radius: 13px;
+}
+
+
+ion-radio {
+  --border-radius: 4px;
+  --inner-border-radius: 4px;
+
+  --color: #ddd;
+  --color-checked: var(--ion-color-primary);
+}
+
+ion-radio.ios::part(container) {
+  width: 20px;
+  height: 20px;
+
+  border: 2px solid #ddd;
+  border-radius: 4px;
+}
+
+.radio-checked.ios::part(container) {
+  border-color: var(--ion-color-primary)
+}
+
+ion-checkbox::part(container) {
+  border-color: var(--ion-color-medium-shade);
+}
+
+ion-checkbox.checkbox-checked::part(container) {
+  border-color: var(--ion-color-primary);
 }

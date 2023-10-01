@@ -41,18 +41,21 @@
             </ion-card>
           </ion-col>
           <ion-col size="8" size-md="3">
-            <ion-card color="primary" @click="router.push('/plans')">
+            <ion-card
+              color="primary"
+              @click="router.push('/plans')"
+              v-if="activePlan">
               <ion-card-header class="plan-card">
                 <ion-card-subtitle>Active Plan</ion-card-subtitle>
                 <ion-card-title
                   style="font-size: 22px"
-                  :class="{ biggerFont: activePlan.length < 12 }"
-                  >{{
+                  :class="{ biggerFont: activePlan.length < 12 }">
+                  {{
                     activePlan.length > 25
                       ? activePlan.slice(0, 25) + "..."
                       : activePlan
-                  }}</ion-card-title
-                >
+                  }}
+                </ion-card-title>
                 <ion-icon :icon="repeatOutline" class="plan-icon"></ion-icon>
               </ion-card-header>
             </ion-card>
@@ -219,7 +222,8 @@ const filterQueryResults = () => {
 
 onBeforeMount(async () => {
   workoutDisplaySegment.value = "active";
-  activePlan.value = await store.get("Active Plan");
+  activePlan.value = (await store.get("Active Plan")) || "No Plan";
+  console.log(activePlan.value);
 });
 
 watch(workoutDisplaySegment, async (newValue) => {

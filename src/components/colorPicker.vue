@@ -148,4 +148,7 @@ ion-backdrop {
   z-index: 99;
   /* height: 9999999999999999999999999999999999999999999px; */
 }
+ion-radio.ios::part(container) {
+  border: none;
+}
 </style>

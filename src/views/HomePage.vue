@@ -19,7 +19,7 @@
           ref="NextLastWorkoutSlider"
           :value="showNextLastWorkout"
           @ionChange="storeNewValue()">
-          <ion-segment-button value="plan">
+          <ion-segment-button value="plan" :disabled="disablePlan">
             <ion-label>After Plan</ion-label>
           </ion-segment-button>
           <ion-segment-button value="calendar">
@@ -28,21 +28,31 @@
         </ion-segment>
         <ion-grid>
           <ion-row v-if="showNextLastWorkout === 'plan'">
-            <ion-col size="4">
+            <ion-col size="2">
               <ion-button
                 @click="next"
                 class="grid-button"
                 fill="outline"
                 size="small">
-                Next
-              </ion-button>
-            </ion-col>
-            <ion-col size="4">
-              <ion-button class="grid-button" fill="outline" size="small">
                 Skip
               </ion-button>
             </ion-col>
-            <ion-col size="4">
+            <ion-col size="8">
+              <ion-button
+                v-if="todayWorkout"
+                class="grid-button"
+                fill="outline"
+                size="small"
+                @click="
+                  handleCardClick(
+                    todayWorkout.startdate,
+                    todayWorkout.workoutname
+                  )
+                ">
+                Today: {{ todayWorkout.workoutname }}
+              </ion-button>
+            </ion-col>
+            <ion-col size="2">
               <ion-button class="grid-button" fill="outline" size="small">
                 Rest
               </ion-button>
@@ -168,7 +178,6 @@ import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
-import { newspaper, today } from "ionicons/icons";
 
 const NextLastWorkoutSlider = ref();
 
@@ -176,8 +185,10 @@ const databaseStore = useDatabaseStore();
 const queryCurrentWeightResults = ref<any>([]);
 const lastWorkout = ref<any>();
 const nextWorkout = ref<any>();
+const todayWorkout = ref<any>();
 
 const showNextLastWorkout = ref();
+const disablePlan = ref(false);
 
 const getLastWorkout = async () => {
   if (NextLastWorkoutSlider.value.$el.value === "calendar") {
@@ -238,11 +249,12 @@ const getNextWorkout = async () => {
       ? { workoutname: resp.values[0].workoutname, startdate: "" }
       : { workoutname: "No Workout", startdate: "" };
   } else {
-    const workoutIndex = await store.get("Current Workout Index");
     const activePlan = await store.get("Active Plan");
     const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
     const resp = await databaseStore.getDatabase()?.query(query);
     const scheme = resp?.values ? resp.values[0].scheme : "";
+    const workoutIndex =
+      ((await store.get("Current Workout Index")) + 1) % scheme.length;
     const todaysSchemeValue = scheme[workoutIndex];
 
     if (todaysSchemeValue === "r") {
@@ -275,19 +287,49 @@ const handleCardClick = (startdate: string | any[], name: string) => {
   if (startdate && startdate.length) {
     router.push(`/workoutdetails/${startdate}`);
   } else if (name !== "Restday" && name !== "No Workout") {
-    console.log("pushing");
+    console.log("pushing to", `/workouttemplate/${name}`);
     router.push(`/workouttemplate/${name}`);
   }
 };
 
-onMounted(async () => {
+const getTodaysPlanValue = async () => {
+  const workoutIndex = await store.get("Current Workout Index");
+  const activePlan = await store.get("Active Plan");
+  const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  const scheme = resp?.values ? resp.values[0].scheme : "";
+  const todaysSchemeValue = scheme[workoutIndex];
+
+  if (todaysSchemeValue === "r") {
+    todayWorkout.value = { workoutname: "Restday", startdate: "" };
+  } else {
+    // count how many 't' are in scheme before todaysSchemeValue
+    const count = scheme.slice(0, workoutIndex).split("t").length - 1;
+    const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
+    const resp = await databaseStore.getDatabase()?.query(query);
+    todayWorkout.value = resp?.values
+      ? { workoutname: resp.values[0].WorkoutTemplateName, startdate: "" }
+      : { workoutname: "No Workout", startdate: "" };
+  }
+};
+
+onBeforeMount(async () => {
   getCurrentWeight();
 
   showNextLastWorkout.value =
     (await store.get("showNextLastWorkout")) || "calendar";
   NextLastWorkoutSlider.value.$el.value = showNextLastWorkout.value;
+
+  if ((await store.get("Active Plan")) === "No Plan") {
+    showNextLastWorkout.value = "calendar";
+    disablePlan.value = true;
+  }
+
   getLastWorkout();
   getNextWorkout();
+  getTodaysPlanValue();
+
+  if (showNextLastWorkout.value === "plan") await getTodaysPlanValue();
 });
 
 const storeNewValue = async () => {
@@ -297,6 +339,7 @@ const storeNewValue = async () => {
 
   getNextWorkout();
   getLastWorkout();
+  getTodaysPlanValue();
 };
 
 const next = async () => {
@@ -309,6 +352,7 @@ const next = async () => {
   await store.set("Current Workout Index", (index + 1) % scheme.length);
   getNextWorkout();
   getLastWorkout();
+  getTodaysPlanValue();
 };
 </script>
 

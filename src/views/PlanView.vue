@@ -11,17 +11,14 @@
             color="primary"></ion-icon>
           <ion-label @click="router.go(-1)" color="primary">Cancel</ion-label>
         </div>
-        <!-- <div
-            @click="saveWorkout()"
-            class="icon"
-            slot="end"
-            style="margin-right: 16px">
-            <ion-label color="primary">Save</ion-label>
-            <ion-icon
-              :icon="saveOutline"
-              style="font-size: 24px; margin-left: 8px"
-              color="primary"></ion-icon>
-          </div> -->
+        <div class="icon" slot="end" style="margin-right: 16px">
+          <ion-icon
+            :icon="pencilOutline"
+            @click="edit"
+            style="font-size: 24px; margin-right: 8px"
+            color="primary"></ion-icon>
+          <ion-label @click="edit" color="primary">Edit</ion-label>
+        </div>
       </ion-toolbar>
     </ion-header>
 
@@ -69,8 +66,26 @@
         <ion-list ref="list">
           <ion-list-header>
             <ion-label class="mt-0">Workout</ion-label>
+            <ion-icon
+              :icon="add"
+              size="large"
+              @click="addWorkoutModalOpen = true"
+              class="ion-margin-end"></ion-icon>
+            <ion-icon
+              :icon="trashOutline"
+              size="large"
+              @click="deleteMode = !deleteMode"
+              v-if="!deleteMode"
+              class="ion-margin-end"></ion-icon>
+            <ion-icon
+              :icon="reorderThreeOutline"
+              size="large"
+              @click="deleteMode = !deleteMode"
+              v-else
+              class="ion-margin-end"></ion-icon>
           </ion-list-header>
           <ion-reorder-group
+            v-if="!deleteMode"
             :disabled="false"
             @ionItemReorder="handleReorder($event)">
             <ion-item v-for="workout in workouts" key="workout.OrderIndex">
@@ -78,9 +93,177 @@
               <ion-reorder slot="end"></ion-reorder>
             </ion-item>
           </ion-reorder-group>
+          <ion-item-sliding
+            v-else
+            v-for="workout in workouts"
+            key="workout.OrderIndex">
+            <ion-item>
+              <ion-label>{{ workout.WorkoutTemplateName }} </ion-label>
+              <ion-reorder slot="end"></ion-reorder>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option color="danger">
+                <ion-button
+                  @click="
+                    deleteWorkout(
+                      workout.WorkoutTemplateName,
+                      workout.OrderIndex
+                    )
+                  "
+                  color="transparent"
+                  id="colorpickerTrigger">
+                  <ion-icon
+                    slot="icon-only"
+                    :icon="trashOutline"
+                    style="font-size: 36px"></ion-icon>
+                </ion-button>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
         </ion-list>
       </div>
     </ion-content>
+
+    <ion-modal ref="modal" :isOpen="modalOpen">
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button @click="cancel()">
+              <ion-icon slot="start" :icon="chevronBack"></ion-icon>
+              Cancel
+            </ion-button>
+          </ion-buttons>
+          <ion-title>Edit Plan</ion-title>
+          <ion-buttons slot="end">
+            <ion-button :strong="true" @click="confirmModal()">
+              <ion-icon slot="end" :icon="saveOutline"></ion-icon>
+              Save
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-item>
+          <ion-textarea
+            label="Description"
+            :auto-grow="true"
+            v-model="plan.description"
+            :rows="1">
+          </ion-textarea>
+        </ion-item>
+        <ion-item>
+          <!-- <ion-input label="Type" v-model="plan.type"></ion-input> -->
+          <ion-select
+            label="Choose your Plan Type"
+            interface="action-sheet"
+            :value="plan.type"
+            @ionChange="plan.type = $event.target.value">
+            <ion-select-option value="Strength training">
+              Strength Training
+            </ion-select-option>
+            <ion-select-option value="Mass training">
+              Mass Training
+            </ion-select-option>
+            <ion-select-option value="Cut training">
+              Cut Training
+            </ion-select-option>
+            <ion-select-option value="Cardio">Cardio</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <!-- <ion-input label="Place" v-model="plan.place"></ion-input> -->
+          <ion-select
+            label="Choose your Llace"
+            interface="action-sheet"
+            :value="plan.place"
+            @ionChange="plan.place = $event.target.value">
+            <ion-select-option value="Gym"> Gym </ion-select-option>
+            <ion-select-option value="Calisthenic Park">
+              Calisthenic Park
+            </ion-select-option>
+            <ion-select-option value="Home"> Home </ion-select-option>
+            <ion-select-option value="Outdoor">Outdoor</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <!-- <ion-input label="Split" v-model="plan.split"></ion-input> -->
+          <ion-select
+            label="Choose your Split"
+            interface="action-sheet"
+            :value="plan.split"
+            @ionChange="plan.split = $event.target.value">
+            <ion-select-option value="1-way split">
+              1-way split
+            </ion-select-option>
+            <ion-select-option value="2-way split">
+              2-way split
+            </ion-select-option>
+            <ion-select-option value="3-way split">
+              3-way split
+            </ion-select-option>
+            <ion-select-option value="4-way split">
+              4-way split
+            </ion-select-option>
+            <ion-select-option value="5-way split">
+              5-way split
+            </ion-select-option>
+            <ion-select-option value="6-way-split">
+              6-way-split
+            </ion-select-option>
+            <ion-select-option value="7-waysplit">
+              7-waysplit
+            </ion-select-option>
+            <ion-select-option value="8-way split">
+              8-way split
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-content>
+    </ion-modal>
+
+    <ion-modal ref="addWorkoutModal" :isOpen="addWorkoutModalOpen">
+      <ion-header>
+        <ion-toolbar>
+          <div class="icon">
+            <ion-icon
+              :icon="chevronBack"
+              @click="addWorkoutModalOpen = false"
+              size="large"
+              color="primary"></ion-icon>
+            <ion-label @click="addWorkoutModalOpen = false" color="primary">
+              Cancel
+            </ion-label>
+          </div>
+          <ion-title>Add Workout</ion-title>
+          <div class="icon" slot="end" style="margin-right: 16px">
+            <ion-label @click="addNewWorkouts" color="primary">Save</ion-label>
+            <ion-icon
+              :icon="saveOutline"
+              @click="addNewWorkouts"
+              style="font-size: 24px; margin-left: 8px"
+              color="primary"></ion-icon>
+          </div>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-item>
+          <ion-checkbox
+            v-model="selectedWorkouts['Restday']"
+            label-placement="end"
+            justify="start">
+            Restday
+          </ion-checkbox>
+        </ion-item>
+        <ion-item v-for="workout in workouttemplates" :key="workout.Name">
+          <ion-checkbox
+            v-model="selectedWorkouts[workout.Name]"
+            label-placement="end"
+            justify="start">
+            {{ workout.Name }}
+          </ion-checkbox>
+        </ion-item>
+      </ion-content>
+    </ion-modal>
   </ion-page>
 </template>
 
@@ -99,22 +282,45 @@ import {
   IonCol,
   IonReorderGroup,
   IonReorder,
-  IonInput,
   IonList,
   IonListHeader,
   IonItem,
+  IonButtons,
+  IonButton,
+  IonModal,
+  IonTextarea,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonCheckbox,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
-import { chevronBack, saveOutline } from "ionicons/icons";
+import {
+  chevronBack,
+  pencilOutline,
+  add,
+  saveOutline,
+  trashOutline,
+  reorderThreeOutline,
+} from "ionicons/icons";
 import { onBeforeMount, ref } from "vue";
 import { store } from "@/stores/IonicStorage";
 
 const router = useRouter();
 const databaseStore = useDatabaseStore();
 const route = useRoute();
+const modalOpen = ref(false);
+const addWorkoutModalOpen = ref(false);
+const deleteMode = ref(false);
 
 const plan = ref();
 const workouts = ref();
+const workouttemplates = ref();
+
+let selectedWorkouts: Record<string, boolean> = {};
 
 const list = ref();
 
@@ -160,9 +366,31 @@ const loadWorkouts = async () => {
   workouts.value = newWs;
 };
 
+const loadAllWorkouts = async () => {
+  const query = `SELECT * FROM WorkoutTemplate`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  workouttemplates.value = resp?.values ? resp.values : [];
+};
+
 onBeforeMount(async () => {
   await loadPlan();
   await loadWorkouts();
+  await loadAllWorkouts();
+
+  selectedWorkouts.Restday = false;
+  // add key in selectedWorkouts for each workouttemplate
+  selectedWorkouts = {
+    ...selectedWorkouts, // all existing keys
+    ...workouttemplates.value.reduce(
+      (acc: { [x: string]: boolean }, workout: { Name: string | number }) => {
+        acc[workout.Name] = false;
+        return acc;
+      },
+      {}
+    ),
+  };
+
+  console.log(selectedWorkouts);
 });
 
 const handleReorder = async (event: CustomEvent) => {
@@ -227,6 +455,78 @@ const handleReorder = async (event: CustomEvent) => {
   await databaseStore.getDatabase()?.query(query);
 
   await event.detail.complete();
+};
+
+const edit = () => {
+  modalOpen.value = true;
+};
+
+const confirmModal = async () => {
+  modalOpen.value = false;
+  // Save everything to database
+  const query = `UPDATE Plan SET Description = '${plan.value.description}', Type = '${plan.value.type}', Place = '${plan.value.place}', Split = '${plan.value.split}' WHERE ID = ${plan.value.ID}`;
+  await databaseStore.getDatabase()?.query(query);
+};
+
+const cancel = async () => {
+  modalOpen.value = false;
+};
+
+const addNewWorkouts = async () => {
+  addWorkoutModalOpen.value = false;
+  // Save everything to database
+
+  // get amount of t in plan.scheme
+  const t = plan.value.scheme.split("t").length - 1;
+
+  let dbOrderIndex = t;
+  for (const [key, value] of Object.entries(selectedWorkouts)) {
+    if (value) {
+      if (key !== "Restday") {
+        const query = `INSERT INTO WorkoutTemplatePlan (PlanID, WorkoutTemplateName, OrderIndex) VALUES (${plan.value.ID}, '${key}', ${dbOrderIndex})`;
+        await databaseStore.getDatabase()?.query(query);
+        dbOrderIndex += 1;
+      }
+
+      selectedWorkouts[key] = false;
+
+      // update scheme
+      plan.value.scheme += key === "Restday" ? "r" : "t";
+
+      // save scheme to database
+      const query2 = `UPDATE Plan SET Scheme = '${plan.value.scheme}' WHERE ID = ${plan.value.ID}`;
+      await databaseStore.getDatabase()?.query(query2);
+    }
+  }
+
+  await loadWorkouts();
+};
+
+const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
+  const query = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workoutName}'`;
+  await databaseStore.getDatabase()?.run(query);
+
+  workouts.value = workouts.value.filter(
+    (w: { OrderIndex: number }) => w.OrderIndex !== OrderIndex
+  );
+
+  // update scheme- build new scheme from workouts
+  let newScheme = "";
+  for (let i = 0; i < workouts.value.length; i++) {
+    if (workouts.value[i].WorkoutTemplateName === "Restday") {
+      newScheme += "r";
+    } else {
+      newScheme += "t";
+    }
+  }
+
+  plan.value.scheme = newScheme;
+
+  await loadWorkouts();
+
+  // save scheme to database
+  const query2 = `UPDATE Plan SET Scheme = '${newScheme}' WHERE ID = ${plan.value.ID}`;
+  await databaseStore.getDatabase()?.run(query2);
 };
 </script>
 

@@ -133,7 +133,7 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonButton,
-  IonActionSheet,
+  IonAlert,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
@@ -185,6 +185,21 @@ const alertButtons = [
       activePlan.value = plan.value.name;
       store.set("Active Plan", plan.value.name);
       store.set("Current Workout Index", 0);
+
+      // Set all active workouts in database workoutTemplate inactive
+      const query = `UPDATE WorkoutTemplate SET active = 0`;
+      databaseStore.getDatabase()?.execute(query);
+
+      // Set all WorkoutTemplates active where WorkoutTemplatePlan.planId = plan.value.ID
+      const query2 = `UPDATE WorkoutTemplate
+      SET active = 1
+      WHERE Name IN (
+          SELECT workoutTemplateName
+          FROM workouttemplatePlan
+          WHERE PlanID = ${plan.value.ID}
+      );`;
+      databaseStore.getDatabase()?.execute(query2);
+
       router.go(-1);
     },
   },

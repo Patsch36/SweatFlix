@@ -74,7 +74,8 @@
             >
           </ion-list-header>
           <ion-item-sliding v-for="(exercise, index) in exercises" :key="index">
-            <ion-item>
+            <ion-item
+              @click="router.push(`/exercise/${exercise.exerciseName}`)">
               <ion-label>{{ exercise.exerciseName }}</ion-label>
               <ion-label slot="end">
                 {{ exercise.sets }} x {{ exercise.reps }}

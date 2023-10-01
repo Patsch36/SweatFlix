@@ -10,6 +10,7 @@ import WorkoutTemplatePage from "@/views/WorkoutTemplatePage.vue";
 import WorkoutTemplateEditPage from "@/views/WorkouTemplateEditPage.vue";
 import PlansView from "@/views/PlansView.vue";
 import PlanView from "@/views/PlanView.vue";
+import ExerciseView from "@/views/ExerciseView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -65,6 +66,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/plan/:id",
     name: "plan",
     component: PlanView,
+  },
+  {
+    path: "/exercise/:id",
+    name: "exercise",
+    component: ExerciseView,
   },
 ];
 
