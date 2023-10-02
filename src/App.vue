@@ -60,8 +60,8 @@ onBeforeMount(async () => {
     );
     await db?.open();
     databaseStore.setDatabase(db);
-    await dropTables();
-    console.log("Dropped Tables");
+    // await dropTables();
+    // console.log("Dropped Tables");
     const createdTables = await createTables();
     console.log("Amount of created Tables: ", createdTables);
     if (createdTables > 0) {
@@ -77,9 +77,28 @@ onBeforeMount(async () => {
   document.body.classList.add("dark");
 
   await store.create();
+
+  // test if store is ready
+  await store.set("test", "test");
+  await store.get("test");
+  await store.remove("test");
+
+  // const keys = await store.keys();
+  // alert("Keys: " + keys);
+  // store.forEach((value, key, iterationNumber) => {
+  //   alert(
+  //     "Key: " +
+  //       key +
+  //       " Value: " +
+  //       value +
+  //       " iterationNumber: " +
+  //       iterationNumber
+  //   );
+  // });
+
   if (
-    store.get("Active Plan") === undefined ||
-    store.get("Active Plan") === null
+    store.get("Active Plan") == undefined ||
+    store.get("Active Plan") == null
   ) {
     await initKeyValuePairs();
   }

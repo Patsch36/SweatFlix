@@ -367,7 +367,7 @@ onBeforeMount(async () => {
 
   const plan = await store.get("Active Plan");
   console.log(await store.get("Active Plan"), plan === "No Plan");
-  if (plan == "No Plan") {
+  if (plan == "No Plan" || plan == undefined) {
     showNextLastWorkout.value = "calendar";
     disablePlan.value = true;
   }

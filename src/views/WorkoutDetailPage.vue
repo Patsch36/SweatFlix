@@ -191,24 +191,28 @@
                     label="Reps"
                     type="number"
                     :value="exercise.reps?.toString() || '0'"
+                    v-model="exercise.reps"
                     @ion-blur="
                       leaveReps(
                         exercise.exerciseName,
                         exercise.set,
                         $event.target.value
                       )
-                    "></ion-input>
+                    ">
+                  </ion-input>
                   <ion-input
                     label="Weight"
                     type="number"
                     :value="exercise.weight?.toString() || '0'"
+                    v-model="exercise.weight"
                     @ion-blur="
                       leaveWeight(
                         exercise.exerciseName,
                         exercise.set,
                         $event.target.value
                       )
-                    "></ion-input>
+                    ">
+                  </ion-input>
                   <ion-select
                     label="Unit"
                     :interface-options="{
@@ -231,6 +235,7 @@
               </div>
             </ion-item>
           </h5>
+          <p>{{ modalPlaceholder }}</p>
         </ion-content>
       </ion-modal>
     </ion-content>
@@ -495,65 +500,88 @@ const confirmModal = async () => {
     const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
     console.log(deleteQuery);
     await databaseStore.getDatabase()?.execute(deleteQuery);
+
+    // if (workoutExercises.value.length === 0) {
+    // await SetResults.value.map(async (exercise: any) => {
+    //   console.log(exercise);
+    //   console.log("modalPlaceholder", modalPlaceholder.value);
+    //   const index = modalPlaceholder.value.findIndex(
+    //     (obj: any) =>
+    //       obj.exerciseName === exercise.exerciseName && obj.set === exercise.set
+    //   );
+
+    //   console.log("Index", index);
+    //   exercise.reps
+    //     ? exercise.reps
+    //     : (exercise.reps = modalPlaceholder.value[index].reps);
+    //   exercise.weight
+    //     ? exercise.weight
+    //     : (exercise.weight = modalPlaceholder.value[index].weight);
+    //   exercise.unit ? exercise.unit : (exercise.unit = "kg");
+
+    // const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
+    //       VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
+    //       ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`;
+
+    // console.log(insertQuery);
+    // await databaseStore.getDatabase()?.execute(insertQuery);
+    // });
+    // } else if (SetResults.value.length !== 0) {
+    // await SetResults.value.map(async (exercise: any) => {
+    //   const index = workoutExercises.value.findIndex(
+    //     (obj: any) =>
+    //       obj.exercise === exercise.exerciseName &&
+    //       obj.setNumber === exercise.set
+    //   );
+    //   exercise.reps
+    //     ? exercise.reps
+    //     : (exercise.reps = workoutExercises.value[index].reps);
+    //   exercise.weight
+    //     ? exercise.weight
+    //     : (exercise.weight = workoutExercises.value[index].weight);
+    //   exercise.unit ? exercise.unit : (exercise.unit = "kg");
+
+    // console.log("update");
+    // const query = `UPDATE WorkoutExercise
+    //       SET reps = ${exercise.reps},
+    //           weight = ${exercise.weight},
+    //           unit = '${exercise.unit}'
+    //       WHERE workout = '${modalStarttime.value}'
+    //         AND exercise = '${exercise.exerciseName}' AND setNumber = ${exercise.set};`;
+    // console.log(query);
+    // await databaseStore.getDatabase()?.execute(query);
+    // });
   }
 
-  // console.log(SetResults.value, typeof SetResults.value);
-  // console.log(
-  //   workoutExercises.value,
-  //   typeof workoutExercises.value,
-  //   workoutExercises.value.length
-  // );
+  for (let i = 0; i < modalPlaceholder.value.length; i++) {
+    console.log("ModalPlaceholer: ", modalPlaceholder.value[i]);
+    console.log("WorkoutExercises: ", workoutExercises.value);
+    const index = workoutExercises.value.findIndex(
+      (obj: any) =>
+        obj.exercise == modalPlaceholder.value[i].exerciseName &&
+        obj.setNumber == modalPlaceholder.value[i].set
+    );
 
-  if (workoutExercises.value.length === 0) {
-    await SetResults.value.map(async (exercise: any) => {
-      console.log(exercise);
-      console.log("modalPlaceholder", modalPlaceholder.value);
-      const index = modalPlaceholder.value.findIndex(
-        (obj: any) =>
-          obj.exerciseName === exercise.exerciseName && obj.set === exercise.set
-      );
-
-      console.log("Index", index);
-      exercise.reps
-        ? exercise.reps
-        : (exercise.reps = modalPlaceholder.value[index].reps);
-      exercise.weight
-        ? exercise.weight
-        : (exercise.weight = modalPlaceholder.value[index].weight);
-      exercise.unit ? exercise.unit : (exercise.unit = "kg");
-
-      const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
-          VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
-          ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`;
-
-      console.log(insertQuery);
-      await databaseStore.getDatabase()?.execute(insertQuery);
-    });
-  } else if (SetResults.value.length !== 0) {
-    await SetResults.value.map(async (exercise: any) => {
-      const index = workoutExercises.value.findIndex(
-        (obj: any) =>
-          obj.exercise === exercise.exerciseName &&
-          obj.setNumber === exercise.set
-      );
-      exercise.reps
-        ? exercise.reps
-        : (exercise.reps = workoutExercises.value[index].reps);
-      exercise.weight
-        ? exercise.weight
-        : (exercise.weight = workoutExercises.value[index].weight);
-      exercise.unit ? exercise.unit : (exercise.unit = "kg");
-
+    console.log("Index", index);
+    if (index !== -1) {
       console.log("update");
       const query = `UPDATE WorkoutExercise
-          SET reps = ${exercise.reps},
-              weight = ${exercise.weight},
-              unit = '${exercise.unit}'
-          WHERE workout = '${modalStarttime.value}'
-            AND exercise = '${exercise.exerciseName}' AND setNumber = ${exercise.set};`;
+              SET reps = ${modalPlaceholder.value[i].reps},
+                  weight = ${modalPlaceholder.value[i].weight},
+                  unit = '${modalPlaceholder.value[i].unit}'
+              WHERE workout = '${modalStarttime.value}'
+                AND exercise = '${modalPlaceholder.value[i].exerciseName}' AND setNumber = ${modalPlaceholder.value[i].set};`;
       console.log(query);
-      await databaseStore.getDatabase()?.execute(query);
-    });
+      await databaseStore.getDatabase()?.run(query);
+    } else {
+      console.log("insert");
+      const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
+              VALUES ('${modalStarttime.value}', '${modalPlaceholder.value[i].exerciseName}', ${modalPlaceholder.value[i].set} ,
+              ${modalPlaceholder.value[i].reps}, ${modalPlaceholder.value[i].weight}, '${modalPlaceholder.value[i].unit}');`;
+
+      console.log(insertQuery);
+      await databaseStore.getDatabase()?.run(insertQuery);
+    }
   }
 
   showDiagram.value = false;
