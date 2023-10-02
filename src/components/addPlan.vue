@@ -12,8 +12,16 @@
           <ion-button
             :disabled="checkIfPlanIsFilled()"
             :strong="true"
-            @click="confirmModal()">
-            Confirm
+            @click="confirmModal()"
+            v-if="!addWorkouts">
+            Add Plan Data
+          </ion-button>
+          <ion-button
+            :disabled="checkIfPlanIsFilled()"
+            :strong="true"
+            @click="addWorkoutsFunction()"
+            v-else>
+            Add Plan Workouts
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -55,7 +63,7 @@
       </ion-item>
       <ion-item>
         <ion-select
-          label="Choose your Llace"
+          label="Choose your Place"
           interface="action-sheet"
           :value="plan.place"
           @ionChange="plan.place = $event.target.value">
@@ -97,7 +105,8 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
-      <p>{{ plan }}</p>
+
+      <WorkoutOrganizer v-if="addWorkouts"></WorkoutOrganizer>
     </ion-content>
   </ion-modal>
 </template>
@@ -121,6 +130,8 @@ import {
 } from "@ionic/vue";
 import { useStateStore } from "@/stores/stateStore";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import WorkoutOrganizer from "./WorkoutOrganizer.vue";
+import { add } from "cypress/types/lodash";
 
 const stateStore = useStateStore();
 const databaseStore = useDatabaseStore();
@@ -134,6 +145,8 @@ const plan = ref({
   place: "",
   split: "",
 });
+
+const addWorkouts = ref(false);
 
 onBeforeMount(() => {
   modalOpen.value = stateStore.showAddPlanModal;
@@ -158,8 +171,6 @@ const checkIfPlanIsFilled = () => {
 };
 
 const confirmModal = async () => {
-  stateStore.setShowAddPlanModal(false);
-
   const newPlan = {
     name: plan.value.name,
     description: plan.value.description,
@@ -169,5 +180,19 @@ const confirmModal = async () => {
   };
   const query = `INSERT INTO Plan (name, description, type, place, split) VALUES ("${newPlan.name}", "${newPlan.description}", "${newPlan.type}", "${newPlan.place}", "${newPlan.split}")`;
   await databaseStore.getDatabase()?.run(query);
+
+  addWorkouts.value = true;
+};
+
+const addWorkoutsFunction = () => {
+  addWorkouts.value = false;
+  plan.value = {
+    name: "",
+    description: "",
+    type: "",
+    place: "",
+    split: "",
+  };
+  stateStore.setShowAddPlanModal(false);
 };
 </script>

@@ -229,6 +229,10 @@ const activatePlan = (_plan: { ID: any; name: any }) => {
 };
 
 const deletePlan = async (plan: { ID: any }) => {
+  // Delete all workouts from WorkoutTemplatePlan
+  const deleteWTPQuery = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.ID}`;
+  await databaseStore.getDatabase()?.run(deleteWTPQuery);
+
   const query = `DELETE FROM Plan WHERE id = ${plan.ID}`;
   await databaseStore.getDatabase()?.run(query);
   await loadPlans();
