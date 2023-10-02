@@ -50,7 +50,9 @@
         <ion-grid class="ion-margin-bottom">
           <ion-row>
             <ion-col size="4" size-md="3">
-              <ion-card color="primary">
+              <ion-card
+                color="primary"
+                @click="stateStore.setShowAddPlanModal(true)">
                 <ion-card-header>
                   <ion-card-subtitle>Add new Plan</ion-card-subtitle>
                   <ion-card-title style="text-align: center">+</ion-card-title>
@@ -106,6 +108,7 @@
         </ion-list>
       </div>
     </ion-content>
+    <add-plan></add-plan>
   </ion-page>
 </template>
 
@@ -139,6 +142,10 @@ import { useRoute, useRouter } from "vue-router";
 import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
 import { onBeforeMount, ref, shallowRef } from "vue";
 import { store } from "@/stores/IonicStorage";
+import { useStateStore } from "@/stores/stateStore";
+import AddPlan from "@/components/addPlan.vue";
+
+const stateStore = useStateStore();
 
 const router = useRouter();
 const databaseStore = useDatabaseStore();
@@ -223,7 +230,7 @@ const activatePlan = (_plan: { ID: any; name: any }) => {
 
 const deletePlan = async (plan: { ID: any }) => {
   const query = `DELETE FROM Plan WHERE id = ${plan.ID}`;
-  await databaseStore.getDatabase()?.execute(query);
+  await databaseStore.getDatabase()?.run(query);
   await loadPlans();
 };
 
@@ -231,6 +238,10 @@ onBeforeMount(async () => {
   activePlan.value = await store.get("Active Plan");
   activePlan.value ? activePlan.value : "No Active Plan";
   await loadPlans();
+});
+
+stateStore.$subscribe((mutation, state) => {
+  if (!state.showAddPlanModal) loadPlans();
 });
 </script>
 
