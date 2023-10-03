@@ -203,7 +203,8 @@ const loadWorkouts = async () => {
   const newWs = [];
   let wsIndex = 0;
   console.log(ws);
-  for (let i = 0; i < plan.value.scheme.length; i++) {
+  const loopLimit = plan.value.scheme ? plan.value.scheme.length : 0;
+  for (let i = 0; i < loopLimit; i++) {
     if (plan.value.scheme[i] === "t") {
       console.log(
         wsIndex,
@@ -239,9 +240,9 @@ const loadAllWorkouts = async () => {
 };
 
 onBeforeMount(async () => {
+  await loadAllWorkouts();
   await loadPlan();
   await loadWorkouts();
-  await loadAllWorkouts();
 
   selectedWorkouts.Restday = false;
   // add key in selectedWorkouts for each workouttemplate
@@ -345,6 +346,7 @@ const addNewWorkouts = async () => {
         selectedWorkouts[key] = false;
 
         // update scheme
+        if (!plan.value.scheme) plan.value.scheme = "";
         plan.value.scheme += key === "Restday" ? "r" : "t";
 
         // save scheme to database
