@@ -60,6 +60,7 @@
       </ion-segment>
 
       <Diagram :weights="queryResults" v-if="queryResults" />
+
       <ion-list class="fixed-height-list">
         <ion-list-header>
           <ion-label>Date</ion-label>
@@ -117,12 +118,12 @@ import Diagram from "../components/Diagram.vue";
 import WeightRecord from "../datatypes/weight";
 
 const router = useRouter();
-const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
 let latestWeight = ref<number>(0);
 const inputWidth = ref<string>("5rem");
 const weightGoalFromStore = ref();
 
+const queryResults = ref<any>(null);
 // const diagram = ref<any>(null);
 const timeSegment = ref<string>("week");
 
@@ -152,6 +153,8 @@ const loadWeight = async () => {
       b: { timestamp: string | number | Date }
     ) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
+
+  console.log(queryResults.value);
 };
 
 onBeforeMount(async () => {

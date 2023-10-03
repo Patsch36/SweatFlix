@@ -97,9 +97,10 @@
             :disabled="false"
             @ionItemReorder="handleReorder($event)">
             <ion-item v-for="exercise in exercises" key="exercise.ID">
-              <ion-label>{{
-                exercise.exerciseName || exercise.name
-              }}</ion-label>
+              <ion-label
+                @click="router.push(`/exercise/${exercise.exerciseName}`)"
+                >{{ exercise.exerciseName || exercise.name }}</ion-label
+              >
               <ion-label
                 style="
                   display: flex;
@@ -159,15 +160,23 @@
           <ion-list>
             <ion-list-header>
               <ion-label>Exercises</ion-label>
-              <ion-label style="text-align: end; margin-right: 24px"
-                >Sets</ion-label
-              >
+              <ion-label style="text-align: end; margin-right: 24px">
+                Sets
+              </ion-label>
             </ion-list-header>
             <ion-item v-for="exercise in modalExercises" :key="exercise.name">
-              <ion-label>
+              <ion-label @click="openPopover(exercise.name, $event)">
                 <span style="color: white">{{ exercise.name }}</span>
                 <ion-label color="medium">{{ exercise.SubMuscle }}</ion-label>
               </ion-label>
+              <ion-popover
+                :is-open="popoverOpen[exercise.name]"
+                :keep-contents-mounted="true"
+                @didDismiss="popoverOpen[exercise.name] = false">
+                <ion-content class="ion-padding">
+                  {{ exercise.description }}
+                </ion-content>
+              </ion-popover>
               <ion-label
                 v-if="allExercises"
                 style="
@@ -231,6 +240,7 @@ import {
   IonBackdrop,
   IonReorderGroup,
   IonReorder,
+  IonPopover,
 } from "@ionic/vue";
 import { onBeforeMount, ref, shallowRef } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
@@ -272,6 +282,9 @@ const name = ref<string>("");
 const description = ref<string>("");
 const color = ref<string>("");
 
+const popoverOpen = ref<{ [key: string]: any }>({});
+const event = ref<any>(null);
+
 const loadWorkoutTemplate = async () => {
   const query = `SELECT Split, Description, Color FROM WorkoutTemplate WHERE name = '${workout.value}'`;
 
@@ -303,7 +316,7 @@ const loadWorkoutExcercises = async () => {
 };
 
 const loadAllExercises = async () => {
-  const query = `SELECT Exercise.name, MuscleGroup.Muscle, MuscleGroup.SubMuscle FROM Exercise INNER JOIN MuscleGroup on Exercise.muscleGroup = MuscleGroup.ID`;
+  const query = `SELECT Exercise.name, Exercise.description, MuscleGroup.Muscle, MuscleGroup.SubMuscle FROM Exercise INNER JOIN MuscleGroup on Exercise.muscleGroup = MuscleGroup.ID`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   allExercises.value = resp?.values ? resp.values : [];
@@ -325,6 +338,7 @@ onBeforeMount(async () => {
   missingMuscles.value = await musclesWithSubgroup(allMusclesOfSplit.value);
 
   modalExercises.value = allExercises.value;
+  initPopoverOpenRef();
 
   initBuffers();
 });
@@ -429,27 +443,39 @@ const generateNumbers = (upperLimit: any) => {
   return Array.from({ length: upperLimit }, (_, index) => index + 1);
 };
 
+const initPopoverOpenRef = () => {
+  allExercises.value.map((exercise) => {
+    popoverOpen.value[exercise.name] = false;
+  });
+  console.log(popoverOpen.value);
+};
+
+const openPopover = (name: string, event: any) => {
+  popoverOpen.value[name] = true;
+  event.value = event;
+};
+
 const cancel = () => {
   modal.value.$el.dismiss(null, "cancel");
   showAddExerciseModal.value = false;
 };
 
 const handleInput = (event: any) => {
-  const query = event.target.value;
+  const query = event.target.value.toLowerCase(); // To ignore case sensitivity
   console.log(query);
 
-  if (query === "" || !allExercises.value)
+  if (query === "" || !allExercises.value) {
     modalExercises.value = allExercises.value;
-  else {
+  } else {
     modalExercises.value = allExercises.value.filter((exercise) => {
-      const exerciseName = exercise.name;
-      const subMuscle = exercise.SubMuscle;
-      const muscle = exercise.Muscle;
+      const exerciseName = exercise.name.toLowerCase(); // To ignore case sensitivity
+      const subMuscle = exercise.SubMuscle.toLowerCase(); // To ignore case sensitivity
+      const muscle = exercise.Muscle.toLowerCase(); // To ignore case sensitivity
 
       return (
-        exerciseName.includes(query) ||
-        subMuscle.includes(query) ||
-        muscle.includes(query)
+        exerciseName.indexOf(query) !== -1 || // Check if the query string is found in the name
+        subMuscle.indexOf(query) !== -1 || // Check if the query string is found in the SubMuscle
+        muscle.indexOf(query) !== -1 // Check if the query string is found in the Muscle
       );
     });
     console.log(modalExercises.value);
@@ -515,17 +541,12 @@ const isTemplateNameUnique = async () => {
 };
 
 const handleReorder = async (event: CustomEvent) => {
-  // The `from` and `to` properties contain the index of the item
-  // when the drag started and ended, respectively
   await console.log(
     "Dragged from index",
     event.detail.from,
     "to",
     event.detail.to
   );
-
-  // const item1 = exercises.value[event.detail.from];
-  // const item2 = exercises.value[event.detail.to];
 
   const to = event.detail.to;
   const from = event.detail.from;
@@ -568,14 +589,6 @@ const handleReorder = async (event: CustomEvent) => {
     const insertQuery = `INSERT INTO WorkoutList (ID, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}, ${exercise.sets}, '${exercise.reps}')`;
     await databaseStore.getDatabase()?.run(insertQuery);
   }
-
-  // await console.log("Changed", item1, item2);
-
-  // await loadWorkoutExcercises();
-
-  // Finish the reorder and position the item in the DOM based on
-  // where the gesture ended. This method can also be called directly
-  // by the reorder group
   await event.detail.complete();
 };
 </script>
@@ -608,5 +621,17 @@ ion-button {
 
 .mt-0 {
   margin-top: 0 !important;
+}
+
+ion-popover {
+  --background: rgba(40, 173, 218, 0.6);
+  --backdrop-opacity: 0.75;
+  --border-color: rgba(40, 173, 218, 0.6);
+  --color: white;
+  --width: 300px;
+}
+ion-popover ion-content {
+  /* --background: rgba(40, 173, 218, 0.6); */
+  border: 5px solid var(--ion-color-primary);
 }
 </style>

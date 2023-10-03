@@ -101,6 +101,7 @@
       </ion-grid>
 
       <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
+      <p>{{ queryResults }}</p>
 
       <ion-list v-show="workoutExercises.length">
         <ion-list-header>
@@ -110,7 +111,7 @@
         <ion-item-sliding
           v-for="(exercise, index) in workoutExercises"
           :key="index">
-          <ion-item>
+          <ion-item @click="router.push(`/exercise/${exercise.exercise}`)">
             <ion-label>{{ exercise.exercise }}</ion-label>
             <ion-label slot="end">
               {{ exercise.reps }} x {{ exercise.weight }} {{ exercise.unit }}

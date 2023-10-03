@@ -183,6 +183,8 @@ const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
 
+import Diagram from "../components/Diagram.vue";
+
 const NextLastWorkoutSlider = ref();
 
 const databaseStore = useDatabaseStore();
@@ -194,6 +196,12 @@ const weightGoal = ref();
 
 const showNextLastWorkout = ref();
 const disablePlan = ref(false);
+
+const testWeights = ref([
+  { timestamp: "2023-09-02T06:30:00", weight: 50 },
+  { timestamp: "2023-09-05T06:30:00", weight: 55 },
+  { timestamp: "2023-09-12T06:30:00", weight: 60 },
+]);
 
 const getLastWorkout = async () => {
   if (NextLastWorkoutSlider.value.$el.value === "calendar") {

@@ -1,6 +1,6 @@
 <template>
   <div class="canvas-box">
-    <canvas ref="weightChartEl" height="900px" v-if="dataY2.length"></canvas>
+    <canvas ref="weightChartEl" height="900px"></canvas>
   </div>
   <p ref="weightRef" v-show="false">{{ weights }}</p>
 </template>
@@ -58,6 +58,72 @@ onMounted(() => {
     LinearScale,
     TimeScale
   );
+
+  nextTick(() => {
+    if (weightChartEl.value) {
+      const ctx = weightChartEl.value.getContext("2d");
+      if (ctx) {
+        weightChart.value = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Weight",
+                data: [],
+                backgroundColor: "rgba(147, 30, 21, 0.2)",
+                borderColor: "rgba(147, 30, 21, 1)",
+                borderWidth: 1,
+                fill: true,
+                pointRadius: 2, // Radius der Punkte
+                pointBackgroundColor: "rgba(227,36,0, 0.2)", // Farbe der Punkte
+                pointBorderColor: "rgba(227,36,0, 1)", // Randfarbe der Punkte
+                pointBorderWidth: 1, // Breite des Randes der Punkte
+                tension: 0.4,
+              },
+              // {
+              //   label: "Goal",
+              //   data: dataY2,
+              //   backgroundColor: "rgba(206,176,78, 0.2)",
+              //   borderColor: "rgba(206,176,78, 1)",
+              //   borderWidth: 1,
+              //   pointRadius: 0,
+              //   tension: 0.4,
+              // },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "day",
+                  stepSize: 1,
+                },
+                grid: {
+                  display: true,
+                  color: "#222",
+                },
+              },
+              y: {
+                type: "linear",
+                grid: {
+                  color: "#444",
+                },
+                // ticks: {
+                //   stepSize: 1,
+                // },
+              },
+            },
+          },
+        });
+
+        console.log("weightGoal.value", weightGoal.value);
+      }
+    }
+  });
 });
 
 watch(
@@ -205,6 +271,8 @@ const updateChart = () => {
   //     dataY2.push(weightGoal.value);
   //   }
   // }
+  // console.log("dataX", dataX);
+  // console.log("dataY", dataY);
 
   if (weightChart.value) {
     weightChart.value.data.labels = dataX;
@@ -213,10 +281,76 @@ const updateChart = () => {
 
     weightChart.value.update();
     return;
+  } else {
+    nextTick(() => {
+      if (weightChartEl.value) {
+        const ctx = weightChartEl.value.getContext("2d");
+        if (ctx) {
+          weightChart.value = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: dataX,
+              datasets: [
+                {
+                  label: "Weight",
+                  data: dataY,
+                  backgroundColor: "rgba(147, 30, 21, 0.2)",
+                  borderColor: "rgba(147, 30, 21, 1)",
+                  borderWidth: 1,
+                  fill: true,
+                  pointRadius: 2, // Radius der Punkte
+                  pointBackgroundColor: "rgba(227,36,0, 0.2)", // Farbe der Punkte
+                  pointBorderColor: "rgba(227,36,0, 1)", // Randfarbe der Punkte
+                  pointBorderWidth: 1, // Breite des Randes der Punkte
+                  tension: 0.4,
+                },
+                // {
+                //   label: "Goal",
+                //   data: dataY2,
+                //   backgroundColor: "rgba(206,176,78, 0.2)",
+                //   borderColor: "rgba(206,176,78, 1)",
+                //   borderWidth: 1,
+                //   pointRadius: 0,
+                //   tension: 0.4,
+                // },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    unit: "day",
+                    stepSize: 1,
+                  },
+                  grid: {
+                    display: true,
+                    color: "#222",
+                  },
+                },
+                y: {
+                  type: "linear",
+                  grid: {
+                    color: "#444",
+                  },
+                  // ticks: {
+                  //   stepSize: 1,
+                  // },
+                },
+              },
+            },
+          });
+
+          console.log("weightGoal.value", weightGoal.value);
+        }
+      }
+    });
   }
 };
 
-setInterval(updateChart, 100);
+setInterval(updateChart, 500);
 
 const averagedQueryResults = () => {
   const sortedQueryResults = weights

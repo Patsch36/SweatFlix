@@ -50,6 +50,62 @@
           </ion-row>
         </ion-grid>
       </div>
+
+      <div class="ion-padding">
+        <ion-segment
+          color="primary"
+          value="workout"
+          @ion-change="segmentChangedValues($event)"
+          v-model="valueSegment">
+          <!-- <ion-segment-button value="week">
+            <ion-label>Sets</ion-label>
+          </ion-segment-button> -->
+          <ion-segment-button value="workout">
+            <ion-label>Workout</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="heaviestSet">
+            <ion-label>Heaviest Set</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="weightSet">
+            <ion-label>Weight Set</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="weight">
+            <ion-label>Weight</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        <ion-segment
+          color="primary"
+          value="week"
+          @ion-change="segmentChangedTime($event)"
+          v-model="timeSegment"
+          style="margin-bottom: 15px">
+          <ion-segment-button value="month">
+            <ion-label>Month</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="halfyear">
+            <ion-label>6 Months</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="year">
+            <ion-label>Year</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="complete">
+            <ion-label>Complete</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        <Diagram
+          :weights="
+            mergeTwoArrays(
+              timestamps.slice(indexForDisplayableValues, timestamps.length),
+              displayableValues.slice(
+                indexForDisplayableValues,
+                displayableValues.length
+              )
+            )
+          "
+          v-if="displayableValues" />
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -64,11 +120,18 @@ import {
   IonToolbar,
   IonLabel,
   IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonItem,
+  IonSegment,
+  IonSegmentButton,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
-import { store } from "@/stores/IonicStorage";
-import { onBeforeMount, ref } from "vue";
+import { computed, onBeforeMount, onMounted, ref } from "vue";
+import Diagram from "@/components/Diagram.vue";
+import { times } from "cypress/types/lodash";
 
 const router = useRouter();
 const route = useRoute();
@@ -76,8 +139,23 @@ const databaseStore = useDatabaseStore();
 
 const exercise = ref();
 const exerciseName = ref();
+const timeSegment = ref<string>("week");
+const valueSegment = ref<string>("workout");
+const displayableValues = ref<number[]>([]);
 
-const WorkoutExercise = ref();
+const workoutExercises = ref();
+
+const timestamps = ref<string[]>([]);
+
+const showDiagramm = ref(true);
+
+const testWeights = ref([
+  { timestamp: "2023-09-02T06:30:00", weight: 50 },
+  { timestamp: "2023-09-05T06:30:00", weight: 55 },
+  { timestamp: "2023-09-12T06:30:00", weight: 60 },
+]);
+
+const indexForDisplayableValues = ref<number>(0);
 
 const loadExercise = async () => {
   const query = `SELECT *, Exercise.description as ExDesc FROM Exercise INNER JOIN MuscleGroup ON Exercise.MuscleGroup = MuscleGroup.ID WHERE Exercise.Name = '${exerciseName.value}'`;
@@ -88,17 +166,191 @@ const loadExercise = async () => {
   console.log(exercise.value);
 };
 
-const loadExercisesFromWorkoutEexercises = async () => {
+const loadExercisesFromWorkoutExercises = async () => {
   // get all exercises from database of this exercise
   const query = `SELECT * FROM WorkoutExercise WHERE WorkoutExercise.Exercise = '${exerciseName.value}'`;
   const resp = await databaseStore.getDatabase()?.query(query);
-  WorkoutExercise.value = resp?.values ? resp.values : [];
+  workoutExercises.value = resp?.values ? resp.values : [];
 };
 
 onBeforeMount(async () => {
   exerciseName.value = route.params.id;
   await loadExercise();
+  await loadExercisesFromWorkoutExercises();
+  timestamps.value = getUniqueTimestamps(workoutExercises.value);
+
+  timeSegment.value = "halfyear";
+  segmentChangedTime(null);
+  valueSegment.value = "workout";
+  segmentChangedValues(null);
 });
+
+onMounted(() => {
+  showDiagramm.value = true;
+  console.log(testWeights.value);
+});
+
+const overallWeightsPerSet = () => {
+  if (!workoutExercises.value) return [];
+  const weightsPerSet: number[] = [];
+  workoutExercises.value.forEach(
+    (workoutExercise: { reps: number; weight: number }) => {
+      const set = workoutExercise.reps * workoutExercise.weight;
+      weightsPerSet.push(set);
+    }
+  );
+  console.log("Weights per Set", weightsPerSet);
+  return weightsPerSet;
+};
+
+const overallWeightsPerWorkout = () => {
+  if (!workoutExercises.value) return [];
+  const weightsPerWorkout: { [key: string]: number } = {};
+  workoutExercises.value.forEach(
+    (workoutExercise: { reps: number; weight: number; workout: string }) => {
+      if (weightsPerWorkout[workoutExercise.workout]) {
+        weightsPerWorkout[workoutExercise.workout] +=
+          workoutExercise.reps * workoutExercise.weight;
+      } else {
+        weightsPerWorkout[workoutExercise.workout] =
+          workoutExercise.reps * workoutExercise.weight;
+      }
+    }
+  );
+  console.log("Weights per Workout", Object.values(weightsPerWorkout));
+  return Object.values(weightsPerWorkout);
+};
+
+const setOfWorkoutWithHighestSetWeight = () => {
+  if (!workoutExercises.value) return [];
+  const weightsPerWorkout: { [key: string]: number } = {};
+  workoutExercises.value.forEach(
+    (workoutExercise: { reps: number; weight: number; workout: string }) => {
+      if (weightsPerWorkout[workoutExercise.workout]) {
+        if (
+          weightsPerWorkout[workoutExercise.workout] <
+          workoutExercise.reps * workoutExercise.weight
+        ) {
+          weightsPerWorkout[workoutExercise.workout] =
+            workoutExercise.reps * workoutExercise.weight;
+        }
+      } else {
+        weightsPerWorkout[workoutExercise.workout] =
+          workoutExercise.reps * workoutExercise.weight;
+      }
+    }
+  );
+  console.log("Highest Set per Workout", Object.values(weightsPerWorkout));
+  return Object.values(weightsPerWorkout);
+};
+
+const setWithHighestWeightValue = () => {
+  if (!workoutExercises.value) return [];
+  const weightsPerWorkout: { [key: string]: number } = {};
+  const weightPerWorkout: { [key: string]: number } = {};
+  workoutExercises.value.forEach(
+    (workoutExercise: { reps: number; weight: number; workout: string }) => {
+      if (weightPerWorkout[workoutExercise.workout]) {
+        if (
+          weightPerWorkout[workoutExercise.workout] < workoutExercise.weight
+        ) {
+          weightPerWorkout[workoutExercise.workout] = workoutExercise.weight;
+          weightsPerWorkout[workoutExercise.workout] =
+            workoutExercise.reps * workoutExercise.weight;
+        }
+      } else {
+        weightsPerWorkout[workoutExercise.workout] =
+          workoutExercise.reps * workoutExercise.weight;
+      }
+    }
+  );
+  console.log("Highest Set per Workout", Object.values(weightsPerWorkout));
+  return Object.values(weightsPerWorkout);
+};
+
+const highestWeightAfterWorkout = () => {
+  if (!workoutExercises.value) return [];
+  const weightsPerWorkout: { [key: string]: number } = {};
+  const weightPerWorkout: { [key: string]: number } = {};
+  workoutExercises.value.forEach(
+    (workoutExercise: { reps: number; weight: number; workout: string }) => {
+      if (weightPerWorkout[workoutExercise.workout]) {
+        if (
+          weightPerWorkout[workoutExercise.workout] < workoutExercise.weight
+        ) {
+          weightPerWorkout[workoutExercise.workout] = workoutExercise.weight;
+          weightsPerWorkout[workoutExercise.workout] =
+            workoutExercise.reps * workoutExercise.weight;
+        }
+      } else {
+        weightPerWorkout[workoutExercise.workout] = workoutExercise.weight;
+      }
+    }
+  );
+  console.log("Highest Set per Workout", Object.values(weightPerWorkout));
+  return Object.values(weightPerWorkout);
+};
+
+const getUniqueTimestamps = (array: any[]): string[] => {
+  const uniqueTimestamps: string[] = [];
+  array.forEach((element: { workout: string }) => {
+    if (!uniqueTimestamps.includes(element.workout)) {
+      uniqueTimestamps.push(element.workout);
+    }
+  });
+  return uniqueTimestamps;
+};
+
+const mergeTwoArrays = (timeStampArray: string | any[], weightArray: any[]) => {
+  const mergedArray = [];
+  for (let i = 0; i < timeStampArray.length; i++) {
+    mergedArray.push({ timestamp: timeStampArray[i], weight: weightArray[i] });
+  }
+  return mergedArray;
+};
+
+const segmentChangedValues = (event: CustomEvent | null) => {
+  if (valueSegment.value === "workout") {
+    displayableValues.value = overallWeightsPerWorkout();
+  } else if (valueSegment.value === "heaviestSet") {
+    displayableValues.value = setOfWorkoutWithHighestSetWeight();
+  } else if (valueSegment.value === "weightSet") {
+    displayableValues.value = setWithHighestWeightValue();
+  } else if (valueSegment.value === "weight") {
+    displayableValues.value = highestWeightAfterWorkout();
+  }
+};
+
+const segmentChangedTime = (event: CustomEvent | null) => {
+  // FInd Index of timestamps array depending on timeSegment Values. Look of first value one week ago, one month ago, etc.
+  // Then filter workoutExercises array for all workouts that are in the timestamps array
+  const index = timestamps.value.findIndex((timestamp) => {
+    if (timeSegment.value === "week") {
+      return (
+        timestamp >=
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      );
+    } else if (timeSegment.value === "month") {
+      return (
+        timestamp >=
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      );
+    } else if (timeSegment.value === "halfyear") {
+      return (
+        timestamp >=
+        new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+      );
+    } else if (timeSegment.value === "year") {
+      return (
+        timestamp >=
+        new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
+      );
+    } else if (timeSegment.value === "complete") {
+      return true;
+    }
+  });
+  indexForDisplayableValues.value = index;
+};
 </script>
 
 <style scoped>
@@ -106,5 +358,10 @@ onBeforeMount(async () => {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+ion-segment-button {
+  --padding-start: 3px;
+  --padding-end: 3px;
 }
 </style>
