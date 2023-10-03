@@ -135,6 +135,7 @@
             </ion-item>
           </ion-reorder-group>
         </ion-list>
+        <p>{{ exercises }}</p>
       </div>
       <ion-modal ref="modal" :isOpen="showAddExerciseModal">
         <ion-header>
@@ -397,8 +398,8 @@ const saveWorkout = async () => {
         // Set new Exercises in workoutlist if exercises are chosen
         for (let i = 0; i < exercises.value.length; i++) {
           const exercise = exercises.value[i];
-          const insertQuery = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
-          await databaseStore.getDatabase()?.run(insertQuery);
+          const updateQuery = `UPDATE WorkoutList SET sets = ${exercise.sets}, reps = '${exercise.reps}' WHERE ID = '${exercise.WID}'`;
+          await databaseStore.getDatabase()?.run(updateQuery);
         }
 
         // Update Split in WorkoutTemplate
@@ -422,14 +423,14 @@ const saveWorkout = async () => {
     console.log(query);
     await databaseStore.getDatabase()?.run(query);
     // Delete every entry from workoutlist where workout is workout
-    const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
-    await databaseStore.getDatabase()?.run(deleteQuery);
+    // const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
+    // await databaseStore.getDatabase()?.run(deleteQuery);
 
     // Set new exercises
     for (let i = 0; i < exercises.value.length; i++) {
       const exercise = exercises.value[i];
-      const insertQuery = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
-      await databaseStore.getDatabase()?.run(insertQuery);
+      const updateQuery = `UPDATE WorkoutList SET sets = ${exercise.sets}, reps = '${exercise.reps}' WHERE ID = '${exercise.WID}'`;
+      await databaseStore.getDatabase()?.run(updateQuery);
     }
 
     router.go(-1);
@@ -484,11 +485,17 @@ const handleInput = (event: any) => {
 
 const confirmModal = async () => {
   let ids: any[] = [];
+  const query = `SELECT MAX(ID) as max FROM WorkoutList`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  console.log(resp);
+  let id = resp?.values ? resp.values[0].max + 1 : 0;
   modalExercises.value = modalExercises.value.map((exercise) => {
     if (exercise.sets || exercise.reps) {
       console.log(exercise);
-      const query = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps) VALUES ('${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
+      const query = `INSERT INTO WorkoutList (id, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
       databaseStore.getDatabase()?.run(query);
+
+      id += 1;
 
       if (exercise.SubMuscle) ids.push(exercise.SubMuscle);
       exercise.sets = undefined;
@@ -586,7 +593,7 @@ const handleReorder = async (event: CustomEvent) => {
   //Save new Exercis Order to Database WorkoutList
   for (let i = 0; i < exercises.value.length; i++) {
     const exercise = exercises.value[i];
-    const insertQuery = `INSERT INTO WorkoutList (ID, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}, ${exercise.sets}, '${exercise.reps}')`;
+    const insertQuery = `INSERT INTO WorkoutList (id, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
     await databaseStore.getDatabase()?.run(insertQuery);
   }
   await event.detail.complete();

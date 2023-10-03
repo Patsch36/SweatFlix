@@ -17,7 +17,6 @@
         presentation="date"
         :highlighted-dates="highlightedDates"
         @ionChange="onDateChange"
-        v-if="highlightedDates.length > 0"
         ref="datetime"
         :key="componentKey">
         <ion-buttons slot="buttons">
