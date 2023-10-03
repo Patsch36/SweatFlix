@@ -52,7 +52,7 @@
               <p
                 v-for="(muscle, index) in missingMuscles"
                 key="muscle"
-                style="margin: 0 5px 0 0">
+                style="margin: 0 5px 0 0; min-width: max-content">
                 {{ muscle
                 }}{{ index !== missingMuscles.length - 1 ? ",\n" : "" }}
               </p>
@@ -83,10 +83,13 @@
             >{{ color }}</ion-button
           >
         </ion-item>
-        <div class="list-header" @click="showAddExerciseModal = true">
+        <div
+          class="list-header"
+          @click="showAddExerciseModal = true"
+          v-if="showList">
           <ion-icon :icon="addOutline" color="light"></ion-icon>
         </div>
-        <ion-list>
+        <ion-list v-if="showList">
           <ion-list-header>
             <ion-label class="mt-0">Exercises</ion-label>
             <ion-label class="mt-0" style="text-align: end; margin-right: 24px"
@@ -276,6 +279,7 @@ const modal = ref<any>(null);
 const missingMusclesFlag = ref<boolean>(true);
 const inputReferenceName = ref<any>(null);
 const disableSaveButton = ref<boolean>(false);
+const showList = ref<boolean>(false);
 
 const newWorkout = shallowRef<boolean>(false);
 
@@ -342,6 +346,9 @@ onBeforeMount(async () => {
   initPopoverOpenRef();
 
   initBuffers();
+
+  if (workout.value !== "New Workout" && workout.value !== "NotFound")
+    showList.value = true;
 });
 
 const musclesWithSubgroup = async (musclesOfSplit: number[]) => {
@@ -406,11 +413,16 @@ const saveWorkout = async () => {
         const updateQuery = `UPDATE WorkoutTemplate SET Split = '${currentSplits.value[0]}' WHERE Name = '${name.value}'`;
         await databaseStore.getDatabase()?.run(updateQuery);
       }
+      if (showList.value) {
+        router.go(-1);
+        setTimeout(() => {
+          router.push(`/workouttemplate/${name.value}`);
+        }, 40);
+      } else {
+        showList.value = true;
+      }
 
-      router.go(-1);
-      setTimeout(() => {
-        router.push(`/workouttemplate/${name.value}`);
-      }, 40);
+      return;
     }
 
     const query = `UPDATE WorkoutTemplate SET name = '${
@@ -433,7 +445,8 @@ const saveWorkout = async () => {
       await databaseStore.getDatabase()?.run(updateQuery);
     }
 
-    router.go(-1);
+    if (showList.value) router.go(-1);
+    else showList.value = true;
   } else {
     alert("Name already exists");
   }
@@ -483,6 +496,7 @@ const handleInput = (event: any) => {
   }
 };
 
+// Add Exercise
 const confirmModal = async () => {
   let ids: any[] = [];
   const query = `SELECT MAX(ID) as max FROM WorkoutList`;
@@ -503,6 +517,8 @@ const confirmModal = async () => {
     }
     return exercise;
   });
+  workout.value = name.value;
+  await loadWorkoutTemplate();
   await loadWorkoutExcercises();
   cancel();
 
