@@ -63,11 +63,12 @@ export const createTables = async () => {
 
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS WorkoutTemplatePlan (
-    WorkoutTemplateName TEXT,
-    PlanID INTEGER,
-    OrderIndex INTEGER,
-    FOREIGN KEY (WorkoutTemplateName) REFERENCES WorkoutTemplate(Name),
-    FOREIGN KEY (PlanID) REFERENCES Plan(ID)
+            ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            WorkoutTemplateName TEXT,
+            PlanID INTEGER,
+            OrderIndex INTEGER,
+            FOREIGN KEY (WorkoutTemplateName) REFERENCES WorkoutTemplate(Name),
+            FOREIGN KEY (PlanID) REFERENCES Plan(ID)
   );`);
 
     try {

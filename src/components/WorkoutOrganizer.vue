@@ -309,7 +309,7 @@ const handleReorder = async (event: CustomEvent) => {
       newScheme += "r";
     } else {
       newScheme += "t";
-      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].WorkoutTemplateName}'`;
+      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].ID}'`;
       console.log(query);
       await databaseStore.getDatabase()?.query(query);
       dbOrderIndex += 1;
