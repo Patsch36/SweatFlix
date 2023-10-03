@@ -263,8 +263,8 @@ const handleWorkoutChange = (itemActive: Boolean, itemName: String) => {
   itemNameUpdate = itemName;
 
   popOverShow.value = true;
-  activePlan.value = "No Plan";
-  store.set("Active Plan", "No Plan");
+  // activePlan.value = "No Plan";
+  // store.set("Active Plan", "No Plan");
 
   if (itemActive) {
     const query = `UPDATE WorkoutTemplate SET active = ${

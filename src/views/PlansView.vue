@@ -228,7 +228,7 @@ const activatePlan = (_plan: { ID: any; name: any }) => {
   plan.value = _plan;
 };
 
-const deletePlan = async (plan: { ID: any }) => {
+const deletePlan = async (plan: { name: any; ID: any }) => {
   // Delete all workouts from WorkoutTemplatePlan
   const deleteWTPQuery = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.ID}`;
   await databaseStore.getDatabase()?.run(deleteWTPQuery);
@@ -236,6 +236,12 @@ const deletePlan = async (plan: { ID: any }) => {
   const query = `DELETE FROM Plan WHERE id = ${plan.ID}`;
   await databaseStore.getDatabase()?.run(query);
   await loadPlans();
+
+  const currentPlan = await store.get("Active Plan");
+  if (currentPlan === plan.name) {
+    store.set("Active Plan", "No Plan");
+    activePlan.value = "No Plan";
+  }
 };
 
 onBeforeMount(async () => {
