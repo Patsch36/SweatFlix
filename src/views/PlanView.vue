@@ -236,9 +236,16 @@ const loadPlan = async () => {
 };
 
 const loadWorkouts = async () => {
+  if (!plan.value) {
+    return;
+  }
   const query = `SELECT WorkoutTemplateName, OrderIndex FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID}`;
   const resp = await databaseStore.getDatabase()?.query(query);
   const ws = resp?.values ? resp.values : [];
+
+  if (ws.length === 0) {
+    console.log("no workouts in plan");
+  }
 
   ws.sort((a: any, b: any) => {
     return a.OrderIndex - b.OrderIndex;
@@ -246,13 +253,28 @@ const loadWorkouts = async () => {
 
   // Iterate through plan.value.scheme. If t, insert first element of ws and remove ist. if R, insert {WorkoutTemplateName: 'Restday'}. Make OrderIndex rising.
   const newWs = [];
-  for (let i = 0; i < plan.value.scheme.length; i++) {
+  let wsIndex = 0;
+  console.log(ws);
+  const loopLimit = plan.value.scheme ? plan.value.scheme.length : 0;
+  for (let i = 0; i < loopLimit; i++) {
     if (plan.value.scheme[i] === "t") {
+      console.log(
+        wsIndex,
+        ws[ws.findIndex((obj) => obj.OrderIndex === wsIndex)]
+      );
       newWs.push({
-        WorkoutTemplateName: ws[0].WorkoutTemplateName,
+        WorkoutTemplateName:
+          ws[ws.findIndex((obj) => obj.OrderIndex === wsIndex)]
+            .WorkoutTemplateName,
         OrderIndex: i,
       });
-      ws.shift();
+      //   ws.shift();
+      console.log(ws.length, wsIndex);
+      if (wsIndex < ws.length) {
+        wsIndex += 1;
+      } else {
+        wsIndex = 0;
+      }
     } else if (plan.value.scheme[i] === "r") {
       newWs.push({ WorkoutTemplateName: "Restday", OrderIndex: i });
     }

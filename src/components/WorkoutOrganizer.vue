@@ -10,27 +10,32 @@
       <ion-icon
         :icon="trashOutline"
         size="large"
-        @click="deleteMode = !deleteMode"
+        @click="toggleListMode"
         v-if="!deleteMode"
         class="ion-margin-end"></ion-icon>
       <ion-icon
         :icon="reorderThreeOutline"
         size="large"
-        @click="deleteMode = !deleteMode"
+        @click="
+          deleteMode = !deleteMode;
+          loadPlan();
+        "
         v-else
         class="ion-margin-end"></ion-icon>
     </ion-list-header>
     <ion-reorder-group
-      v-if="!deleteMode"
+      v-if="!deleteMode && showList"
       :disabled="false"
       @ionItemReorder="handleReorder($event)">
       <ion-item v-for="workout in workouts" key="workout.OrderIndex">
-        <ion-label>{{ workout.WorkoutTemplateName }} </ion-label>
+        <ion-label
+          >{{ workout.WorkoutTemplateName }}, {{ workout.OrderIndex }}
+        </ion-label>
         <ion-reorder slot="end"></ion-reorder>
       </ion-item>
     </ion-reorder-group>
     <ion-item-sliding
-      v-else
+      v-if="deleteMode && showList"
       v-for="workout in workouts"
       key="workout.OrderIndex">
       <ion-item>
@@ -138,6 +143,7 @@ const databaseStore = useDatabaseStore();
 const route = useRoute();
 const addWorkoutModalOpen = ref(false);
 const deleteMode = ref(false);
+const showList = ref(true);
 
 const plan = ref();
 const workouts = ref();
@@ -203,6 +209,7 @@ const loadWorkouts = async () => {
   const newWs = [];
   let wsIndex = 0;
   console.log(ws);
+
   const loopLimit = plan.value.scheme ? plan.value.scheme.length : 0;
   for (let i = 0; i < loopLimit; i++) {
     if (plan.value.scheme[i] === "t") {
@@ -217,7 +224,6 @@ const loadWorkouts = async () => {
         OrderIndex: i,
       });
       //   ws.shift();
-      console.log(ws.length, wsIndex);
       if (wsIndex < ws.length) {
         wsIndex += 1;
       } else {
@@ -284,7 +290,7 @@ const handleReorder = async (event: CustomEvent) => {
       const index = workouts.value.findIndex(
         (w: { OrderIndex: any }) => w.OrderIndex === i + 1
       );
-      console.log(i - 1, workouts.value[index]);
+      console.log(i, workouts.value[index]);
       workouts.value[index].OrderIndex = i;
     }
     workouts.value[ind].OrderIndex = to;
@@ -310,9 +316,9 @@ const handleReorder = async (event: CustomEvent) => {
       newScheme += "r";
     } else {
       newScheme += "t";
-      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].ID}'`;
+      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].WorkoutTemplateName}'`;
       console.log(query);
-      await databaseStore.getDatabase()?.query(query);
+      await databaseStore.getDatabase()?.run(query);
       dbOrderIndex += 1;
     }
   }
@@ -321,6 +327,7 @@ const handleReorder = async (event: CustomEvent) => {
   const query = `UPDATE Plan SET Scheme = '${newScheme}' WHERE ID = ${plan.value.ID}`;
   await databaseStore.getDatabase()?.query(query);
 
+  await loadPlan();
   emit("loadPlan");
 
   await event.detail.complete();
@@ -332,14 +339,15 @@ const addNewWorkouts = async () => {
 
   // get amount of t in plan.scheme
   if (plan.value) {
-    const t = plan.value.scheme ? plan.value.scheme.split("t").length - 1 : 0;
+    const t = plan.value.scheme ? plan.value.scheme.split("t").length : 1;
 
-    let dbOrderIndex = t;
+    let dbOrderIndex = t - 1;
     for (const [key, value] of Object.entries(selectedWorkouts)) {
       if (value) {
         if (key !== "Restday") {
           const query = `INSERT INTO WorkoutTemplatePlan (PlanID, WorkoutTemplateName, OrderIndex) VALUES (${plan.value.ID}, '${key}', ${dbOrderIndex})`;
-          await databaseStore.getDatabase()?.query(query);
+          console.log(query);
+          await databaseStore.getDatabase()?.run(query);
           dbOrderIndex += 1;
         }
 
@@ -362,8 +370,12 @@ const addNewWorkouts = async () => {
 };
 
 const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
-  const query = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workoutName}'`;
+  const query = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workoutName}' AND OrderIndex = ${OrderIndex}`;
   await databaseStore.getDatabase()?.run(query);
+
+  // For workout in WorkoutTemplatePlan, where OrderIndex > OrderIndex of deleted workout, decrease OrderIndex by 1
+  const query3 = `UPDATE WorkoutTemplatePlan SET OrderIndex = OrderIndex - 1 WHERE PlanID = ${plan.value.ID} AND OrderIndex > ${OrderIndex}`;
+  await databaseStore.getDatabase()?.run(query3);
 
   workouts.value = workouts.value.filter(
     (w: { OrderIndex: number }) => w.OrderIndex !== OrderIndex
@@ -377,17 +389,26 @@ const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
     } else {
       newScheme += "t";
     }
+    console.log("NEW SCHEME AFTER DELETING: ", newScheme);
   }
 
   plan.value.scheme = newScheme;
-
-  await loadWorkouts();
 
   // save scheme to database
   const query2 = `UPDATE Plan SET Scheme = '${newScheme}' WHERE ID = ${plan.value.ID}`;
   await databaseStore.getDatabase()?.run(query2);
 
   emit("loadPlan");
+};
+
+const toggleListMode = async () => {
+  showList.value = false;
+  deleteMode.value = !deleteMode.value;
+  await loadPlan();
+  workouts.value = workouts.value.sort((a: any, b: any) => {
+    return a.OrderIndex - b.OrderIndex;
+  });
+  showList.value = true;
 };
 </script>
 

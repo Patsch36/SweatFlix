@@ -45,12 +45,10 @@ export const createTables = async () => {
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS WorkoutTemplate (
         Name TEXT PRIMARY KEY,
-        PlanID INTEGER,
         Split TEXT,
         Description TEXT,
         Color TEXT,
-        active INTEGER,
-        FOREIGN KEY (PlanID) REFERENCES Plan(ID)
+        active INTEGER
     );`);
 
     try {
@@ -199,20 +197,20 @@ export const initTables = async () => {
     tableInitialisations += promise?.changes?.changes || 0;
 
     promise = await databaseStore.getDatabase()
-      ?.run(`INSERT INTO WorkoutTemplate (Name, PlanID, Split, Description, Color, active)
+      ?.run(`INSERT INTO WorkoutTemplate (Name, Split, Description, Color, active)
       VALUES 
-          ('Push-Request Workout', 3, 'Push', 'A push workout that will help you handle all your push requests.', 'magenta', 0),
-          ('Pull-Request Workout', 3, 'Pull', 'A pull workout that will help you handle all your pull requests.', 'lime', 0),
-          ('Leg-Endary Code Workout', 3, 'Legs', 'A leg workout that will help you maintain your leg-endary code.', 'cerulean', 0),
-          ('Full-Body Debugging Workout', 1, 'FullBody', 'A full-body workout that will help you debug your entire system.', 'coral', 0),
-          ('Upper-Body Programming Workout', 2, 'Upperbody', 'An upper-body workout that will help you program your upper body to be stronger.', 'magenta', 0),
-          ('Lower-Body Programming Workout', 1, 'Lowerbody', 'A lower-body workout that will help you program your lower body to be stronger.', 'lime', 0),
-          ('Full-Body Push Workout', 2, 'FullBodyPush', 'A full-body push workout that will help you push your limits.', 'cerulean', 0),
-          ('Full-Body Pull Workout', 2, 'FullBodyPull', 'A full-body pull workout that will help you pull your weight.', 'coral', 0),
-          ('Chest-Code Workout', 4, 'Chest', 'A chest workout that will help you debug your upper body.', 'magenta', 1),
-          ('Back-End Workout', 4, 'Back', 'A back workout that will strengthen your back-end.', 'lime', 1),
-          ('Arm-Assembly Workout', 4, 'Arms', 'An arm workout that will help you assemble stronger arms.', 'cerulean', 1),
-          ('Leg-acy Code Workout', 4, 'Legs', 'A leg workout that will help you maintain your leg-acy code.', 'coral', 1);`);
+          ('Push-Request Workout', 'Push', 'A push workout that will help you handle all your push requests.', 'magenta', 0),
+          ('Pull-Request Workout', 'Pull', 'A pull workout that will help you handle all your pull requests.', 'lime', 0),
+          ('Leg-Endary Code Workout', 'Legs', 'A leg workout that will help you maintain your leg-endary code.', 'cerulean', 0),
+          ('Full-Body Debugging Workout', 'FullBody', 'A full-body workout that will help you debug your entire system.', 'coral', 0),
+          ('Upper-Body Programming Workout', 'Upperbody', 'An upper-body workout that will help you program your upper body to be stronger.', 'magenta', 0),
+          ('Lower-Body Programming Workout', 'Lowerbody', 'A lower-body workout that will help you program your lower body to be stronger.', 'lime', 0),
+          ('Full-Body Push Workout', 'FullBodyPush', 'A full-body push workout that will help you push your limits.', 'cerulean', 0),
+          ('Full-Body Pull Workout', 'FullBodyPull', 'A full-body pull workout that will help you pull your weight.', 'coral', 0),
+          ('Chest-Code Workout', 'Chest', 'A chest workout that will help you debug your upper body.', 'magenta', 1),
+          ('Back-End Workout', 'Back', 'A back workout that will strengthen your back-end.', 'lime', 1),
+          ('Arm-Assembly Workout', 'Arms', 'An arm workout that will help you assemble stronger arms.', 'cerulean', 1),
+          ('Leg-acy Code Workout', 'Legs', 'A leg workout that will help you maintain your leg-acy code.', 'coral', 1);`);
 
     tableInitialisations += promise?.changes?.changes || 0;
 
@@ -355,17 +353,13 @@ export const initTables = async () => {
 
     tableInitialisations += promise?.changes?.changes || 0;
 
-    // promise = await databaseStore.getDatabase()
-    //   ?.run(`INSERT INTO Weight (timestamp, weight)
-    //   VALUES
-    //   (datetime('now', '-1 days'), 80),
-    //   (datetime('now', '-2 days'), 81),
-    //   (datetime('now', '-3 days'), 82),
-    //   (datetime('now', '-4 days'), 83),
-    //   (datetime('now', '-5 days'), 85),
-    //   (datetime('now', '-20 days'), 86),
-    //   (datetime('now', '-75 days'), 88),
-    //   (datetime('now', '-100 days'), 99);`);
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO Weight (timestamp, weight)
+      VALUES
+      (datetime('now', '-1 days'), 77.7),
+      (datetime('now', '-2 days'), 77.9),
+      (datetime('now', '-3 days'), 77.6),
+      (datetime('now', '-4 days'), 78.1);`);
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }
