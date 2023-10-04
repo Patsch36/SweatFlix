@@ -144,6 +144,7 @@ import { onBeforeMount, ref, shallowRef } from "vue";
 import { store } from "@/stores/IonicStorage";
 import { useStateStore } from "@/stores/stateStore";
 import AddPlan from "@/components/addPlan.vue";
+import { availableColors } from "@/datatypes/CalendarTypes";
 
 const stateStore = useStateStore();
 
@@ -206,11 +207,39 @@ const alertButtons = [
           WHERE PlanID = ${plan.value.ID}
       );`;
       databaseStore.getDatabase()?.execute(query2);
+      makeAcitveWorkoutsHaveUniqueColors();
 
       router.go(-1);
     },
   },
 ];
+
+const makeAcitveWorkoutsHaveUniqueColors = async () => {
+  // Make sure all active workouts have unique colors
+  const query2 = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
+  const resp = await databaseStore.getDatabase()?.query(query2);
+  const activeWorkouts = resp?.values ? resp.values : [];
+
+  let usedColors: string[] = [];
+  await activeWorkouts.forEach((item: any) => {
+    console.log(usedColors, item.Color);
+    if (usedColors.includes(item.Color)) {
+      // Change color
+      const newColor =
+        Object.keys(availableColors).find(
+          (color) => !usedColors.includes(color)
+        ) ||
+        Object.keys(availableColors)[
+          Math.floor(Math.random() * Object.keys(availableColors).length)
+        ];
+      console.log(newColor);
+
+      const query3 = `UPDATE WorkoutTemplate SET Color = '${newColor}' WHERE Name = '${item.Name}';`;
+      databaseStore.getDatabase()?.run(query3);
+      usedColors.push(newColor);
+    } else if (item.Color) usedColors.push(item.Color);
+  });
+};
 
 const logResult = (ev: CustomEvent) => {
   console.log(`Dismissed with role: ${ev.detail.role}`);
