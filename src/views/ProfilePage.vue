@@ -15,8 +15,8 @@
 
       <ion-accordion-group
         ref="accordionGroup"
-        :animated="true"
-        :multiple="true">
+        @IonChange="accordionGroupChanged($event)"
+        v-model="openedAccordion">
         <ion-accordion value="exercises">
           <ion-item slot="header" color="primary">
             <ion-label>Exercises</ion-label>
@@ -30,29 +30,48 @@
                 style="width: 47.5%">
                 Add new Exercise
               </ion-button>
-              <ion-button fill="outline" color="light" style="width: 47.5%">
+              <ion-button
+                v-if="!showDoneExercises"
+                @click="
+                  modalExercises = allExercises.filter(
+                    (item) => item.isWorkedOut
+                  );
+                  showDoneExercises = true;
+                "
+                fill="outline"
+                color="light"
+                style="width: 47.5%">
                 Show done exercises
+              </ion-button>
+              <ion-button
+                v-else
+                @click="
+                  modalExercises = allExercises;
+                  showDoneExercises = false;
+                "
+                fill="outline"
+                color="light"
+                style="width: 47.5%">
+                Show all exercises
               </ion-button>
             </div>
             <ion-searchbar
               @ionInput="handleInput($event)"
-              placeholder="Search"></ion-searchbar>
+              placeholder="Search"
+              v-model="searchQuery"></ion-searchbar>
             <ion-list>
               <ion-list-header>
                 <ion-label>Exercises</ion-label>
-                <ion-label style="text-align: end; margin-right: 24px">
-                  Sets
-                </ion-label>
               </ion-list-header>
               <ion-item-sliding
                 v-for="exercise in modalExercises"
                 :key="exercise.name">
                 <ion-item @click="router.push(`/exercise/${exercise.name}`)">
-                  <ion-label>
-                    <span style="color: white">{{ exercise.name }}</span>
-                    <ion-label color="medium">{{
-                      exercise.SubMuscle
-                    }}</ion-label>
+                  <ion-label style="color: white; min-width: max-content">
+                    <span>{{ exercise.name }}</span>
+                    <ion-label color="medium">
+                      {{ exercise.SubMuscle }}
+                    </ion-label>
                   </ion-label>
                   <ion-label
                     v-if="allExercises"
@@ -103,11 +122,6 @@
     </ion-content>
     <add-exercise @exerciseAdded="loadAllExercises()"></add-exercise>
   </ion-page>
-
-  <!-- <base-layout pageTitle="Calendar">
-      <ion-button color="primary" router-link="/home">Home</ion-button>
-      In Calendar
-      </base-layout>  -->
 </template>
 
 <script setup lang="ts">
@@ -126,14 +140,20 @@ import {
   IonList,
   IonSearchbar,
   IonListHeader,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
+  IonIcon,
 } from "@ionic/vue";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, onMounted, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { Exercise } from "@/datatypes/Exercise";
 import { useRouter } from "vue-router";
 import { useStateStore } from "@/stores/stateStore";
+import { store } from "@/stores/IonicStorage";
 import AddExercise from "@/components/addExercise.vue";
 import { trashOutline } from "ionicons/icons";
+import { storeToRefs } from "pinia";
 
 const stateStore = useStateStore();
 const databaseStore = useDatabaseStore();
@@ -141,16 +161,31 @@ const router = useRouter();
 
 const query = ref("");
 const data = ref();
+const searchQuery = ref();
 
 const allExercises = ref<Exercise[]>([]);
 const modalExercises = ref<Exercise[]>([]);
+const showDoneExercises = ref(false);
 
 const accordionGroup = ref(null);
+const openedAccordion = ref("");
 
 onBeforeMount(async () => {
   await loadAllExercises();
   modalExercises.value = allExercises.value;
+  searchQuery.value = stateStore.profileSearchQuery;
+  handleInput({ target: { value: searchQuery.value } });
+
+  if (stateStore.openedProfileAccordion.length) {
+    openedAccordion.value = stateStore.openedProfileAccordion;
+  }
 });
+
+const accordionGroupChanged = (event: any) => {
+  console.log(event);
+  stateStore.setOpenedProfileAccordion(event.detail.value);
+  openedAccordion.value = event.detail.value;
+};
 
 const executeQuery = async () => {
   try {
@@ -163,8 +198,9 @@ const executeQuery = async () => {
   query.value = "";
 };
 
-const handleInput = (event: any) => {
+const handleInput = async (event: any) => {
   const query = event.target.value.toLowerCase(); // To ignore case sensitivity
+  stateStore.setProfileSearchQuery(query);
   console.log(query);
 
   if (query === "" || !allExercises.value) {
@@ -181,12 +217,34 @@ const handleInput = (event: any) => {
         muscle.indexOf(query) !== -1 // Check if the query string is found in the Muscle
       );
     });
+
+    if (showDoneExercises.value)
+      modalExercises.value = modalExercises.value.filter(
+        (exercise) => exercise.isWorkedOut
+      );
     console.log(modalExercises.value);
   }
 };
 
 const loadAllExercises = async () => {
-  const query = `SELECT Exercise.name, Exercise.description, MuscleGroup.Muscle, MuscleGroup.SubMuscle FROM Exercise INNER JOIN MuscleGroup on Exercise.muscleGroup = MuscleGroup.ID`;
+  const query = `SELECT DISTINCT
+  Exercise.name,
+  Exercise.description,
+  MuscleGroup.Muscle,
+  MuscleGroup.SubMuscle,
+  CASE WHEN WorkoutExercise.ID IS NOT NULL THEN 1 ELSE 0 END AS isWorkedOut
+FROM
+  Exercise
+INNER JOIN
+  MuscleGroup
+ON
+  Exercise.muscleGroup = MuscleGroup.ID
+LEFT JOIN
+  WorkoutExercise
+ON
+  Exercise.Name = WorkoutExercise.exercise
+  ORDER BY Exercise.Name ASC
+`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   allExercises.value = resp?.values ? resp.values : [];

@@ -5,4 +5,5 @@ export interface Exercise {
   Muscle: string;
   sets: number | undefined;
   reps: string | undefined | number;
+  isWorkedOut: boolean;
 }
