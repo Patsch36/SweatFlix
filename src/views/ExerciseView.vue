@@ -125,11 +125,8 @@
         <Diagram
           :weights="
             mergeTwoArrays(
-              timestamps.slice(indexForDisplayableValues, timestamps.length),
-              displayableValues.slice(
-                indexForDisplayableValues,
-                displayableValues.length
-              )
+              timestamps.slice(0, indexForDisplayableValues),
+              displayableValues.slice(0, indexForDisplayableValues)
             )
           "
           v-if="displayableValues" />
@@ -359,34 +356,33 @@ const segmentChangedValues = (event: CustomEvent | null) => {
 };
 
 const segmentChangedTime = (event: CustomEvent | null) => {
-  // FInd Index of timestamps array depending on timeSegment Values. Look of first value one week ago, one month ago, etc.
+  // Find Index of timestamps array depending on timeSegment Values. Look of first value one week ago, one month ago, etc.
   // Then filter workoutExercises array for all workouts that are in the timestamps array
+
+  // reverse order
+
   const index = timestamps.value.findIndex((timestamp) => {
     if (timeSegment.value === "week") {
       return (
-        timestamp >=
-        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        new Date(timestamp).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
       );
     } else if (timeSegment.value === "month") {
       return (
-        timestamp >=
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        new Date(timestamp).getTime() < Date.now() - 30 * 24 * 60 * 60 * 1000
       );
     } else if (timeSegment.value === "halfyear") {
       return (
-        timestamp >=
-        new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+        new Date(timestamp).getTime() < Date.now() - 180 * 24 * 60 * 60 * 1000
       );
     } else if (timeSegment.value === "year") {
       return (
-        timestamp >=
-        new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
+        new Date(timestamp).getTime() < Date.now() - 365 * 24 * 60 * 60 * 1000
       );
     } else if (timeSegment.value === "complete") {
       return true;
     }
   });
-  indexForDisplayableValues.value = index;
+  indexForDisplayableValues.value = index > 0 ? index : timestamps.value.length;
 };
 </script>
 
