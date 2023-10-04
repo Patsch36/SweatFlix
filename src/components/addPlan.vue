@@ -21,7 +21,7 @@
             :strong="true"
             @click="addWorkoutsFunction()"
             v-else>
-            Add Plan Workouts
+            Add Workouts
           </ion-button>
         </ion-buttons>
       </ion-toolbar>

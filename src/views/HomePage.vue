@@ -81,13 +81,9 @@
                     style="font-size: 22px"
                     class="adaptive-title"
                     :class="{
-                      biggerFont: lastWorkout.workoutname.length < 12,
+                      biggerFont: lastWorkout.workoutname.length < 9,
                     }">
-                    {{
-                      lastWorkout.workoutname.length > 12
-                        ? lastWorkout.workoutname.slice(0, 12) + "..."
-                        : lastWorkout.workoutname
-                    }}
+                    {{ lastWorkout.workoutname }}
                   </ion-card-title>
                 </ion-card-header>
               </ion-card>
@@ -110,13 +106,10 @@
                     style="font-size: 22px"
                     class="adaptive-title"
                     :class="{
-                      biggerFont: nextWorkout.workoutname.length < 12,
-                    }">
-                    {{
-                      nextWorkout.workoutname.length > 12
-                        ? nextWorkout.workoutname.slice(0, 12) + "..."
-                        : nextWorkout.workoutname
-                    }}
+                      biggerFont: nextWorkout.workoutname.length < 9,
+                    }"
+                    ref="nextWorkoutCardTitle">
+                    {{ nextWorkout.workoutname }}
                   </ion-card-title>
                 </ion-card-header>
               </ion-card>
@@ -131,12 +124,12 @@
               <ion-card color="primary">
                 <ion-card-header>
                   <ion-card-subtitle>Current</ion-card-subtitle>
-                  <ion-card-title v-if="queryCurrentWeightResults.length > 0"
-                    >{{
-                      queryCurrentWeightResults[0].weight
-                    }}
-                    kg</ion-card-title
-                  >
+                  <ion-card-title>
+                    <span v-if="queryCurrentWeightResults.length > 0">
+                      {{ queryCurrentWeightResults[0].weight }}
+                    </span>
+                    kg
+                  </ion-card-title>
                 </ion-card-header>
               </ion-card>
             </ion-col>
@@ -177,13 +170,11 @@ import {
   IonButton,
 } from "@ionic/vue";
 import { useRouter } from "vue-router";
-import { onBeforeMount, onMounted, ref } from "vue";
+import { onBeforeMount, onMounted, ref, watch } from "vue";
 import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
 import { useDatabaseStore } from "../stores/databaseStore";
-
-import Diagram from "../components/Diagram.vue";
 
 const NextLastWorkoutSlider = ref();
 
@@ -197,11 +188,9 @@ const weightGoal = ref();
 const showNextLastWorkout = ref();
 const disablePlan = ref(false);
 
-const testWeights = ref([
-  { timestamp: "2023-09-02T06:30:00", weight: 50 },
-  { timestamp: "2023-09-05T06:30:00", weight: 55 },
-  { timestamp: "2023-09-12T06:30:00", weight: 60 },
-]);
+// const nextWorkoutCardTitle = ref();
+// const nextWorkoutCharLimit = ref(20);
+// const showNextWorkout = ref(true);
 
 const getLastWorkout = async () => {
   if (NextLastWorkoutSlider.value.$el.value === "calendar") {
@@ -258,9 +247,20 @@ const getNextWorkout = async () => {
   `;
 
     const resp = await databaseStore.getDatabase()?.query(query);
-    nextWorkout.value = resp?.values
-      ? { workoutname: resp.values[0].workoutname, startdate: "" }
-      : { workoutname: "No Workout", startdate: "" };
+    console.log(resp?.values, typeof resp?.values);
+    if (resp?.values && resp?.values.length > 0) {
+      nextWorkout.value = {
+        workoutname: resp.values[0].workoutname,
+        startdate: "",
+      };
+    } else {
+      // Select random workout of active workouts
+      const query = `SELECT Name FROM WorkoutTemplate WHERE active = 1 ORDER BY RANDOM() LIMIT 1`;
+      const resp = await databaseStore.getDatabase()?.query(query);
+      nextWorkout.value = resp?.values
+        ? { workoutname: resp.values[0].Name, startdate: "" }
+        : { workoutname: "No Workout", startdate: "" };
+    }
   } else {
     const activePlan = await store.get("Active Plan");
     const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
@@ -427,9 +427,38 @@ const rest = async () => {
   nextWorkout.value = todayWorkout.value;
   todayWorkout.value = { workoutname: "Restday", startdate: "" };
 };
+
+const hasOverflow = (element: HTMLElement): boolean => {
+  return (
+    element.scrollWidth > element.clientWidth ||
+    element.scrollHeight > element.clientHeight
+  );
+};
+
+// watch(nextWorkout, () => {
+//   console.log("WATCH TRIGGERED");
+//   if (!nextWorkoutCardTitle.value || !nextWorkoutCardTitle.value.$el) return;
+
+//   let doesOverflowExist = hasOverflow(nextWorkoutCardTitle.value.$el);
+//   if (doesOverflowExist) {
+//     console.log("Overflow vorhanden.");
+//     while (doesOverflowExist) {
+//       console.log("Overflow vorhanden.");
+//       showNextWorkout.value = false;
+//       nextWorkoutCharLimit.value = nextWorkoutCharLimit.value - 1;
+//       doesOverflowExist = hasOverflow(nextWorkoutCardTitle.value.$el);
+//       showNextWorkout.value = true;
+//     }
+//   } else {
+//     console.log("Kein Overflow vorhanden.");
+//   }
+// });
 </script>
 
 <style scoped>
+ion-card-header {
+  padding-inline: 1rem;
+}
 .adaptive-card {
   height: 100px;
 }
@@ -440,9 +469,19 @@ const rest = async () => {
 
 .adaptive-title {
   height: 50px;
+  max-height: 50px;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Text am unteren Rand ausrichten */
+  justify-content: start;
+  /* white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis; */
+  hyphens: auto;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* Begrenzt die Anzahl der sichtbaren Zeilen auf 2 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .biggerFont {
