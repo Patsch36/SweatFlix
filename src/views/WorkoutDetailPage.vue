@@ -101,7 +101,6 @@
       </ion-grid>
 
       <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
-      <p>{{ queryResults }}</p>
 
       <ion-list v-show="workoutExercises.length">
         <ion-list-header>

@@ -6,6 +6,7 @@ export const useStateStore = defineStore("stateStore", () => {
   const showAddExerciseModal = ref(false);
   const openedProfileAccordion = ref("");
   const profileSearchQuery = ref("");
+  const showEditExerciseModal = ref(false);
 
   const setShowAddPlanModal = (show: boolean) => {
     showAddPlanModal.value = show;
@@ -23,14 +24,21 @@ export const useStateStore = defineStore("stateStore", () => {
     profileSearchQuery.value = value;
   };
 
+  const setShowEditExerciseModal = (show: boolean) => {
+    console.log("setShowEditExerciseModal", show);
+    showEditExerciseModal.value = show;
+  };
+
   return {
     setShowAddPlanModal,
     setShowAddExerciseModal,
     setOpenedProfileAccordion,
     setProfileSearchQuery,
+    setShowEditExerciseModal,
     showAddPlanModal,
     showAddExerciseModal,
     openedProfileAccordion,
     profileSearchQuery,
+    showEditExerciseModal,
   };
 });

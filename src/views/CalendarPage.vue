@@ -13,6 +13,7 @@
         </ion-toolbar>
       </ion-header>
       <ion-datetime
+        v-if="showDatetime"
         style="margin-top: 25px"
         presentation="date"
         :highlighted-dates="highlightedDates"
@@ -228,6 +229,8 @@ const queryResults = ref<any>(null);
 const queryDatesResult = ref<any>(null);
 const databaseStore = useDatabaseStore();
 
+const showDatetime = ref(false);
+
 const starttime = ref(
   new Date().toISOString().slice(0, 10) +
     "T" +
@@ -325,6 +328,7 @@ onBeforeMount(async () => {
   if (queryResults.value && queryResults.value.length > 0) {
     queryResults.value.reverse();
   }
+  showDatetime.value = true;
 });
 
 const reset = () => datetime.value.$el.reset();

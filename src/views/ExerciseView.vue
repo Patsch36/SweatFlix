@@ -11,6 +11,21 @@
             color="primary"></ion-icon>
           <ion-label @click="router.go(-1)" color="primary">Cancel</ion-label>
         </div>
+        <div class="icon" slot="end">
+          <ion-label
+            @click="
+              console.log('CLICKED');
+              stateStore.setShowEditExerciseModal(true);
+            "
+            color="primary"
+            >Edit</ion-label
+          >
+          <ion-icon
+            :icon="pencilOutline"
+            @click="stateStore.setShowEditExerciseModal(true)"
+            size="large"
+            color="primary"></ion-icon>
+        </div>
       </ion-toolbar>
     </ion-header>
 
@@ -94,6 +109,19 @@
           </ion-segment-button>
         </ion-segment>
 
+        <p class="diagramm-explanantion" v-if="valueSegment === 'workout'">
+          Overall Moved Weight of this exercise in Workout (Sum of all sets)
+        </p>
+        <p class="diagramm-explanantion" v-if="valueSegment === 'heaviestSet'">
+          The set with the highest set-weight
+        </p>
+        <p class="diagramm-explanantion" v-if="valueSegment === 'weightSet'">
+          Moved Weight during set with heighest rep-weight
+        </p>
+        <p class="diagramm-explanantion" v-if="valueSegment === 'weight'">
+          The Weight moved by one set
+        </p>
+
         <Diagram
           :weights="
             mergeTwoArrays(
@@ -107,6 +135,7 @@
           v-if="displayableValues" />
       </div>
     </ion-content>
+    <EditExercise :exercise="exercise"></EditExercise>
   </ion-page>
 </template>
 
@@ -128,14 +157,21 @@ import {
   IonSegmentButton,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
-import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
+import {
+  chevronBack,
+  pencilOutline,
+  checkmarkCircleOutline,
+} from "ionicons/icons";
 import { computed, onBeforeMount, onMounted, ref } from "vue";
 import Diagram from "@/components/Diagram.vue";
 import { times } from "cypress/types/lodash";
+import { useStateStore } from "@/stores/stateStore";
+import EditExercise from "@/components/EditExercise.vue";
 
 const router = useRouter();
 const route = useRoute();
 const databaseStore = useDatabaseStore();
+const stateStore = useStateStore();
 
 const exercise = ref();
 const exerciseName = ref();
@@ -148,6 +184,7 @@ const workoutExercises = ref();
 const timestamps = ref<string[]>([]);
 
 const showDiagramm = ref(true);
+const editExercise = ref(false);
 
 const testWeights = ref([
   { timestamp: "2023-09-02T06:30:00", weight: 50 },
@@ -187,7 +224,6 @@ onBeforeMount(async () => {
 
 onMounted(() => {
   showDiagramm.value = true;
-  console.log(testWeights.value);
 });
 
 const overallWeightsPerSet = () => {
@@ -259,6 +295,7 @@ const setWithHighestWeightValue = () => {
             workoutExercise.reps * workoutExercise.weight;
         }
       } else {
+        weightPerWorkout[workoutExercise.workout] = workoutExercise.weight;
         weightsPerWorkout[workoutExercise.workout] =
           workoutExercise.reps * workoutExercise.weight;
       }
@@ -363,5 +400,11 @@ const segmentChangedTime = (event: CustomEvent | null) => {
 ion-segment-button {
   --padding-start: 3px;
   --padding-end: 3px;
+}
+
+.diagramm-explanation {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
 }
 </style>
