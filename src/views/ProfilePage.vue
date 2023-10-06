@@ -43,8 +43,6 @@
         </ion-accordion>
       </ion-accordion-group>
 
-      <p>ORM Eppley: {{ ORMEppley }}</p>
-
       <ion-textarea
         placeholder="Enter some text..."
         :auto-grow="true"
@@ -74,7 +72,6 @@ import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
 import ExerciseManager from "@/components/ExerciseManager.vue";
-import { SetManager } from "@/datatypes/SetManager";
 import PersonalData from "@/components/PersonalData.vue";
 import Settings from "@/components/Settings.vue";
 
@@ -85,21 +82,6 @@ const query = ref("");
 const data = ref();
 
 const accordionGroup = ref(null);
-
-// ======================================================================
-const setmanager = new SetManager();
-const ORMEppley = ref();
-
-onBeforeMount(async () => {
-  ORMEppley.value = await setmanager.getNRM(
-    "Incline Bench Press",
-    new Date().toISOString().slice(0, 19),
-    60,
-    "all"
-  );
-
-  await setmanager.test();
-});
 
 const accordionGroupChanged = (event: any) => {
   console.log(event);

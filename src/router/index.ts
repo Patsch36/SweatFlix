@@ -77,6 +77,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "HealthSheet",
     component: () => import("../views/HealthSheet.vue"),
   },
+  {
+    path: "/RM-Calculator",
+    name: "RM-Calculator",
+    component: () => import("../views/RMCalculator.vue"),
+  },
 ];
 
 const router = createRouter({

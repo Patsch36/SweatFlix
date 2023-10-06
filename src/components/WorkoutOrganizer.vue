@@ -28,9 +28,7 @@
       :disabled="false"
       @ionItemReorder="handleReorder($event)">
       <ion-item v-for="workout in workouts" key="workout.OrderIndex">
-        <ion-label
-          >{{ workout.WorkoutTemplateName }}, {{ workout.OrderIndex }}
-        </ion-label>
+        <ion-label>{{ workout.WorkoutTemplateName }} </ion-label>
         <ion-reorder slot="end"></ion-reorder>
       </ion-item>
     </ion-reorder-group>
@@ -306,6 +304,10 @@ const handleReorder = async (event: CustomEvent) => {
 
   let newScheme = "";
   let dbOrderIndex = 0;
+  // Delete all workouts in WorkoutTemplatePlan from Plan.value.ID
+  const query2 = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID}`;
+  await databaseStore.getDatabase()?.run(query2);
+
   for (let i = 0; i < workouts.value.length; i++) {
     const itemIndex = workouts.value.findIndex(
       (w: { OrderIndex: any }) => w.OrderIndex === i
@@ -315,7 +317,8 @@ const handleReorder = async (event: CustomEvent) => {
       newScheme += "r";
     } else {
       newScheme += "t";
-      const query = `UPDATE WorkoutTemplatePlan SET OrderIndex = ${dbOrderIndex} WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workouts.value[itemIndex].WorkoutTemplateName}'`;
+      // Insert workout in WorkoutTemplatePlan with new OrderIndex = dbOrderIndex, pan.value.ID and workoutTemplatename
+      const query = `INSERT INTO WorkoutTemplatePlan (PlanID, WorkoutTemplateName, OrderIndex) VALUES (${plan.value.ID}, '${workouts.value[itemIndex].WorkoutTemplateName}', ${dbOrderIndex})`;
       console.log(query);
       await databaseStore.getDatabase()?.run(query);
       dbOrderIndex += 1;
@@ -379,8 +382,11 @@ const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
   await databaseStore.getDatabase()?.run(query);
 
   // For workout in WorkoutTemplatePlan, where OrderIndex > OrderIndex of deleted workout, decrease OrderIndex by 1
-  const query3 = `UPDATE WorkoutTemplatePlan SET OrderIndex = OrderIndex - 1 WHERE PlanID = ${plan.value.ID} AND OrderIndex > ${OrderIndex}`;
-  await databaseStore.getDatabase()?.run(query3);
+  // Only update when no restad is deleted
+  if (workoutName !== "Restday") {
+    const query3 = `UPDATE WorkoutTemplatePlan SET OrderIndex = OrderIndex - 1 WHERE PlanID = ${plan.value.ID} AND OrderIndex >= ${OrderIndex}`;
+    await databaseStore.getDatabase()?.run(query3);
+  }
 
   workouts.value = workouts.value.filter(
     (w: { OrderIndex: number }) => w.OrderIndex !== OrderIndex
@@ -402,6 +408,9 @@ const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
   // save scheme to database
   const query2 = `UPDATE Plan SET Scheme = '${newScheme}' WHERE ID = ${plan.value.ID}`;
   await databaseStore.getDatabase()?.run(query2);
+
+  await loadPlan();
+  await loadWorkouts();
 
   emit("loadPlan");
 };
