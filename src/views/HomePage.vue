@@ -45,6 +45,7 @@ import {
   IonFabButton,
   IonFabList,
   IonIcon,
+  IonLabel,
 } from "@ionic/vue";
 
 import { add, chevronUp, calculator } from "ionicons/icons";

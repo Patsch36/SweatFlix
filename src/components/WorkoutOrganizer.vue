@@ -133,6 +133,8 @@ import {
   reorderThreeOutline,
 } from "ionicons/icons";
 import { onBeforeMount, ref, defineEmits } from "vue";
+import { store } from "@/stores/IonicStorage";
+import { availableColors } from "@/datatypes/CalendarTypes";
 
 const emit = defineEmits(["loadPlan"]);
 
@@ -145,6 +147,7 @@ const showList = ref(true);
 const plan = ref();
 const workouts = ref();
 const workouttemplates = ref();
+const activePlan = ref();
 
 let selectedWorkouts: Record<string, boolean> = {};
 
@@ -260,6 +263,8 @@ onBeforeMount(async () => {
     ),
   };
 
+  activePlan.value = await store.get("Active Plan");
+
   console.log(selectedWorkouts);
 });
 
@@ -366,6 +371,13 @@ const addNewWorkouts = async () => {
     }
 
     await loadWorkouts();
+
+    console.log("ACTIVE PLAN: ", activePlan.value);
+    console.log("PLAN: ", plan.value.name);
+    console.log("Compared: ", activePlan.value === plan.value.name);
+    if (activePlan.value === plan.value.name) {
+      await activate();
+    }
     emit("loadPlan");
   } else {
   }
@@ -412,6 +424,10 @@ const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
   await loadPlan();
   await loadWorkouts();
 
+  if (activePlan.value === workoutName) {
+    await activate();
+  }
+
   emit("loadPlan");
 };
 
@@ -423,6 +439,53 @@ const toggleListMode = async () => {
     return a.OrderIndex - b.OrderIndex;
   });
   showList.value = true;
+};
+
+const activate = () => {
+  console.log("ACTIVATE");
+  store.set("Active Plan", plan.value.name);
+
+  // Set all active workouts in database workoutTemplate inactive
+  const query = `UPDATE WorkoutTemplate SET active = 0`;
+  databaseStore.getDatabase()?.execute(query);
+
+  // Set all WorkoutTemplates active where WorkoutTemplatePlan.planId = plan.value.ID
+  const query2 = `UPDATE WorkoutTemplate
+      SET active = 1
+      WHERE Name IN (
+          SELECT workoutTemplateName
+          FROM workouttemplatePlan
+          WHERE PlanID = ${plan.value.ID}
+      );`;
+  databaseStore.getDatabase()?.execute(query2);
+  makeAcitveWorkoutsHaveUniqueColors();
+};
+
+const makeAcitveWorkoutsHaveUniqueColors = async () => {
+  // Make sure all active workouts have unique colors
+  const query2 = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
+  const resp = await databaseStore.getDatabase()?.query(query2);
+  const activeWorkouts = resp?.values ? resp.values : [];
+
+  let usedColors: string[] = [];
+  await activeWorkouts.forEach((item: any) => {
+    console.log(usedColors, item.Color);
+    if (usedColors.includes(item.Color)) {
+      // Change color
+      const newColor =
+        Object.keys(availableColors).find(
+          (color) => !usedColors.includes(color)
+        ) ||
+        Object.keys(availableColors)[
+          Math.floor(Math.random() * Object.keys(availableColors).length)
+        ];
+      console.log(newColor);
+
+      const query3 = `UPDATE WorkoutTemplate SET Color = '${newColor}' WHERE Name = '${item.Name}';`;
+      databaseStore.getDatabase()?.run(query3);
+      usedColors.push(newColor);
+    } else if (item.Color) usedColors.push(item.Color);
+  });
 };
 </script>
 
