@@ -61,7 +61,7 @@
                   new Date(workoutQueryResult.startdate).getTime()
               ).getUTCMinutes()
             }}
-            Stunden
+            hours
           </ion-col>
           <ion-col
             v-if="
@@ -91,7 +91,7 @@
             </div>
           </ion-col>
         </ion-row>
-        <ion-row>
+        <ion-row v-if="workoutQueryResult.note">
           <ion-col>
             <b>Notes:</b>
             <br />
@@ -235,7 +235,6 @@
               </div>
             </ion-item>
           </h5>
-          <p>{{ modalPlaceholder }}</p>
         </ion-content>
       </ion-modal>
     </ion-content>

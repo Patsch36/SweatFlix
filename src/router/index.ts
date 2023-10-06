@@ -72,6 +72,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "exercise",
     component: ExerciseView,
   },
+  {
+    path: "/HealthSheet",
+    name: "HealthSheet",
+    component: () => import("../views/HealthSheet.vue"),
+  },
 ];
 
 const router = createRouter({

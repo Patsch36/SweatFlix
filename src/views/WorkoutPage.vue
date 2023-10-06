@@ -23,7 +23,7 @@
             :icon="addCircleOutline"
             slot="end"
             class="newWorkoutIcon"
-            @click="router.push(`/workouttemplate/New Workout`)"></ion-icon>
+            @click="router.push(`/workouttemplateEdit/New Workout`)"></ion-icon>
         </ion-toolbar>
       </ion-header>
 

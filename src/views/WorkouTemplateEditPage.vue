@@ -138,7 +138,6 @@
             </ion-item>
           </ion-reorder-group>
         </ion-list>
-        <p>{{ exercises }}</p>
       </div>
       <ion-modal ref="modal" :isOpen="showAddExerciseModal">
         <ion-header>
@@ -215,7 +214,6 @@
           </ion-list>
         </ion-content>
       </ion-modal>
-      <p></p>
     </ion-content>
   </ion-page>
 </template>
@@ -394,12 +392,23 @@ const saveWorkout = async () => {
     if (newWorkout.value) {
       const activeexercises = activeWorkoutsStore.getActiveWorkouts();
 
-      const query = `INSERT INTO WorkoutTemplate (Name, Description, Color, active) VALUES ('${
-        name.value
-      }', '${description.value}', '${color.value.toLowerCase()}', ${
-        activeexercises < 16 ? 1 : 0
-      })`;
-      await databaseStore.getDatabase()?.run(query);
+      if (!showList.value) {
+        const query = `INSERT INTO WorkoutTemplate (Name, Description, Color, active) VALUES ('${
+          name.value
+        }', '${description.value}', '${color.value.toLowerCase()}', ${
+          activeexercises < 16 ? 1 : 0
+        })`;
+        await databaseStore.getDatabase()?.run(query);
+      } else {
+        const query = `UPDATE WorkoutTemplate SET name = '${
+          name.value
+        }', Description = '${
+          description.value
+        }', Color = '${color.value.toLowerCase()}', Split = '${
+          currentSplits.value[0]
+        }' WHERE name = '${workout.value}'`;
+        await databaseStore.getDatabase()?.run(query);
+      }
 
       if (exercises.value.length > 0) {
         // Set new Exercises in workoutlist if exercises are chosen

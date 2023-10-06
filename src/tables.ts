@@ -353,13 +353,13 @@ export const initTables = async () => {
 
     tableInitialisations += promise?.changes?.changes || 0;
 
-    promise = await databaseStore.getDatabase()
-      ?.run(`INSERT INTO Weight (timestamp, weight)
-      VALUES
-      (datetime('now', '-1 days'), 77.7),
-      (datetime('now', '-2 days'), 77.9),
-      (datetime('now', '-3 days'), 77.6),
-      (datetime('now', '-4 days'), 78.1);`);
+    // promise = await databaseStore.getDatabase()
+    //   ?.run(`INSERT INTO Weight (timestamp, weight)
+    //   VALUES
+    //   (datetime('now', '-1 days'), 77.7),
+    //   (datetime('now', '-2 days'), 77.9),
+    //   (datetime('now', '-3 days'), 77.6),
+    //   (datetime('now', '-4 days'), 78.1);`);
   } catch (e) {
     alert("ERROR initializing DB " + JSON.stringify(e));
   }

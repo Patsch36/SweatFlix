@@ -135,7 +135,6 @@ import {
   reorderThreeOutline,
 } from "ionicons/icons";
 import { onBeforeMount, ref, defineEmits } from "vue";
-import { I } from "vitest/dist/types-198fd1d9";
 
 const emit = defineEmits(["loadPlan"]);
 
@@ -370,7 +369,13 @@ const addNewWorkouts = async () => {
 };
 
 const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
-  const query = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workoutName}' AND OrderIndex = ${OrderIndex}`;
+  // count the how maniest workout which is no restday this wporkout is in workouts.value
+  const count =
+    workouts.value.filter(
+      (w: { WorkoutTemplateName: string; OrderIndex: number }) =>
+        w.OrderIndex <= OrderIndex && w.WorkoutTemplateName !== "Restday"
+    ).length - 1;
+  const query = `DELETE FROM WorkoutTemplatePlan WHERE PlanID = ${plan.value.ID} AND WorkoutTemplateName = '${workoutName}' AND OrderIndex = ${count}`;
   await databaseStore.getDatabase()?.run(query);
 
   // For workout in WorkoutTemplatePlan, where OrderIndex > OrderIndex of deleted workout, decrease OrderIndex by 1
