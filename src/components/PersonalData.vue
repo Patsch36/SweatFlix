@@ -27,15 +27,13 @@
   </ion-item>
   <ion-item>
     <ion-label>Anatomy/ Physics</ion-label>
-    <ion-item>
-      <ion-select
-        interface="action-sheet"
-        v-model="gender"
-        @ionChange="store.set('Gender', gender)">
-        <ion-select-option value="male"> male </ion-select-option>
-        <ion-select-option value="female"> female </ion-select-option>
-      </ion-select>
-    </ion-item>
+    <ion-select
+      interface="action-sheet"
+      v-model="gender"
+      @ionChange="store.set('Gender', gender)">
+      <ion-select-option value="male"> male </ion-select-option>
+      <ion-select-option value="female"> female </ion-select-option>
+    </ion-select>
   </ion-item>
   <ion-item>
     <ion-label>Activity Level</ion-label>
@@ -50,6 +48,22 @@
         Semi-Professional
       </ion-select-option>
       <ion-select-option value="Professional"> Professional </ion-select-option>
+    </ion-select>
+  </ion-item>
+  <ion-item>
+    <ion-label>Goal Anatomy</ion-label>
+    <ion-select
+      interface="action-sheet"
+      v-model="goalAnatomy"
+      @ionChange="store.set('GoalAnatomy', goalAnatomy)">
+      <ion-select-option value="GetShredded"> Get Shredded </ion-select-option>
+      <ion-select-option value="LooseWeight"> Loose Weight </ion-select-option>
+      <ion-select-option value="Maintain"> Maintain </ion-select-option>
+      <ion-select-option value="GetStronger"> Get Stronger </ion-select-option>
+      <ion-select-option value="BuildMuscles">
+        Build Muscles
+      </ion-select-option>
+      <ion-select-option value="GetBig"> Get Big </ion-select-option>
     </ion-select>
   </ion-item>
   <ion-item>
@@ -171,6 +185,7 @@ const workoutDays = ref<{
   Sundays: false,
 });
 const activityLevel = ref();
+const goalAnatomy = ref();
 
 onBeforeMount(async () => {
   desiredWeight.value = await store.get("Weight Goal");
@@ -187,6 +202,7 @@ onBeforeMount(async () => {
     Saturdays: false,
     Sundays: false,
   };
+  goalAnatomy.value = (await store.get("GoalAnatomy")) || "";
 });
 
 // const workoutdays = JSON.parse(await store.get("Workout Days"));

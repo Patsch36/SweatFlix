@@ -82,6 +82,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "RM-Calculator",
     component: () => import("../views/RMCalculator.vue"),
   },
+  {
+    path: "/archivatedWorkouts",
+    name: "archivatedWorkouts",
+    component: () => import("../views/ArchivatedWorkouts.vue"),
+  },
 ];
 
 const router = createRouter({

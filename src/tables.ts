@@ -48,7 +48,8 @@ export const createTables = async () => {
         Split TEXT,
         Description TEXT,
         Color TEXT,
-        active INTEGER
+        active INTEGER,
+        archivated INTEGER DEFAULT 0
     );`);
 
     try {

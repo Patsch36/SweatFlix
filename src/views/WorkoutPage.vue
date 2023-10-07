@@ -65,7 +65,10 @@
 
       <ion-list v-if="showList">
         <ion-list-header>
-          <ion-segment value="default" v-model="workoutDisplaySegment">
+          <ion-segment
+            value="default"
+            v-model="workoutDisplaySegment"
+            @ionChange="loadWorkouts">
             <ion-segment-button value="active">
               <ion-label>Active</ion-label>
             </ion-segment-button>
@@ -90,7 +93,9 @@
                       height: '15px',
                       width: '15px',
                     }" />
-                  <p class="item-name">{{ item.Name }}</p>
+                  <p class="item-name">
+                    {{ item.Name }}
+                  </p>
                 </div>
                 <p class="description">
                   {{ item.Split }}
@@ -120,7 +125,7 @@
           <ion-item-options side="end">
             <ion-item-option color="danger">
               <ion-button
-                @click="deleteWorkout(item.Name)"
+                @click="archivateWorkout(item.Name)"
                 color="transparent"
                 id="colorpickerTrigger">
                 <ion-icon
@@ -132,6 +137,14 @@
           </ion-item-options>
         </ion-item-sliding>
       </ion-list>
+      <ion-button
+        v-if="workoutDisplaySegment === 'all'"
+        fill="clear"
+        color="light"
+        @click="router.push('/archivatedWorkouts')"
+        class="archive-button">
+        Archivated Workouts
+      </ion-button>
     </ion-content>
   </ion-page>
 </template>
@@ -196,9 +209,9 @@ const activePlan = ref<string>("");
 const loadWorkouts = async () => {
   let query = "";
   if (workoutDisplaySegment.value === "active") {
-    query = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
+    query = `SELECT * FROM WorkoutTemplate WHERE active = 1 AND archivated = 0`;
   } else {
-    query = `SELECT * FROM WorkoutTemplate`;
+    query = `SELECT * FROM WorkoutTemplate WHERE archivated = 0`;
   }
 
   const resp = await databaseStore.getDatabase()?.query(query);
@@ -229,9 +242,9 @@ onBeforeMount(async () => {
 watch(workoutDisplaySegment, async (newValue) => {
   let query = "";
   if (newValue === "active") {
-    query = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
+    query = `SELECT * FROM WorkoutTemplate WHERE active = 1 AND archivated = 0`;
   } else {
-    query = `SELECT * FROM WorkoutTemplate`;
+    query = `SELECT * FROM WorkoutTemplate WHERE archivated = 0`;
   }
   const resp = await databaseStore.getDatabase()?.query(query);
   queryResults.value = resp?.values || [];
@@ -296,15 +309,10 @@ const setWorkoutColor = (event: any) => {
   }, 0.01);
 };
 
-const deleteWorkout = (name: String) => {
+const archivateWorkout = (name: String) => {
   // First delete all exercises from WorkoutList
-  const query1 = `DELETE FROM WorkoutList WHERE workoutPlan = '${name}';`;
-  console.log(query1);
-  databaseStore.getDatabase()?.execute(query1);
-
-  const query2 = `DELETE FROM WorkoutTemplate WHERE Name = '${name}';`;
-  console.log(query2);
-  databaseStore.getDatabase()?.execute(query2);
+  const query1 = `UPDATE WorkoutTemplate SET archivated = 1, active = 0 WHERE Name = '${name}';`;
+  databaseStore.getDatabase()?.run(query1);
 
   loadWorkouts();
   // Reset List in Dom for closing all slides (little timeout needed)
@@ -377,5 +385,9 @@ ion-card-title {
 .newWorkoutIcon {
   font-size: 36px;
   margin-right: 10px;
+}
+
+.archive-button {
+  width: 100%;
 }
 </style>

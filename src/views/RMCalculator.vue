@@ -41,30 +41,28 @@
           </ion-segment-button>
         </ion-segment>
         <ion-item v-if="calcmode === 'NRM'">
-          <ion-item>
-            <ion-input
-              label="Amount of days backwards"
-              type="number"
-              v-model="repsForNRM"
-              @ionFocus="openPopUpReps = true"
-              class="days-backwards-input"></ion-input>
-            <ion-popover
-              :is-open="openPopUpReps"
-              @ionPopoverDidDismiss="openPopUpReps = false">
-              <ion-list>
-                <ion-item
-                  v-for="number in generateArray(500)"
-                  :key="number"
-                  @click="
-                    repsForNRM = number;
-                    openPopUpReps = false;
-                    setmanager.setReps(number);
-                  ">
-                  <ion-label>{{ number }}</ion-label>
-                </ion-item>
-              </ion-list>
-            </ion-popover>
-          </ion-item>
+          <ion-input
+            label="Amount of Reps"
+            type="number"
+            v-model="repsForNRM"
+            @ionFocus="openPopUpReps = true"
+            class="days-backwards-input"></ion-input>
+          <ion-popover
+            :is-open="openPopUpReps"
+            @ionPopoverDidDismiss="openPopUpReps = false">
+            <ion-list>
+              <ion-item
+                v-for="number in generateArray(500)"
+                :key="number"
+                @click="
+                  repsForNRM = number;
+                  openPopUpReps = false;
+                  setmanager.setReps(number);
+                ">
+                <ion-label>{{ number }}</ion-label>
+              </ion-item>
+            </ion-list>
+          </ion-popover>
         </ion-item>
 
         <ion-item class="ion-margin-bottom">
