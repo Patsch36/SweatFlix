@@ -22,11 +22,13 @@
           <ion-icon :icon="add"></ion-icon>
         </ion-fab-button>
         <ion-fab-list side="top">
-          <ion-fab-button
-            @click="router.push('RM-Calculator')"
-            class="subbutton">
-            <ion-icon :icon="calculator"></ion-icon>
+          <ion-fab-button @click="router.push('RM-Calculator')">
             <ion-label>Rep Calculator</ion-label>
+            <ion-icon :icon="calculator"></ion-icon>
+          </ion-fab-button>
+          <ion-fab-button @click="router.push('RM-Calculator')">
+            <ion-label>Start Workout</ion-label>
+            <ion-icon :icon="barbell"></ion-icon>
           </ion-fab-button>
         </ion-fab-list>
       </ion-fab>
@@ -48,7 +50,7 @@ import {
   IonLabel,
 } from "@ionic/vue";
 
-import { add, chevronUp, calculator } from "ionicons/icons";
+import { add, barbell, calculator } from "ionicons/icons";
 
 import { onBeforeMount } from "vue";
 
@@ -84,8 +86,17 @@ ion-fab-button {
   --border-radius: 15px;
 }
 
-.subbutton {
+.fab-button-in-list {
   width: 200px;
   transform: translateX(-145px);
+}
+
+.fab-button-in-list ion-label {
+  margin-left: auto;
+}
+
+.fab-button-in-list ion-icon {
+  margin-right: 12px;
+  margin-left: 6px;
 }
 </style>

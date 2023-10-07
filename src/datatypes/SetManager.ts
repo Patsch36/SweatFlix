@@ -16,6 +16,10 @@ export class SetManager {
     this.m_Reps = reps;
   }
 
+  public getReps(): number {
+    return this.m_Reps;
+  }
+
   public async get1RM(
     exercise: string,
     day: string,
@@ -27,7 +31,55 @@ export class SetManager {
     const result = await this.getValuesFromDB(exercise, day, days, latest);
     // calculate 1RM
     const oneRM = await this.calculate1RM(result, formula);
-    return oneRM;
+    return Math.round(oneRM * 10) / 10;
+  }
+
+  public calculate1RMFromWeightAndReps(
+    weight: number,
+    reps: number,
+    formula: string = "all"
+  ) {
+    if (formula === "all") {
+      return (
+        Math.round(
+          ((this.calculate1RMBoydEppley(weight, reps) +
+            this.calculate1RMBrzycki(weight, reps) +
+            this.calculate1RMLander(weight, reps)) /
+            3) *
+            10
+        ) / 10
+      );
+    } else if (formula === "eppley") {
+      return Math.round(this.calculate1RMBoydEppley(weight, reps) * 10) / 10;
+    } else if (formula === "brzycki") {
+      return Math.round(this.calculate1RMBrzycki(weight, reps) * 10) / 10;
+    } else if (formula === "lander") {
+      return Math.round(this.calculate1RMLander(weight, reps) * 10) / 10;
+    }
+  }
+
+  public calculateNRMFromWeightAndReps(
+    weight: number,
+    reps: number,
+    formula = "all"
+  ) {
+    if (formula === "all") {
+      return (
+        Math.round(
+          ((this.calculateNRMBoydEppley(weight, reps) +
+            this.calculateNRMBrzycki(weight, reps) +
+            this.calculateNRMLander(weight, reps)) *
+            10) /
+            3
+        ) / 10
+      );
+    } else if (formula === "eppley") {
+      return Math.round(this.calculateNRMBoydEppley(weight, reps) * 10) / 10;
+    } else if (formula === "brzycki") {
+      return Math.round(this.calculateNRMBrzycki(weight, reps) * 10) / 10;
+    } else if (formula === "lander") {
+      return Math.round(this.calculateNRMLander(weight, reps) * 10) / 10;
+    }
   }
 
   public async getNRM(
@@ -42,7 +94,7 @@ export class SetManager {
 
     // calculate 1RM
     const NRM = await this.calculateNRM(result, formula);
-    return NRM;
+    return Math.round(NRM * 10) / 10;
   }
 
   public test(): void {
@@ -72,8 +124,8 @@ export class SetManager {
     let sql;
 
     if (latest) {
-      // Wenn latest auf true gesetzt ist, den aktuellsten Wert abrufen
-      sql = `SELECT reps, weight FROM WorkoutExercise WHERE exercise = '${exercise}' ORDER BY workout DESC LIMIT 1;`;
+      // Select how many exercises of exercise var are in WorkoutExercise on latest day
+      sql = `SELECT reps, weight FROM WorkoutExercise WHERE exercise = '${exercise}' AND workout = (SELECT startdate FROM Workout INNER JOIN WorkoutExercise ON Workout.startdate = WorkoutExercise.workout WHERE exercise = '${exercise}' ORDER BY startdate DESC LIMIT 1);`;
     } else {
       // Andernfalls Daten für die letzten 'days' Tage abrufen
       sql = `SELECT reps, weight FROM WorkoutExercise WHERE date(workout) >= date('${day}', '-${days} days') AND exercise = '${exercise}';`;
@@ -101,9 +153,9 @@ export class SetManager {
       console.log("CURRENT 1RM VALUE ", entry);
       const weight = entry.weight;
       const reps = entry.reps;
-      console.log("epply", this.calculate1RMBoydEppley(weight, reps));
-      console.log("brzycki", this.calculate1RMBrzycki(weight, reps));
-      console.log("lander", this.calculate1RMLander(weight, reps));
+      // console.log("eppley", this.calculate1RMBoydEppley(weight, reps));
+      // console.log("brzycki", this.calculate1RMBrzycki(weight, reps));
+      // console.log("lander", this.calculate1RMLander(weight, reps));
       if (formula === "all") {
         return (
           (this.calculate1RMBoydEppley(weight, reps) +
@@ -135,9 +187,9 @@ export class SetManager {
       console.log("CURRENT NRM VALUE ", entry);
       const weight = entry.weight;
       const reps = entry.reps;
-      console.log("epply", this.calculateNRMBoydEppley(weight, reps));
-      console.log("brzycki", this.calculateNRMBrzycki(weight, reps));
-      console.log("lander", this.calculateNRMLander(weight, reps));
+      // console.log("epply", this.calculateNRMBoydEppley(weight, reps));
+      // console.log("brzycki", this.calculateNRMBrzycki(weight, reps));
+      // console.log("lander", this.calculateNRMLander(weight, reps));
       if (formula === "all") {
         return (
           (this.calculateNRMBoydEppley(weight, reps) +
@@ -165,6 +217,10 @@ export class SetManager {
     if (repetitions <= 0) {
       throw new Error("The number of repetitions must be greater than 0.");
     }
+
+    console.log("weight", weight);
+    console.log("repetitions", repetitions);
+    console.log(weight + (weight * repetitions) / 30);
 
     const oneRM = weight + (weight * repetitions) / 30;
     return oneRM;
