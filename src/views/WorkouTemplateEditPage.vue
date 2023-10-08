@@ -101,9 +101,9 @@
             @ionItemReorder="handleReorder($event)">
             <ion-item v-for="exercise in exercises" key="exercise.ID">
               <ion-label
-                @click="router.push(`/exercise/${exercise.exerciseName}`)"
-                >{{ exercise.exerciseName || exercise.name }}</ion-label
-              >
+                @click="router.push(`/exercise/${exercise.exerciseName}`)">
+                {{ exercise.exerciseName || exercise.name }}
+              </ion-label>
               <ion-label
                 style="
                   display: flex;
@@ -308,14 +308,14 @@ const loadWorkoutTemplate = async () => {
 };
 
 const loadWorkoutExcercises = async () => {
-  const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID, WorkoutList.ID as WID
+  const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID, WorkoutList.OrderIndex
   FROM WorkoutList INNER JOIN MuscleGroup INNER JOIN Exercise on WorkoutList.exerciseName == Exercise.name
   AND Exercise.MuscleGroup = MuscleGroup.ID WHERE workoutPlan = '${workout.value}'`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
 
-  exercises.value.sort((a: any, b: any) => a.WID - b.WID);
+  exercises.value.sort((a: any, b: any) => a.OrderIndex - b.OrderIndex);
 };
 
 const loadAllExercises = async () => {
@@ -508,14 +508,14 @@ const handleInput = (event: any) => {
 // Add Exercise
 const confirmModal = async () => {
   let ids: any[] = [];
-  const query = `SELECT MAX(ID) as max FROM WorkoutList`;
+  const query = `SELECT MAX(OrderIndex) as max FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
   const resp = await databaseStore.getDatabase()?.query(query);
   console.log(resp);
-  let id = resp?.values ? resp.values[0].max + 1 : 0;
+  let id = resp?.values && resp.values[0].max ? resp.values[0].max + 1 : 0;
   modalExercises.value = modalExercises.value.map((exercise) => {
     if (exercise.sets || exercise.reps) {
       console.log(exercise);
-      const query = `INSERT INTO WorkoutList (id, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
+      const query = `INSERT INTO WorkoutList (OrderIndex, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
       databaseStore.getDatabase()?.run(query);
 
       id += 1;
@@ -572,7 +572,74 @@ const isTemplateNameUnique = async () => {
   }
 };
 
+// const handleReorder = async (event: CustomEvent) => {
+//   await console.log(
+//     "Dragged from index",
+//     event.detail.from,
+//     "to",
+//     event.detail.to
+//   );
+
+//   const to = event.detail.to;
+//   const from = event.detail.from;
+
+//   const WIDs = exercises.value.map((e: { WID: any }) => e.WID);
+//   console.log(WIDs);
+
+//   const ind = exercises.value.findIndex(
+//     (e: { WID: any }) => e.WID === WIDs[from]
+//   );
+//   const draggedItem = exercises.value[ind];
+//   console.log(draggedItem);
+
+//   if (from < to) {
+//     for (
+//       let i = exercises.value[ind].WID;
+//       i < exercises.value[ind].WID + to;
+//       i++
+//     ) {
+//       const index = exercises.value.findIndex(
+//         (e: { WID: any }) => e.WID === i + 1
+//       );
+//       console.log(i, exercises.value[index]);
+//       exercises.value[index].WID = i;
+//     }
+//     exercises.value[ind].WID += to;
+//   } else if (from > to) {
+//     for (
+//       let i = exercises.value[ind].WID - 1;
+//       i >= exercises.value[ind].WID + to;
+//       i--
+//     ) {
+//       const index = exercises.value.findIndex((e: { WID: any }) => e.WID === i);
+//       console.log(i + 1, exercises.value[index]);
+//       exercises.value[index].WID = i + 1;
+//     }
+//     exercises.value[ind].WID += to;
+//   }
+
+//   // Delete all existing Exercises from Database
+//   const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
+//   await databaseStore.getDatabase()?.run(deleteQuery);
+
+//   // exercises.value.sort((a: any, b: any) => a.WID - b.WID);
+//   //Save new Exercis Order to Database WorkoutList
+//   console.log("INSERTING", exercises.value.length);
+//   // const sortedExercises = exercises.value.sort(
+//   //   (a: any, b: any) => a.WID < b.WID
+//   // );
+//   for (let i = 0; i < exercises.value.length; i++) {
+//     const exercise = exercises.value[i];
+//     const insertQuery = `INSERT INTO WorkoutList (id, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
+//     console.log(insertQuery);
+//     await databaseStore.getDatabase()?.run(insertQuery);
+//   }
+//   await event.detail.complete();
+// };
+
 const handleReorder = async (event: CustomEvent) => {
+  // The `from` and `to` properties contain the index of the item
+  // when the drag started and ended, respectively
   await console.log(
     "Dragged from index",
     event.detail.from,
@@ -583,44 +650,51 @@ const handleReorder = async (event: CustomEvent) => {
   const to = event.detail.to;
   const from = event.detail.from;
 
-  const WIDs = exercises.value.map((e: { WID: any }) => e.WID);
-  console.log(WIDs);
-
   const ind = exercises.value.findIndex(
-    (e: { WID: any }) => e.WID === WIDs[from]
+    (w: { OrderIndex: any }) => w.OrderIndex === from
   );
-  const draggedItem = exercises.value[ind];
+  const draggedItem = exercises.value[ind].WorkoutTemplateName;
   console.log(draggedItem);
 
   if (from < to) {
     for (let i = from; i < to; i++) {
       const index = exercises.value.findIndex(
-        (e: { WID: any }) => e.WID === WIDs[i + 1]
+        (w: { OrderIndex: any }) => w.OrderIndex === i + 1
       );
-      console.log(i - 1, exercises.value[index]);
-      exercises.value[index].WID = WIDs[i];
+      console.log(i, exercises.value[index]);
+      exercises.value[index].OrderIndex = i;
     }
-    exercises.value[ind].WID = WIDs[to];
+    exercises.value[ind].OrderIndex = to;
   } else if (from > to) {
     for (let i = from - 1; i >= to; i--) {
       const index = exercises.value.findIndex(
-        (e: { WID: any }) => e.WID === WIDs[i]
+        (w: { OrderIndex: any }) => w.OrderIndex === i
       );
       console.log(i + 1, exercises.value[index]);
-      exercises.value[index].WID = WIDs[i + 1];
+      exercises.value[index].OrderIndex = i + 1;
     }
-    exercises.value[ind].WID = WIDs[to];
+    exercises.value[ind].OrderIndex = to;
   }
 
-  // Delete all existing Exercises from Database
-  const deleteQuery = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
-  await databaseStore.getDatabase()?.run(deleteQuery);
-  //Save new Exercis Order to Database WorkoutList
+  let dbOrderIndex = 0;
+  // Delete all workouts in WorkoutTemplatePlan from Plan.value.ID
+  const query2 = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
+  await databaseStore.getDatabase()?.run(query2);
+
   for (let i = 0; i < exercises.value.length; i++) {
-    const exercise = exercises.value[i];
-    const insertQuery = `INSERT INTO WorkoutList (id, workoutPlan, exerciseName, sets, reps) VALUES (${exercise.WID}, '${name.value}', '${exercise.exerciseName}', ${exercise.sets}, '${exercise.reps}')`;
-    await databaseStore.getDatabase()?.run(insertQuery);
+    const itemIndex = exercises.value.findIndex(
+      (w: { OrderIndex: any }) => w.OrderIndex === i
+    );
+
+    // Insert workout in WorkoutTemplatePlan with new OrderIndex = dbOrderIndex, pan.value.ID and workoutTemplatename
+    const query = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps, OrderIndex) VALUES ('${name.value}', '${exercises.value[itemIndex].exerciseName}', ${exercises.value[itemIndex].sets}, '${exercises.value[itemIndex].reps}', ${dbOrderIndex})`;
+    console.log(query);
+    await databaseStore.getDatabase()?.run(query);
+    dbOrderIndex += 1;
   }
+
+  // await loadWorkoutExcercises();
+
   await event.detail.complete();
 };
 </script>
