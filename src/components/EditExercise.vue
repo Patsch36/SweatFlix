@@ -21,16 +21,18 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-item>
+      <ion-item v-if="name">
         <ion-label position="floating">Name</ion-label>
-        <ion-input type="text" v-model="exercise.name"></ion-input>
+        <ion-input type="text" v-model="name"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Description</ion-label>
-        <ion-textarea v-model="exercise.ExDesc" :rows="15"></ion-textarea>
+        <ion-label position="floating" v-if="description"
+          >Description</ion-label
+        >
+        <ion-textarea v-model="description" :rows="15"></ion-textarea>
       </ion-item>
-      <ion-item>
-        <ion-select v-model="exercise.SubMuscle" interface="action-sheet">
+      <ion-item v-if="subMuscle">
+        <ion-select v-model="subMuscle" interface="action-sheet">
           <ion-select-option
             v-for="subMuscle in subMuscles"
             :key="subMuscle.SubMuscle"
@@ -40,11 +42,12 @@
         </ion-select>
       </ion-item>
     </ion-content>
+    <p>{{ exercise }}</p>
   </ion-modal>
 </template>
 
 <script lang="ts" setup>
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, reactive, ref } from "vue";
 import {
   IonModal,
   IonHeader,
@@ -72,12 +75,25 @@ const modalOpen = ref(false);
 
 const { exercise } = defineProps(["exercise"]);
 
+const name = ref();
+const description = ref();
+const subMuscle = ref();
+const muscle = ref();
+
 const subMuscles = ref();
 
 stateStore.$subscribe((mutation, state) => {
   console.log("TRIGGERED");
   modalOpen.value = state.showEditExerciseModal;
+  console.log("Exercise", exercise);
+  name.value = exercise.name;
+  description.value = exercise.ExDesc;
+  subMuscle.value = exercise.SubMuscle;
+  muscle.value = exercise.Muscle;
 });
+
+// define emit
+const emit = defineEmits(["reloadExercises"]);
 
 onBeforeMount(async () => {
   await loadSubMuscles();
@@ -94,14 +110,17 @@ const checkIfPlanIsFilled = () => {
 };
 
 const confirmModal = async () => {
-  stateStore.setShowEditExerciseModal(false);
   // Get muscleGroup ID from db
-  const selectQuery = `SELECT id FROM MuscleGroup WHERE SubMuscle = '${exercise.SubMuscle}'`;
+  const selectQuery = `SELECT id FROM MuscleGroup WHERE SubMuscle = '${subMuscle.value}' AND Muscle = '${muscle.value}' `;
+  console.log(selectQuery);
   const resp = await databaseStore.getDatabase()?.query(selectQuery);
-  const muscleGroupID = resp?.values ? resp.values[0][0] : null;
+  const muscleGroupID = resp?.values ? resp.values[0].ID : null;
   // Save everything to database
-  const query = `UPDATE Exercise SET name = '${exercise.name}', description = '${exercise.ExDesc}', muscleGroup = '${muscleGroupID}' WHERE name = '${exercise.name}'`;
-  databaseStore.getDatabase()?.query(query);
+  const query = `UPDATE Exercise SET name = '${name.value}', description = '${description.value}', muscleGroup = '${muscleGroupID}' WHERE name = '${exercise.name}'`;
+  console.log(query);
+  await databaseStore.getDatabase()?.run(query);
+  emit("reloadExercises", name.value);
+  stateStore.setShowEditExerciseModal(false);
 };
 </script>
 

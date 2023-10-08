@@ -507,6 +507,7 @@ const handleInput = (event: any) => {
 
 // Add Exercise
 const confirmModal = async () => {
+  handleInput({ target: { value: "" } });
   let ids: any[] = [];
   const query = `SELECT MAX(OrderIndex) as max FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
   const resp = await databaseStore.getDatabase()?.query(query);

@@ -132,7 +132,10 @@
           v-if="displayableValues" />
       </div>
     </ion-content>
-    <EditExercise :exercise="exercise"></EditExercise>
+    <EditExercise
+      v-if="exercise"
+      :exercise="exercise"
+      @reloadExercises="reloadExercises"></EditExercise>
   </ion-page>
 </template>
 
@@ -197,7 +200,19 @@ const loadExercise = async () => {
   exercise.value = resp?.values
     ? resp.values[0]
     : { name: "No exercise found" };
-  console.log(exercise.value);
+  console.log("LOADED EXERCISE INFO", exercise.value);
+};
+
+const reloadExercises = async (name: string) => {
+  exerciseName.value = name;
+  await loadExercise();
+  await loadExercisesFromWorkoutExercises();
+  timestamps.value = getUniqueTimestamps(workoutExercises.value);
+
+  timeSegment.value = "halfyear";
+  segmentChangedTime(null);
+  valueSegment.value = "workout";
+  segmentChangedValues(null);
 };
 
 const loadExercisesFromWorkoutExercises = async () => {
