@@ -4,7 +4,7 @@
     ref="NextLastWorkoutSlider"
     :value="showNextLastWorkout"
     @ionChange="storeNewValue()">
-    <ion-segment-button value="plan" :disabled="disablePlan">
+    <ion-segment-button value="plan" :disabled="disablePlan || !scheme.length">
       <ion-label>After Plan</ion-label>
     </ion-segment-button>
     <ion-segment-button value="calendar">
@@ -122,6 +122,8 @@ const lastWorkout = ref<any>();
 const nextWorkout = ref<any>();
 const todayWorkout = ref<any>();
 
+const scheme = ref("");
+
 const showNextLastWorkout = ref();
 const disablePlan = ref(false);
 
@@ -143,17 +145,19 @@ const getLastWorkout = async () => {
     const activePlan = await store.get("Active Plan");
     const query = `SELECT scheme from Plan WHERE name = '${activePlan}'`;
     const resp = await databaseStore.getDatabase()?.query(query);
-    const scheme = resp?.values ? resp.values[0].scheme : "";
+    scheme.value = resp?.values ? resp.values[0].scheme : "";
     const wi = await store.get("Current Workout Index");
     const workoutIndex =
-      wi === 0 ? scheme.length + ((wi - 1) % scheme.length) : wi - 1;
-    const todaysSchemeValue = scheme[workoutIndex];
+      wi === 0
+        ? scheme.value.length + ((wi - 1) % scheme.value.length)
+        : wi - 1;
+    const todaysSchemeValue = scheme.value[workoutIndex];
 
     if (todaysSchemeValue === "r") {
       lastWorkout.value = { workoutname: "Restday", startdate: "" };
     } else {
       // count how many 't' are in scheme before todaysSchemeValue + 1
-      const count = scheme.slice(0, workoutIndex).split("t").length - 1;
+      const count = scheme.value.slice(0, workoutIndex).split("t").length - 1;
       const query = `Select WorkoutTemplateName from WorkoutTemplatePlan WHERE PlanID = (SELECT ID FROM Plan WHERE name = '${activePlan}') AND OrderIndex = ${count}`;
       const resp = await databaseStore.getDatabase()?.query(query);
       lastWorkout.value = resp?.values

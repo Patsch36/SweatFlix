@@ -237,7 +237,8 @@ const weight = ref();
 
 onBeforeMount(async () => {
   await loadDoneExercises();
-  dateVal.value = new Date().toISOString().slice(0, 19);
+  dateVal.value = await new Date().toISOString().slice(0, 19);
+  console.log(dateVal.value);
   repsForNRM.value = setmanager.getReps();
   await setmanager.test();
 });
@@ -256,6 +257,18 @@ watch(
     repsForNRM,
   ],
   async () => {
+    console.log(
+      calcmode.value,
+      mode.value,
+      exercise.value,
+      dateVal.value,
+      daysBackwards.value,
+      formula.value,
+      latestWorkout.value,
+      reps.value,
+      weight.value,
+      repsForNRM.value
+    );
     if (calcmode.value === "1RM") {
       if (mode.value === "exercise") {
         const latest = latestWorkout.value === "yes" ? true : false;
@@ -298,6 +311,10 @@ const loadDoneExercises = async () => {
   const query = `SELECT DISTINCT Exercise FROM WorkoutExercise`;
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
+  exercises.value = exercises.value.sort(
+    (a: { exercise: string }, b: { exercise: any }) =>
+      a.exercise.localeCompare(b.exercise)
+  );
 };
 
 const generateArray = (n: number) => {

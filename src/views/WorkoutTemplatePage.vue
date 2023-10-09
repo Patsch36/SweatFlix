@@ -160,11 +160,11 @@ const loadWorkoutTemplate = async () => {
 };
 
 const loadWorkoutExcercises = async () => {
-  const query = `SELECT exerciseName, sets, reps, ID FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
+  const query = `SELECT exerciseName, sets, reps, OrderIndex FROM WorkoutList WHERE workoutPlan = '${workout.value}'`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
-  exercises.value.sort((a: any, b: any) => a.id - b.id);
+  exercises.value.sort((a: any, b: any) => a.OrderIndex - b.OrderIndex);
 };
 
 const loadWorkoutDates = async () => {

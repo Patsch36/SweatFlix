@@ -2,6 +2,8 @@
   <ion-page style="height: calc(100vh - 100px)">
     <ion-header :translucent="true" color="light">
       <ion-toolbar>
+        <ion-progress-bar
+          :value="currentCount / (dates.length - 1)"></ion-progress-bar>
         <ion-title color="primary-contrast">{{
           workoutQueryResult.workoutname
         }}</ion-title>
@@ -24,12 +26,29 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true" class="ion-padding">
-      <ion-header collapse="condense">
+    <ion-content :fullscreen="true" class="ion-padding-start ion-padding-end">
+      <div class="buttons">
+        <ion-button
+          fill="clear"
+          @click="routeLink('prev')"
+          :disabled="previous === ''"
+          size="small">
+          <ion-icon :icon="returnUpBackOutline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button
+          fill="clear"
+          @click="routeLink('next')"
+          :disabled="next === ''"
+          size="small">
+          <ion-icon :icon="returnUpForwardOutline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+
+      <ion-header collapse="condense" style="display: flex">
         <ion-toolbar>
-          <ion-title size="large" style="font-size: 28px">{{
-            workoutQueryResult.workoutname
-          }}</ion-title>
+          <ion-title size="large" style="font-size: 28px"
+            >{{ workoutQueryResult.workoutname }}
+          </ion-title>
         </ion-toolbar>
       </ion-header>
 
@@ -100,6 +119,8 @@
         </ion-row>
       </ion-grid>
 
+      <p>{{ dates }}</p>
+      <p>prev {{ previous }}, next {{ next }}</p>
       <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
 
       <ion-list v-show="workoutExercises.length">
@@ -270,14 +291,22 @@ import {
   IonSelect,
   IonSelectOption,
   IonInput,
+  IonProgressBar,
 } from "@ionic/vue";
-import { chevronBack, pencilOutline, trash } from "ionicons/icons";
+import {
+  chevronBack,
+  pencilOutline,
+  trash,
+  returnUpBackOutline,
+  returnUpForwardOutline,
+} from "ionicons/icons";
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const databaseStore = useDatabaseStore();
 const route = useRoute();
 const router = useRouter();
+console.log(route.fullPath);
 
 const showDiagram = ref(true);
 
@@ -293,6 +322,10 @@ const allOverallWeights = ref([
   { OverAllSum: 1, WorkoutDatum: "0" },
   { OverAllSum: 1, WorkoutDatum: "0" },
 ]); // Init with 1, because before db is loaded, it is 0/0
+const dates = ref<any>([]);
+const previous = ref<any>("");
+const next = ref<any>("");
+const currentCount = ref(0);
 
 const queryResults = ref<any>([]);
 const exercises = ref<any>([]);
@@ -377,11 +410,14 @@ const loadWorkout = async () => {
 
 const loadExercises = async () => {
   const date = route.params.id;
-  const exercises = await databaseStore.getDatabase()?.query(`SELECT *
-    FROM WorkoutExercise
-    WHERE DATE(workout) = '${date.slice(0, 10)}';
-    `);
+  const query = `SELECT we.exercise, we.setnumber, we.reps, we.weight, we.unit, wl.OrderIndex from WorkoutExercise we  JOIN WorkoutList wl ON we.exercise = wl.exerciseName AND wl.WorkoutPlan = '${
+    workoutQueryResult.value.workoutname
+  }' WHERE DATE(we.workout) = '${date.slice(0, 10)}';`;
+  const exercises = await databaseStore.getDatabase()?.query(query);
   workoutExercises.value = exercises?.values || [];
+  workoutExercises.value
+    .sort((a: any, b: any) => a.setNumber - b.setNumber)
+    .sort((a: any, b: any) => a.OrderIndex - b.OrderIndex);
 };
 
 const getOverallWeightsOfWorkout = async () => {
@@ -453,12 +489,74 @@ const loadLastExercises = async () => {
   lastWorkoutExercises.value = resp?.values || [];
 };
 
+const loadDatesOfWorkouts = async () => {
+  const resp = await databaseStore.getDatabase()?.query(
+    `
+    SELECT *
+    FROM Workout
+    WHERE workoutname = '${workoutQueryResult.value.workoutname}'
+    ORDER BY startdate DESC;
+    `
+  );
+  dates.value = resp?.values || [];
+  console.log(dates.value);
+  dates.value = dates.value.map((date: any) => date.startdate.slice(0, 10));
+  dates.value.sort(
+    (a: any, b: any) => new Date(a).getTime() - new Date(b).getTime()
+  );
+  console.log(dates.value);
+};
+
+const setPreviousNext = (targetDate: string) => {
+  console.log("Target Date:", targetDate);
+  const targetDateObject = new Date(targetDate).toDateString();
+
+  // Erstelle Date-Objekte aus den Daten in dates.value
+  const dateObjects = dates.value.map(
+    (dateString: string | number | Date) => new Date(dateString)
+  );
+
+  // Sortiere die Date-Objekte aufsteigend
+  dateObjects.sort(
+    (a: { getTime: () => number }, b: { getTime: () => number }) =>
+      a.getTime() - b.getTime()
+  );
+
+  let previousIndex = -1;
+  let nextIndex = -1;
+
+  // Finde das vorherige und das nächste Datum mit Date-Objekten
+  for (let i = 0; i < dateObjects.length; i++) {
+    if (dateObjects[i].toDateString() === targetDateObject) {
+      if (i > 0) {
+        previousIndex = i - 1;
+      }
+      if (i < dateObjects.length - 1) {
+        nextIndex = i + 1;
+      }
+      currentCount.value = i;
+      break;
+    }
+  }
+
+  // Die Variablen previous.value und next.value basierend auf den gefundenen Indizes aktualisieren
+  previous.value = previousIndex !== -1 ? dates.value[previousIndex] : "";
+  next.value = nextIndex !== -1 ? dates.value[nextIndex] : "";
+
+  console.log("Vorheriges Datum:", previous.value);
+  console.log("Nächstes Datum:", next.value);
+};
+
 onBeforeMount(async () => {
+  console.log(route.fullPath);
   await loadWorkout();
   await loadExercises();
   await getOverallWeightsOfWorkout();
   await loadListExercises();
   await loadLastExercises();
+  await loadDatesOfWorkouts();
+  const date = route.params.id as string;
+  setPreviousNext(date);
 
   modalStarttime.value = workoutQueryResult.value.startdate;
   modalEndtime.value = workoutQueryResult.value.enddate;
@@ -662,28 +760,6 @@ const leaveUnit = (
 };
 
 const deleteWeightEntry = async (exercise: string, set: number) => {
-  // const date = route.params.id;
-  // const exercises = await databaseStore.getDatabase()?.query(`SELECT *
-  //   FROM WorkoutExercise
-  //   WHERE DATE(workout) = '${date.slice(0, 10)}';
-  //   `);
-  // console.log(
-  //   exercises?.values?.find(
-  //     (val) =>
-  //       val.exercise === exercise &&
-  //       val.workout === workoutQueryResult.value.startdate &&
-  //       val.setNumber === set
-  //   ).ID
-  // );
-  // console.log(
-  //   `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
-  // );
-  // await databaseStore
-  //   .getDatabase()
-  //   ?.execute(
-  //     `DELETE FROM WorkoutExercise WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
-  //   );
-
   console.log(
     `UPDATE WorkoutExercise SET reps = 0, weight = 0 WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
   );
@@ -692,20 +768,23 @@ const deleteWeightEntry = async (exercise: string, set: number) => {
     ?.execute(
       `UPDATE WorkoutExercise SET reps = 0, weight = 0 WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
     );
-
-  // await databaseStore
-  //   .getDatabase()
-  //   ?.execute(
-  //     `DELETE FROM WorkoutExercise WHERE ID = ${
-  //       exercises?.values?.find(
-  //         (val) =>
-  //           val.exercise === exercise &&
-  //           val.workout === workoutQueryResult.value.startdate &&
-  //           val.setNumber === set
-  //       ).ID
-  //     };`
-  //   );
   await loadExercises();
+};
+
+const routeLink = (direction: string) => {
+  if (direction === "prev") {
+    router.go(-1);
+
+    setTimeout(() => {
+      router.push(`/workoutdetails/${previous.value}`);
+    }, 0.01);
+  } else if (direction === "next") {
+    router.go(-1);
+
+    setTimeout(() => {
+      router.push(`/workoutdetails/${next.value}`);
+    }, 0.01);
+  }
 };
 </script>
 
@@ -719,5 +798,15 @@ const deleteWeightEntry = async (exercise: string, set: number) => {
 p {
   height: inherit !important;
   margin: 0;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.buttons ion-icon {
+  font-size: 32px;
 }
 </style>

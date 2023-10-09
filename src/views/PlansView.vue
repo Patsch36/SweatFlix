@@ -44,6 +44,11 @@
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Plans</ion-title>
+          <ion-icon
+            slot="end"
+            :icon="removeCircleOutline"
+            size="large"
+            @click="removePlan"></ion-icon>
         </ion-toolbar>
       </ion-header>
       <div style="padding-inline: 0.75rem">
@@ -73,8 +78,8 @@
                       activePlan.length > 25
                         ? activePlan.slice(0, 25) + "..."
                         : activePlan
-                    }}</ion-card-title
-                  >
+                    }}
+                  </ion-card-title>
                 </ion-card-header>
               </ion-card>
             </ion-col>
@@ -139,7 +144,12 @@ import {
   IonAlert,
 } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
-import { chevronBack, trash, checkmarkCircleOutline } from "ionicons/icons";
+import {
+  chevronBack,
+  trash,
+  checkmarkCircleOutline,
+  removeCircleOutline,
+} from "ionicons/icons";
 import { onBeforeMount, ref, shallowRef } from "vue";
 import { store } from "@/stores/IonicStorage";
 import { useStateStore } from "@/stores/stateStore";
@@ -282,6 +292,11 @@ onBeforeMount(async () => {
 stateStore.$subscribe((mutation, state) => {
   if (!state.showAddPlanModal) loadPlans();
 });
+
+const removePlan = () => {
+  store.set("Active Plan", "No Plan");
+  activePlan.value = "No Plan";
+};
 </script>
 
 <style scoped>

@@ -93,9 +93,9 @@
               <ion-select-option
                 v-for="item in queryResults"
                 key="item.Name"
-                :value="item.Name"
-                >{{ item.Name }}</ion-select-option
-              >
+                :value="item.Name">
+                {{ item.Name }}
+              </ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item v-if="workout">
@@ -349,7 +349,7 @@ const route = () => {
   if (
     highlightedDates.some((date) => date.date === datepick.value.slice(0, 10))
   )
-    router.push(`/workoutdetails/${datepick.value}`);
+    router.push(`/workoutdetails/${datepick.value.slice(0, 10)}`);
   else alert("No workout on this date");
 };
 
@@ -488,6 +488,10 @@ const confirmModal = () => {
   modal.value.$el.dismiss(name, "confirm");
   modalOpen.value = false;
 
+  endtime.value =
+    new Date().toISOString().slice(0, 10) +
+    "T" +
+    new Date().toTimeString().slice(0, 8);
   addValues(workout.value);
 
   datetime.value.$forceUpdate();
