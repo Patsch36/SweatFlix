@@ -25,6 +25,14 @@
             <ExerciseManager />
           </div>
         </ion-accordion>
+        <ion-accordion value="achievements">
+          <ion-item slot="header" color="primary">
+            <ion-label>Achievements</ion-label>
+          </ion-item>
+          <div class="ion-padding" slot="content">
+            <Archievements />
+          </div>
+        </ion-accordion>
         <ion-accordion value="personalData">
           <ion-item slot="header" color="primary">
             <ion-label>Personal Data</ion-label>
@@ -72,6 +80,7 @@ import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
 import ExerciseManager from "@/components/ExerciseManager.vue";
+import Archievements from "@/components/Archievements.vue";
 import PersonalData from "@/components/PersonalData.vue";
 import Settings from "@/components/Settings.vue";
 

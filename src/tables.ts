@@ -136,16 +136,32 @@ export const createTables = async () => {
     }
     promise = await databaseStore.getDatabase()
       ?.run(`CREATE TABLE IF NOT EXISTS WorkoutList (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workoutPlan TEXT,
-    exerciseName TEXT,
-    sets INTEGER,
-    reps TEXT,
-    OrderIndex INTEGER,
-    UNIQUE (workoutPlan, exerciseName),
-    FOREIGN KEY (workoutPlan) REFERENCES WorkoutTemplate(Name),
-    FOREIGN KEY (exerciseName) REFERENCES Exercise(Name)
-  );`);
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workoutPlan TEXT,
+        exerciseName TEXT,
+        sets INTEGER,
+        reps TEXT,
+        OrderIndex INTEGER,
+        UNIQUE (workoutPlan, exerciseName),
+        FOREIGN KEY (workoutPlan) REFERENCES WorkoutTemplate(Name),
+        FOREIGN KEY (exerciseName) REFERENCES Exercise(Name)
+      );`);
+
+    try {
+      await databaseStore.getDatabase()?.query(`SELECT * FROM Achievements;
+      `);
+    } catch {
+      tableCreations += 1;
+    }
+    promise = await databaseStore.getDatabase()
+      ?.run(`CREATE TABLE IF NOT EXISTS Achievements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        description TEXT,
+        imageURL TEXT,
+        achieved INTEGER DEFAULT 0,
+        obtained DATETIME
+      );`);
   } catch (e) {
     alert("ERROR Creating DB " + JSON.stringify(e));
   }
@@ -352,6 +368,32 @@ export const initTables = async () => {
           (1, 'Full-Body Pull Workout', 'Seated Row', 3, '8-12'),
           (2, 'Full-Body Pull Workout', 'Incline Dumbbell Curl', 3, '8-12'),
           (3, 'Full-Body Pull Workout', 'Hammer Curl', 3, '8-12');`);
+
+    tableInitialisations += promise?.changes?.changes || 0;
+
+    promise = await databaseStore.getDatabase()
+      ?.run(`INSERT INTO Achievements (name, description, imageURL, achieved)
+      VALUES
+        ('Iron Beginner', 'Lift 50 kg weight in one exercise.', '50kg', 0),
+        ('Strength Master', 'Lift 100 kg weight in one exercise.', '100kg', 0),
+        ('Iron Pro', 'Lift 150 kg weight in one exercise.', '150kg', 0),
+        ('Repetition Hero', 'Achieve 20 repetitions with 50 kg weight in one exercise.', '20Reps50kg', 0),
+        ('Iron Athlete', 'Lift 1.5 times your body weight in one exercise.', '1_5You', 0),
+        ('Heavy Weights', 'Lift 200 kg weight in one exercise.', '200kg', 0),
+        ('Weight Record', 'Achieve a personal weightlifting record in one exercise after absolving it at least 30 times.', 'record', 0),
+        ('Steel Muscles', 'Achieve 10 repetitions with 100 kg weight in one Upper Body exercise.', 'steelmuscles', 0),
+        ('Strength Beast', 'Lift 250 kg weight in one exercise.', '250kg', 0),
+        ('Iron Legend', 'Lift 300 kg weight in one exercise.', '300kg', 0),
+        ('LEG-endary', 'Achieve 10 repetitions with 100 kg weight in Squats, 10 repetitions in 150 kg HipThrusts and 10 repetitions 300 kg in Leg Press.', 'blondie', 0),
+        ('Bit Crusher', 'Crush your personal records by adding 8 reps to your bench press max weight (Max Weight first counts after at least 30 workouts). It´s like compressing bits for a stronger you!', '8RepsBench', 0),
+        ('Code Compiler', 'Compile your strength by increasing your squat weight to a power of 2 (e.g., 64 kg). Your muscles will execute flawless code!', 'codecompiler', 0),
+        ('Algorithmic Abs', 'Achieve chiseled abs with a set of 10 different core exercises. Your stomach will be processing algorithms, not just food!', 'algoabs', 0),
+        ('JavaScript Jumper', 'Jump higher in your progress, reaching heights greater than the average JavaScript framework update while increasing weight over 20kg as your workout before!', 'jsjumper', 0),
+        ('Database Deadlifter', 'Lift the weight equivalent to the number of rows in your favorite database table, because deadlifting is your SQL workout!', 'dbdeadlift', 0),
+        ('Pixel Pusher', 'Push your limits by curling 1920kg in one set.', 'pixelpusher', 0),
+        ('Bug Buster', 'Crush those fitness bugs by completing 100 squats in a row. No bugs will escape your leg day routine!', 'bugbuster', 0),
+        ('Full Stack Flexer', 'Achieve the ultimate stack by doing a full set of deadlifts, squats, and bench presses in a single workout. You´ll be a full-stack developer in the gym!', 'fullstack', 0);
+      `);
 
     tableInitialisations += promise?.changes?.changes || 0;
 

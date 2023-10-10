@@ -336,8 +336,14 @@ const generateArray = (n: number) => {
 }
 
 ion-popover ion-list {
-  border: 5px solid red;
-  border-radius: 10px;
+  --background: var(--ion-color-dark-shade);
+  background-color: var(--ion-color-dark-shade);
+  border-radius: 16px;
+  border: 5px solid var(--ion-color-primary);
+  -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
   height: 500px;
   overflow: auto;
 }
