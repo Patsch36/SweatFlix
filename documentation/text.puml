@@ -1,0 +1,33 @@
+@startuml test
+
+start
+:Benutzerpräferenzen eingeben;
+if (Auswahl der Trainingstage?) then (Ja)
+  :Trainingstage auswählen;
+else (Nein)
+  :Standardtage verwenden;
+endif
+
+:Geschlecht, Zustand, Ziel und Vorerkrankungen berücksichtigen;
+if (Vorerkrankungen vorhanden?) then (Ja)
+  :Arzt konsultieren;
+  if (Freigabe des Arztes erhalten?) then (Ja)
+    :Vorerkrankungen berücksichtigen;
+  else (Nein)
+    :Workout abbrechen;
+    stop
+  endif
+endif
+
+:Workouts generieren;
+
+if (Genug Workouts generiert?) then (Ja)
+  :Trainingsplan erstellen;
+  :Pausetage einplanen;
+else (Nein)
+  :Weitere Workouts generieren;
+  repeat
+
+
+stop
+@enduml

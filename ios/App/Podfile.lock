@@ -3,6 +3,8 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (5.0.6):
     - Capacitor
+  - CapacitorCommunityNativeAudio (5.0.1):
+    - Capacitor
   - CapacitorCommunitySqlite (5.4.0):
     - Capacitor
     - SQLCipher
@@ -26,6 +28,7 @@ PODS:
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCommunityNativeAudio (from `../../node_modules/@capacitor-community/native-audio`)"
   - "CapacitorCommunitySqlite (from `../../node_modules/@capacitor-community/sqlite`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
@@ -43,6 +46,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorApp:
     :path: "../../node_modules/@capacitor/app"
+  CapacitorCommunityNativeAudio:
+    :path: "../../node_modules/@capacitor-community/native-audio"
   CapacitorCommunitySqlite:
     :path: "../../node_modules/@capacitor-community/sqlite"
   CapacitorCordova:
@@ -59,6 +64,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Capacitor: 1ac9165943bc4f2137642d218c5ba05df811de69
   CapacitorApp: 024e1b1bea5f883d79f6330d309bc441c88ad04a
+  CapacitorCommunityNativeAudio: 1a4d5490acb59f155602c0b6bcf1b42ee4efe91b
   CapacitorCommunitySqlite: b1436663feae8354cfa29720428bc9d9029f3a8c
   CapacitorCordova: b9374d68e63ce29e96ab5db994cf14fbefd722c9
   CapacitorHaptics: 1fffc1217c7e64a472d7845be50fb0c2f7d4204c
@@ -68,6 +74,6 @@ SPEC CHECKSUMS:
   SQLCipher: 905b145f65f349f26da9e60a19901ad24adcd381
   ZIPFoundation: d170fa8e270b2a32bef9dcdcabff5b8f1a5deced
 
-PODFILE CHECKSUM: 86056d764e391c0bfd9a7d93086b3b42df61e9a3
+PODFILE CHECKSUM: 72d4f725df898bdc0d23c6bf4938f331b17503c6
 
 COCOAPODS: 1.12.1

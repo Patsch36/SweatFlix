@@ -92,6 +92,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "absolveWorkout",
     component: () => import("../views/AbsolveWorkoutPage.vue"),
   },
+  {
+    path: "/timer",
+    name: "timer",
+    component: () => import("../views/TimerView.vue"),
+  },
 ];
 
 const router = createRouter({

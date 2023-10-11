@@ -22,6 +22,10 @@
           <ion-icon :icon="add"></ion-icon>
         </ion-fab-button>
         <ion-fab-list side="top">
+          <ion-fab-button @click="router.push('timer')">
+            <ion-label>Timer</ion-label>
+            <ion-icon :icon="timer"></ion-icon>
+          </ion-fab-button>
           <ion-fab-button @click="router.push('RM-Calculator')">
             <ion-label>Rep Calculator</ion-label>
             <ion-icon :icon="calculator"></ion-icon>
@@ -68,7 +72,7 @@ import {
   IonPopover,
 } from "@ionic/vue";
 
-import { add, barbell, calculator } from "ionicons/icons";
+import { add, barbell, calculator, timer } from "ionicons/icons";
 
 import { onBeforeMount, ref } from "vue";
 
