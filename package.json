@@ -27,6 +27,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "ionicons": "^7.0.0",
     "pinia": "^2.1.6",
+    "swiper": "^10.3.1",
     "v-calendar": "^3.0.3",
     "vue": "^3.2.45",
     "vue-chartjs": "^4.1.1",

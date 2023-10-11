@@ -87,6 +87,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "archivatedWorkouts",
     component: () => import("../views/ArchivatedWorkouts.vue"),
   },
+  {
+    path: "/absolveWorkout/:id",
+    name: "absolveWorkout",
+    component: () => import("../views/AbsolveWorkoutPage.vue"),
+  },
 ];
 
 const router = createRouter({

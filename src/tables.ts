@@ -392,7 +392,11 @@ export const initTables = async () => {
         ('Database Deadlifter', 'Lift the weight equivalent to the number of rows in your favorite database table, because deadlifting is your SQL workout!', 'dbdeadlift', 0),
         ('Pixel Pusher', 'Push your limits by curling 1920kg in one set.', 'pixelpusher', 0),
         ('Bug Buster', 'Crush those fitness bugs by completing 100 squats in a row. No bugs will escape your leg day routine!', 'bugbuster', 0),
-        ('Full Stack Flexer', 'Achieve the ultimate stack by doing a full set of deadlifts, squats, and bench presses in a single workout. You´ll be a full-stack developer in the gym!', 'fullstack', 0);
+        ('Full Stack Flexer', 'Achieve the ultimate stack by doing a full set of deadlifts, squats, and bench presses in a single workout. You´ll be a full-stack developer in the gym!', 'fullstack', 0),
+        ('RAM', 'Curl 50 kg for RepairArmMuscles (RAM).', 'ram', 0),
+        ('Biceps Boss', 'Complete 1000 bicep curls and become the undisputed Bicep Boss.', 'bicepsboss1', 0),
+        ('Biceps Master', 'Complete 2500 bicep curls and become the undisputed Bicep Master.', 'bicepsboss2', 0),
+        ('Biceps Hero', 'Complete 5000 bicep curls and become the undisputed Bicep Heor.', 'bicepsboss3', 0);
       `);
 
     tableInitialisations += promise?.changes?.changes || 0;

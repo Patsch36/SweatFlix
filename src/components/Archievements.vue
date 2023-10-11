@@ -59,6 +59,15 @@ import {
   IonAvatar,
   IonImg,
   IonModal,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonButton,
+  IonTitle,
+  IonContent,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from "@ionic/vue";
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";

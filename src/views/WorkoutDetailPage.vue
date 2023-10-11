@@ -119,7 +119,6 @@
         </ion-row>
       </ion-grid>
 
-      <p>{{ dates }}</p>
       <p>prev {{ previous }}, next {{ next }}</p>
       <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
 

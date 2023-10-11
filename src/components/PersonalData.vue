@@ -1,5 +1,10 @@
 <template>
   <ion-item>
+    <ion-label>Name</ion-label>
+    <ion-input v-model="name" placeholder="Name"></ion-input>
+    <ion-button @click="setName"> Submit </ion-button>
+  </ion-item>
+  <ion-item>
     <ion-label type="number">Desired Weight</ion-label>
     <ion-input
       type="number"
@@ -159,10 +164,13 @@ import {
 import { onBeforeMount, ref } from "vue";
 import { store } from "@/stores/IonicStorage";
 import { useRouter } from "vue-router";
+import { useDatabaseStore } from "@/stores/databaseStore";
 
 const router = useRouter();
+const databasestore = useDatabaseStore();
 
 // ======================================================================
+const name = ref();
 const desiredWeight = ref();
 const height = ref();
 const age = ref();
@@ -188,6 +196,7 @@ const activityLevel = ref();
 const goalAnatomy = ref();
 
 onBeforeMount(async () => {
+  name.value = (await store.get("Name")) || "";
   desiredWeight.value = await store.get("Weight Goal");
   height.value = (await store.get("Height")) || 0;
   age.value = (await store.get("Age")) || 0;
@@ -215,6 +224,18 @@ onBeforeMount(async () => {
 //   Saturdays: false,
 //   Sundays: false,
 // };
+
+const setName = async () => {
+  await store.set("Name", name.value);
+  if (name.value.includes("Alf"))
+    await databasestore.getDatabase()
+      ?.run(`INSERT INTO Achievements (name, description, imageURL, achieved, obtained)
+      VALUES ('Alf the Alien', 'Congratulation, your´re also from Melmac!', 'alf', 1, datetime('now'))`);
+  else
+    await databasestore
+      .getDatabase()
+      ?.run(`DELETE FROM Achievements WHERE name = 'Alf the Alien'`);
+};
 </script>
 
 <style scoped>

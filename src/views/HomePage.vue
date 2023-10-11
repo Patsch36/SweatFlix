@@ -26,12 +26,29 @@
             <ion-label>Rep Calculator</ion-label>
             <ion-icon :icon="calculator"></ion-icon>
           </ion-fab-button>
-          <ion-fab-button @click="router.push('RM-Calculator')">
+          <ion-fab-button
+            @click="showModal = true"
+            @ionPopoverDidDismiss="showModal = false">
             <ion-label>Start Workout</ion-label>
             <ion-icon :icon="barbell"></ion-icon>
           </ion-fab-button>
         </ion-fab-list>
       </ion-fab>
+      <ion-popover :is-open="showModal">
+        <ion-content>
+          <ion-list>
+            <ion-item
+              v-for="workout in activeWorkouts"
+              :key="workout.Name"
+              @click="
+                showModal = false;
+                router.push(`/absolveWorkout/${workout.Name}`);
+              ">
+              {{ workout.Name }}
+            </ion-item>
+          </ion-list>
+        </ion-content>
+      </ion-popover>
     </ion-content>
   </ion-page>
 </template>
@@ -48,37 +65,33 @@ import {
   IonFabList,
   IonIcon,
   IonLabel,
+  IonPopover,
 } from "@ionic/vue";
 
 import { add, barbell, calculator } from "ionicons/icons";
 
-import { onBeforeMount } from "vue";
+import { onBeforeMount, ref } from "vue";
 
 import HomeWeightWidget from "@/components/HomeWeightWidget.vue";
 import HomeExerciseWidget from "@/components/HomeExerciseWidget.vue";
 import { useRouter } from "vue-router";
+import { useDatabaseStore } from "@/stores/databaseStore";
 
 const router = useRouter();
+const databasestore = useDatabaseStore();
 
-onBeforeMount(async () => {});
+const activeWorkouts = ref();
+const showModal = ref(false);
 
-//   console.log("WATCH TRIGGERED");
-//   if (!nextWorkoutCardTitle.value || !nextWorkoutCardTitle.value.$el) return;
+onBeforeMount(async () => {
+  await loadActiveWorkouts();
+});
 
-//   let doesOverflowExist = hasOverflow(nextWorkoutCardTitle.value.$el);
-//   if (doesOverflowExist) {
-//     console.log("Overflow vorhanden.");
-//     while (doesOverflowExist) {
-//       console.log("Overflow vorhanden.");
-//       showNextWorkout.value = false;
-//       nextWorkoutCharLimit.value = nextWorkoutCharLimit.value - 1;
-//       doesOverflowExist = hasOverflow(nextWorkoutCardTitle.value.$el);
-//       showNextWorkout.value = true;
-//     }
-//   } else {
-//     console.log("Kein Overflow vorhanden.");
-//   }
-// });
+const loadActiveWorkouts = async () => {
+  const query = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
+  const resp = await databasestore.getDatabase()?.query(query);
+  activeWorkouts.value = resp?.values ? resp.values : [];
+};
 </script>
 
 <style scoped>
@@ -98,5 +111,29 @@ ion-fab-button {
 .fab-button-in-list ion-icon {
   margin-right: 12px;
   margin-left: 6px;
+}
+
+ion-popover {
+  --width: 300px;
+}
+
+ion-popover ion-content {
+  --background: var(--ion-color-dark-shade);
+  border-radius: 16px;
+  border: 5px solid var(--ion-color-primary);
+  -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
+    5px 6px 33px 4px rgba(0, 0, 0, 0.33);
+  overflow: hidden;
+}
+
+ion-popover ion-list {
+  --background: var(--ion-color-dark-shade);
+  overflow: auto;
+}
+
+ion-popover::part(backdrop) {
+  background-color: var(--ion-color-dark-shade);
 }
 </style>

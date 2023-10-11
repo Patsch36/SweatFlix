@@ -17,7 +17,12 @@ export const useStateStore = defineStore("stateStore", () => {
   };
 
   const setOpenedProfileAccordion = (value: string) => {
-    const possibleAccordionTabs = ["exercises", "personalData", "settings"];
+    const possibleAccordionTabs = [
+      "exercises",
+      "achievements",
+      "personalData",
+      "settings",
+    ];
     if (possibleAccordionTabs.includes(value)) {
       openedProfileAccordion.value = value;
     } else {
