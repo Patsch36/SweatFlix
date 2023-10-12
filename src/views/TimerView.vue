@@ -34,12 +34,14 @@
                     @click="
                       userTimeHours = number;
                       openPopOverHours = false;
-                    ">
+                    "
+                    lines="full">
                     <ion-label>{{ number }}</ion-label>
                   </ion-item>
                 </ion-list></ion-content
               >
             </ion-popover>
+            :
             <span class="input-span" @click="openPopOverMinutes = true">
               {{ userTimeMinutes }}
             </span>
@@ -54,12 +56,14 @@
                     @click="
                       userTimeMinutes = number;
                       openPopOverMinutes = false;
-                    ">
+                    "
+                    lines="full">
                     <ion-label>{{ number }}</ion-label>
                   </ion-item>
                 </ion-list></ion-content
               >
             </ion-popover>
+            :
             <span class="input-span" @click="openPopOverSeconds = true">
               {{ userTimeSeconds }}
             </span>
@@ -74,7 +78,8 @@
                     @click="
                       userTimeSeconds = number;
                       openPopOverSeconds = false;
-                    ">
+                    "
+                    lines="full">
                     <ion-label>{{ number }}</ion-label>
                   </ion-item>
                 </ion-list></ion-content
@@ -93,13 +98,12 @@
           </div>
         </ion-card-content>
       </ion-card>
-      <p>{{ userTimeHours }}, {{ userTimeMinutes }}, {{ userTimeSeconds }}</p>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeMount, ref, watch } from "vue";
 import {
   IonButton,
   IonCard,
@@ -131,15 +135,18 @@ const userTimeSeconds = ref(0);
 let starttime = 0;
 let timer: any;
 
-const progress = computed(() => 2 - starttime / desiredTime.value);
+const progress = computed(() => desiredTime.value / starttime);
 
-const startTimer = () => {
+onBeforeMount(() => {
   NativeAudio.preload({
     assetId: "alarm",
     assetPath: "success-fanfare-trumpets-6185.mp3",
     audioChannelNum: 1,
     isUrl: true,
   });
+});
+
+const startTimer = () => {
   isRunning.value = true;
   timer = setInterval(() => {
     if (desiredTime.value > 0) {
@@ -148,17 +155,21 @@ const startTimer = () => {
     } else {
       isRunning.value = false;
       clearInterval(timer);
-      NativeAudio.play({ assetId: "alarm" });
+      NativeAudio.loop({ assetId: "alarm" });
     }
   }, 1000);
 };
 
-const pauseTimer = () => {
+const pauseTimer = async () => {
   isRunning.value = false;
   clearInterval(timer);
+
+  if (await NativeAudio.isPlaying({ assetId: "alarm" })) {
+    NativeAudio.stop({ assetId: "alarm" });
+  }
 };
 
-const resetTimer = () => {
+const resetTimer = async () => {
   isRunning.value = false;
   clearInterval(timer);
   desiredTime.value = 0;
@@ -174,6 +185,9 @@ const resetTimer = () => {
 
   starttime = desiredTime.value;
   setDisplayTime();
+  if (await NativeAudio.isPlaying({ assetId: "alarm" })) {
+    NativeAudio.stop({ assetId: "alarm" });
+  }
 };
 
 const setDisplayTime = () => {
@@ -188,6 +202,10 @@ const setDisplayTime = () => {
 const generateArray = (n: number) => {
   return Array.from({ length: n }, (_, i) => i);
 };
+
+watch([userTimeHours, userTimeMinutes, userTimeSeconds], () => {
+  resetTimer();
+});
 </script>
 
 <style scoped>
@@ -199,6 +217,7 @@ const generateArray = (n: number) => {
   background-color: var(--ion-color-dark-shade);
   overflow: hidden;
   margin: 0 auto;
+  margin-block: 32px;
   transform: rotate(0deg);
   transition: transform 1s linear;
   -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000,
@@ -228,7 +247,7 @@ const generateArray = (n: number) => {
 
 .input-span {
   height: 40px;
-  width: 64px;
+  width: 60px;
   border: 1px solid var(--ion-color-light-shade);
   border-radius: 4px;
   margin: 4px;
@@ -238,7 +257,7 @@ const generateArray = (n: number) => {
 }
 
 ion-popover {
-  --width: 75px;
+  --width: 100px;
 }
 
 ion-popover ion-content {
@@ -257,6 +276,10 @@ ion-popover ion-list {
   --background: var(--ion-color-dark-shade);
   height: 400px;
   overflow: auto;
+}
+
+ion-popover ion-list ion-item {
+  text-align: center;
 }
 
 ion-popover::part(backdrop) {

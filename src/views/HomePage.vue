@@ -53,6 +53,13 @@
           </ion-list>
         </ion-content>
       </ion-popover>
+      <ion-button
+        @click="achievementmanager.checkWorkoutAchievements('2023-10-09')">
+        ad
+      </ion-button>
+
+      <ion-button @click="button1">1</ion-button>
+      <ion-button @click="button2">2</ion-button>
     </ion-content>
   </ion-page>
 </template>
@@ -70,6 +77,9 @@ import {
   IonIcon,
   IonLabel,
   IonPopover,
+  IonList,
+  IonItem,
+  IonButton,
 } from "@ionic/vue";
 
 import { add, barbell, calculator, timer } from "ionicons/icons";
@@ -80,21 +90,39 @@ import HomeWeightWidget from "@/components/HomeWeightWidget.vue";
 import HomeExerciseWidget from "@/components/HomeExerciseWidget.vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import AchievementManager from "@/datatypes/AchievementManager";
+import { NativeAudio } from "@capacitor-community/native-audio";
 
 const router = useRouter();
 const databasestore = useDatabaseStore();
 
 const activeWorkouts = ref();
 const showModal = ref(false);
+const achievementmanager = ref();
 
 onBeforeMount(async () => {
   await loadActiveWorkouts();
+  achievementmanager.value = new AchievementManager();
+
+  NativeAudio.preload({
+    assetId: "alarm",
+    assetPath: "public/assets/sounds/success-fanfare-trumpets-6185.mp3",
+    audioChannelNum: 1,
+    isUrl: false,
+  });
 });
 
 const loadActiveWorkouts = async () => {
   const query = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
   const resp = await databasestore.getDatabase()?.query(query);
   activeWorkouts.value = resp?.values ? resp.values : [];
+};
+
+const button1 = async () => {
+  NativeAudio.loop({ assetId: "alarm" });
+};
+const button2 = async () => {
+  NativeAudio.stop({ assetId: "alarm" });
 };
 </script>
 
