@@ -47,6 +47,19 @@
       <h6 class="achievement-description" v-if="selectedAchievement.obtained">
         Obtained: {{ new Date(selectedAchievement.obtained).toLocaleString() }}
       </h6>
+
+      <p v-if="selectedAchievement.achieved">
+        Obtained {{ selectedAchievement.achieved }} times
+      </p>
+
+      <p
+        v-if="
+          ['Biceps Boss', 'Biceps Master', 'Biceps Hero'].includes(
+            selectedAchievement.name
+          )
+        ">
+        Current: {{ bicepscurls }}
+      </p>
     </ion-content>
   </ion-modal>
 </template>
@@ -72,12 +85,15 @@ import {
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
+import { store } from "@/stores/IonicStorage";
 
 const stateStore = useStateStore();
 const databaseStore = useDatabaseStore();
 
 const data = ref();
 const selectedAchievement = ref();
+
+const bicepscurls = ref(0);
 
 const loadAchievements = async () => {
   const query = "SELECT * FROM achievements";
@@ -87,6 +103,9 @@ const loadAchievements = async () => {
 
 onBeforeMount(async () => {
   await loadAchievements();
+  store.get("bicepscurls").then((val) => {
+    bicepscurls.value = val ? val : 0;
+  });
 });
 
 // Update achievements set imageURL = 'codecompiler' Where id = 30
@@ -103,5 +122,10 @@ onBeforeMount(async () => {
   max-width: 85% !important;
   text-align: center !important;
   margin-inline: auto !important;
+}
+
+p {
+  width: 100%;
+  text-align: center;
 }
 </style>

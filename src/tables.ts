@@ -384,19 +384,19 @@ export const initTables = async () => {
         ('Steel Muscles', 'Achieve 10 repetitions with 100 kg weight in one Upper Body exercise.', 'steelmuscles', 0),
         ('Strength Beast', 'Lift 250 kg weight in one exercise.', '250kg', 0),
         ('Iron Legend', 'Lift 300 kg weight in one exercise.', '300kg', 0),
-        ('LEG-endary', 'Achieve 10 repetitions with 100 kg weight in Squats, 10 repetitions in 150 kg HipThrusts and 10 repetitions 300 kg in Leg Press.', 'blondie', 0),
+        ('LEG-endary', 'Achieve 10 repetitions with 100 kg weight in Squats, 10 repetitions in 150 kg Hip Thrusts and 10 repetitions 300 kg in Leg Press. (Mind the naming of your exercises to be as in the description)', 'blondie', 0),
         ('Bit Crusher', 'Crush your personal records by adding 8 reps to your bench press max weight (Max Weight first counts after at least 30 workouts). It´s like compressing bits for a stronger you!', '8RepsBench', 0),
         ('Code Compiler', 'Compile your strength by increasing your squat weight to a power of 2 (e.g., 64 kg). Your muscles will execute flawless code!', 'codecompiler', 0),
         ('Algorithmic Abs', 'Achieve chiseled abs with a set of 10 different core exercises. Your stomach will be processing algorithms, not just food!', 'algoabs', 0),
-        ('JavaScript Jumper', 'Jump higher in your progress, reaching heights greater than the average JavaScript framework update while increasing weight over 20kg as your workout before!', 'jsjumper', 0),
-        ('Database Deadlifter', 'Lift the weight equivalent to the number of rows in your favorite database table, because deadlifting is your SQL workout!', 'dbdeadlift', 0),
-        ('Pixel Pusher', 'Push your limits by curling 1920kg in one set.', 'pixelpusher', 0),
+        ('JavaScript Jumper', 'Jump higher in your progress, reaching heights greater than the average JavaScript framework update while increasing your Rep-Weight over 20kg as your workout before!', 'jsjumper', 0),
+        ('Database Deadlifter', 'Lift your weight as easy as a database query and reach 150kg deadlifts!', 'dbdeadlift', 0),
+        ('Pixel Pusher', 'Push your limits by bench pressing at least 1920kg in one set.', 'pixelpusher', 0),
         ('Bug Buster', 'Crush those fitness bugs by completing 100 squats in a row. No bugs will escape your leg day routine!', 'bugbuster', 0),
-        ('Full Stack Flexer', 'Achieve the ultimate stack by doing a full set of deadlifts, squats, and bench presses in a single workout. You´ll be a full-stack developer in the gym!', 'fullstack', 0),
+        ('Full Stack Flexer', 'Achieve the ultimate stack by doing a full set of deadlifts, squats, and bench press in a single workout. You´ll be a full-stack developer in the gym! (Mind the naming of your exercises to be as in the description)', 'fullstack', 0),
         ('RAM', 'Curl 50 kg for RepairArmMuscles (RAM).', 'ram', 0),
         ('Biceps Boss', 'Complete 1000 bicep curls and become the undisputed Bicep Boss.', 'bicepsboss1', 0),
         ('Biceps Master', 'Complete 2500 bicep curls and become the undisputed Bicep Master.', 'bicepsboss2', 0),
-        ('Biceps Hero', 'Complete 5000 bicep curls and become the undisputed Bicep Heor.', 'bicepsboss3', 0);
+        ('Biceps Hero', 'Complete 5000 bicep curls and become the undisputed Bicep Hero.', 'bicepsboss3', 0);
       `);
 
     tableInitialisations += promise?.changes?.changes || 0;
