@@ -53,10 +53,6 @@
           </ion-list>
         </ion-content>
       </ion-popover>
-      <ion-button
-        @click="achievementmanager.checkWorkoutAchievements('2023-10-09')">
-        ad
-      </ion-button>
     </ion-content>
   </ion-page>
 </template>

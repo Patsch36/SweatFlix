@@ -119,7 +119,6 @@
         </ion-row>
       </ion-grid>
 
-      <p>prev {{ previous }}, next {{ next }}</p>
       <Diagram :weights="queryResults" v-if="queryResults && showDiagram" />
 
       <ion-list v-show="workoutExercises.length">

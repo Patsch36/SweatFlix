@@ -22,6 +22,14 @@ export default class AchievementManager {
     });
   }
 
+  public getAchievements(): string[] {
+    return this.achievements;
+  }
+
+  public getNewAchievements(): string[] {
+    return this.newAchievements;
+  }
+
   public checkWorkoutAchievements(date: string) {
     this.achievements = [];
     this.newAchievements = [];
@@ -49,6 +57,7 @@ export default class AchievementManager {
 
       // check if theres an exercise over 50kg in weight
       for (const exercise of res.values) {
+        console.log(exercise);
         if (this.convertkglbs(exercise.weight, exercise.unit) >= 50) {
           this.setAchievement("Iron Beginner");
           if (exercise.reps >= 20) this.setAchievement("Repetition Hero");
@@ -74,7 +83,7 @@ export default class AchievementManager {
         )
           this.setAchievement("Iron Athlete");
 
-        if (Number.isInteger(exercise.weight))
+        if (Number.isInteger(Math.log2(exercise.weight)))
           this.setAchievement("Code Compiler");
 
         if (getAllMusclesFromSplit("Abs").includes(exercise.muscleGroup)) {
@@ -156,7 +165,7 @@ export default class AchievementManager {
         this.db?.query(queryExerciseBefore).then((res) => {
           if (res.values === undefined) return;
           if (res.values[0].weight + 20 <= exercise.weight)
-            this.setAchievement("Javascript Jumper");
+            this.setAchievement("JavaScript Jumper");
         });
       }
 
@@ -183,13 +192,14 @@ export default class AchievementManager {
   }
 
   private setAchievement(achievement: string) {
+    console.log(achievement);
     if (!this.achievements.includes(achievement)) {
       this.achievements.push(achievement);
     }
     this.db
       ?.query(`SELECT achieved from achievements WHERE name = "${achievement}"`)
       .then((res) => {
-        if (res.values && res.values[0].achieved === 0) {
+        if (res.values && res.values[0] && res.values[0].achieved === 0) {
           this.db?.run(
             `UPDATE achievements set obtained = datetime('now', 'localtime'), achieved = achieved + 1 WHERE name = '${achievement}'`
           );
