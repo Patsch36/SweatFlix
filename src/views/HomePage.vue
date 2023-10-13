@@ -16,6 +16,7 @@
       <div style="padding-inline: 0.75rem">
         <home-exercise-widget />
         <home-weight-widget />
+        <home-quotes-component />
       </div>
       <ion-fab slot="fixed" horizontal="end" vertical="bottom">
         <ion-fab-button>
@@ -81,6 +82,7 @@ import { onBeforeMount, ref } from "vue";
 
 import HomeWeightWidget from "@/components/HomeWeightWidget.vue";
 import HomeExerciseWidget from "@/components/HomeExerciseWidget.vue";
+import HomeQuotesComponent from "@/components/HomeQuotesComponent.vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import AchievementManager from "@/datatypes/AchievementManager";
