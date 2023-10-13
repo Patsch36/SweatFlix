@@ -58,6 +58,29 @@
           </ion-row>
           <ion-row>
             <ion-col>
+              <b>Weighttype</b>
+              <br />
+              {{
+                exercise.Bodyweight === 1 ? "Bodyweight" : "Externally Weighted"
+              }}
+            </ion-col>
+            <ion-col>
+              <b>Type</b>
+              <br />
+              {{ exercise.Isolation === 1 ? "Isolation" : "Compound" }}
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <b>Secondary Muscle Groups</b>
+              <br />
+              <ion-chip v-for="item in SecondaryMuscleGroups" color="light">
+                {{ item }}
+              </ion-chip>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
               <b>Description</b>
               <br />
               {{ exercise.ExDesc }}
@@ -133,7 +156,7 @@
       </div>
     </ion-content>
     <EditExercise
-      v-if="exercise"
+      v-if="exercise && renderModal"
       :exercise="exercise"
       @reloadExercises="reloadExercises"></EditExercise>
   </ion-page>
@@ -174,24 +197,18 @@ const databaseStore = useDatabaseStore();
 const stateStore = useStateStore();
 
 const exercise = ref();
+const SecondaryMuscleGroups = ref();
 const exerciseName = ref();
 const timeSegment = ref<string>("week");
 const valueSegment = ref<string>("workout");
 const displayableValues = ref<number[]>([]);
+const renderModal = ref(true);
 
 const workoutExercises = ref();
 
 const timestamps = ref<string[]>([]);
 
 const showDiagramm = ref(true);
-const editExercise = ref(false);
-
-const testWeights = ref([
-  { timestamp: "2023-09-02T06:30:00", weight: 50 },
-  { timestamp: "2023-09-05T06:30:00", weight: 55 },
-  { timestamp: "2023-09-12T06:30:00", weight: 60 },
-]);
-
 const indexForDisplayableValues = ref<number>(0);
 
 const loadExercise = async () => {
@@ -201,9 +218,25 @@ const loadExercise = async () => {
     ? resp.values[0]
     : { name: "No exercise found" };
   console.log("LOADED EXERCISE INFO", exercise.value);
+
+  const SecondaryMuscleGroupsQuery = `SELECT SubMuscle FROM MuscleGroup WHERE ID in (${exercise.value.SecondaryMuscleGroup.slice(
+    1,
+    -1
+  )})`;
+  const respSecondaryMuscleGroups = await databaseStore
+    .getDatabase()
+    ?.query(SecondaryMuscleGroupsQuery);
+  SecondaryMuscleGroups.value = respSecondaryMuscleGroups?.values
+    ? respSecondaryMuscleGroups.values
+    : [];
+
+  SecondaryMuscleGroups.value = SecondaryMuscleGroups.value.map(
+    (item: any) => item.SubMuscle
+  );
 };
 
 const reloadExercises = async (name: string) => {
+  renderModal.value = false;
   exerciseName.value = name;
   await loadExercise();
   await loadExercisesFromWorkoutExercises();
@@ -213,6 +246,8 @@ const reloadExercises = async (name: string) => {
   segmentChangedTime(null);
   valueSegment.value = "workout";
   segmentChangedValues(null);
+
+  renderModal.value = true;
 };
 
 const loadExercisesFromWorkoutExercises = async () => {
@@ -417,5 +452,9 @@ ion-segment-button {
   width: 100%;
   justify-content: center;
   text-align: center;
+}
+
+ion-chip {
+  padding: 8px;
 }
 </style>

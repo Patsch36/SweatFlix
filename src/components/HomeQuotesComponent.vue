@@ -14,7 +14,7 @@ const quote = ref("");
 const author = ref("");
 
 onBeforeMount(() => {
-  const date = new Date().setHours(0, 0, 0, 0);
+  const date = new Date().setHours(0, 0, 0, 0) / 1000000;
   const index = date % quotesEnglish.length;
   const quoteParts = quotesEnglish[index].split(" - ");
   quote.value = quoteParts[0];
@@ -39,5 +39,6 @@ p {
 p:nth-child(2) {
   text-align: right;
   font-style: italic;
+  margin-block: 0;
 }
 </style>
