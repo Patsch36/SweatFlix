@@ -1,39 +1,26 @@
 <template>
   <ion-page style="height: calc(100vh - 100px)">
-    <ion-header :translucent="true">
+    <ion-header :translucent="false">
       <ion-toolbar>
-        <ion-title v-if="workout">{{ workout }}</ion-title>
-        <div class="icon">
-          <ion-icon
-            :icon="chevronBack"
-            @click="router.go(-1)"
-            size="large"
-            color="primary"></ion-icon>
-          <ion-label @click="router.go(-1)" color="primary">Back</ion-label>
-        </div>
-        <div
-          v-if="slides && slides.activeIndex < amountOfExercises - 1"
-          @click="router.push(`/workouttemplateEdit/${workout}`)"
-          class="icon"
-          slot="end"
-          style="margin-right: 16px">
-          <ion-icon
-            :icon="pencilOutline"
-            style="font-size: 24px; margin-right: 8px"
-            color="primary"></ion-icon>
-          <ion-label color="primary">Edit</ion-label>
-        </div>
-        <div
-          v-else
-          @click="save"
-          class="icon"
-          slot="end"
-          style="margin-right: 16px">
-          <ion-icon
-            :icon="saveOutline"
-            style="font-size: 24px; margin-right: 8px"
-            color="primary"></ion-icon>
-          <ion-label color="primary">Save</ion-label>
+        <div class="headerwrapper">
+          <div class="icon">
+            <ion-icon
+              :icon="chevronBack"
+              @click="router.go(-1)"
+              size="large"
+              color="primary"></ion-icon>
+            <ion-label @click="router.go(-1)" color="primary">Back</ion-label>
+          </div>
+          <h6>Pageprogress:</h6>
+          <div class="icon" @click="save" slot="end" style="margin-right: 8px">
+            <ion-label color="primary" style="margin-right: 8px">
+              Save
+            </ion-label>
+            <ion-icon
+              :icon="saveOutline"
+              size="large"
+              color="primary"></ion-icon>
+          </div>
         </div>
       </ion-toolbar>
       <ion-progress-bar
@@ -55,6 +42,18 @@
         </ion-toolbar>
       </ion-header>
       <div class="content-wrapper" v-if="template">
+        <!-- <p>{{ slides.activeIndex + 1 }} || {{ amountOfExercises }}</p> -->
+        <div class="set-progress">
+          <p>
+            Finished Sets:
+            {{ Math.round((amountOfFinishedSets / amountOfSets) * 1000) / 10 }}%
+          </p>
+          <ion-progress-bar
+            :value="amountOfFinishedSets / amountOfSets"
+            class="ion-margin-bottom">
+          </ion-progress-bar>
+        </div>
+
         <swiper @swiper="setSwiperInstance">
           <swiper-slide v-for="(exercise, index) in exercises" class="slide">
             <ion-grid>
@@ -77,20 +76,24 @@
                     v-model="exerciseResults[index][setIndex].weight"
                     :placeholder="
                       exerciseResults[index][setIndex].weightPlaceholder
-                    "></ion-input>
+                    ">
+                  </ion-input>
                   <p></p>
                 </ion-item>
               </ion-list>
               <p v-if="ORMs[index]">
                 You're 1RM for this exercise is: {{ ORMs[index] }}kg
               </p>
-              <p v-if="NRMs[index]">
+              <p v-if="NRMs[index] && showReps">
                 You're {{ setManager.getReps() }}RM for this exercise is:
                 {{ NRMs[index] }}kg
               </p>
             </ion-grid>
           </swiper-slide>
         </swiper>
+        <p v-if="slides" class="page-indicator">
+          Page {{ slides.activeIndex + 1 }} / {{ amountOfExercises }}
+        </p>
       </div>
     </ion-content>
     <ion-modal :isOpen="showResultModal">
@@ -189,9 +192,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from "vue";
+import { computed, onBeforeMount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { chevronBack, pencilOutline, saveOutline } from "ionicons/icons";
+import { chevronBack, saveOutline } from "ionicons/icons";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
@@ -223,6 +226,8 @@ const databaseStore = useDatabaseStore();
 
 const route = useRoute();
 const router = useRouter();
+const showTitle = ref(false);
+const showReps = ref(false);
 
 const workout = ref();
 const template = ref();
@@ -248,6 +253,52 @@ const newBadgesImages = ref();
 const allBadges = ref();
 const allBadgesImages = ref();
 const selectedBadge = ref("");
+
+const amountOfSets = computed(() => {
+  let amount = 0;
+  if (!exercises.value) return amount;
+  for (let i = 0; i < exercises.value.length; i++) {
+    amount += exercises.value[i].sets;
+  }
+  return amount;
+});
+
+const amountOfFinishedSets = computed(() => {
+  let amount = 0;
+  if (!exerciseResults.value) return amount;
+  for (let i = 0; i < exerciseResults.value.length; i++) {
+    for (let j = 0; j < exerciseResults.value[i].length; j++) {
+      if (
+        exerciseResults.value[i][j].reps &&
+        exerciseResults.value[i][j].weight
+      ) {
+        amount++;
+      }
+    }
+  }
+  return amount;
+});
+
+onMounted(() => {
+  showTitle.value = true;
+});
+
+onBeforeMount(async () => {
+  workout.value = route.params.id;
+  await loadWorkoutTemplate();
+  await loadWorkoutExcercises();
+
+  startdate.value = new Date().toISOString().slice(0, 19);
+
+  setManager.value = new SetManager();
+  await set1RMs();
+  await setNRMs();
+
+  setTimeout(() => {
+    showReps.value = true;
+  }, 60);
+});
+
 const setSwiperInstance = (swiper: any) => {
   slides.value = swiper;
 };
@@ -306,18 +357,6 @@ const loadWorkoutExcercises = async () => {
   console.log("Results", exerciseResults.value);
 };
 
-onBeforeMount(async () => {
-  workout.value = route.params.id;
-  await loadWorkoutTemplate();
-  await loadWorkoutExcercises();
-
-  startdate.value = new Date().toISOString().slice(0, 19);
-
-  setManager.value = new SetManager();
-  await set1RMs();
-  await setNRMs();
-});
-
 const set1RMs = () => {
   for (let i = 0; i < exercises.value.length; i++) {
     setManager.value
@@ -358,6 +397,14 @@ const save = async () => {
   for (let exercise = 0; exercise < exercises.value.length; exercise++) {
     console.log(exerciseResults.value[exercise]);
     for (let i = 0; i < exerciseResults.value[exercise].length; i++) {
+      if (exerciseResults.value[exercise][i].reps === null) {
+        exerciseResults.value[exercise][i].reps = 0;
+      }
+
+      if (exerciseResults.value[exercise][i].weight === null) {
+        exerciseResults.value[exercise][i].weight = 0;
+      }
+
       const query = `INSERT INTO WorkoutExercise (workout, exercise, setnumber, reps, weight, unit) VALUES ('${
         startdate.value
       }', '${exercises.value[exercise].exerciseName}', ${i + 1}, ${
@@ -374,8 +421,6 @@ const save = async () => {
   await achievementmanager.checkWorkoutAchievements(startdate.value);
   newBadges.value = await achievementmanager.getNewAchievements();
   allBadges.value = await achievementmanager.getAchievements();
-
-  newBadges.value.push("Biceps Boss", "LEG-endary", "Full Stack Flexer");
 
   setTimeout(async () => {
     // Call the function to get the achievement image URLs
@@ -413,6 +458,11 @@ const getAchievementImageURLs = async (list: string[]) => {
   }
   return imageURLs;
 };
+
+const generateNumbers = (upperLimit: any) => {
+  // Erstelle ein Array von 1 bis zur angegebenen oberen Grenze
+  return Array.from({ length: upperLimit }, (_, index) => index);
+};
 </script>
 
 <style scoped>
@@ -441,7 +491,7 @@ ion-content ion-header {
 }
 
 .slide {
-  height: 2000px;
+  height: calc(100vh - 350px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -490,5 +540,31 @@ ion-popover h3 {
   width: 100%;
   text-align: center;
   color: var(--ion-color-accent);
+}
+
+.headerwrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.set-progress {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.set-progress p {
+  width: 275px;
+  margin: 0;
+}
+
+.set-progress ion-progress-bar {
+  margin-block: auto;
+}
+
+.page-indicator {
+  width: 100%;
+  text-align: center;
 }
 </style>

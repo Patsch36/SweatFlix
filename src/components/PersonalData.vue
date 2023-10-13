@@ -64,11 +64,10 @@
       <ion-select-option value="GetShredded"> Get Shredded </ion-select-option>
       <ion-select-option value="LooseWeight"> Loose Weight </ion-select-option>
       <ion-select-option value="Maintain"> Maintain </ion-select-option>
-      <ion-select-option value="GetStronger"> Get Stronger </ion-select-option>
       <ion-select-option value="BuildMuscles">
         Build Muscles
       </ion-select-option>
-      <ion-select-option value="GetBig"> Get Big </ion-select-option>
+      <ion-select-option value="GetStrong"> Get Strong </ion-select-option>
     </ion-select>
   </ion-item>
   <ion-item>

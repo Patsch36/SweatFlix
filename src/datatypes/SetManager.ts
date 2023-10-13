@@ -1,10 +1,30 @@
+import { store } from "@/stores/IonicStorage";
 import { useDatabaseStore } from "@/stores/databaseStore";
 export class SetManager {
   private m_Reps: number;
   private db;
 
   constructor() {
-    this.m_Reps = 6;
+    this.m_Reps = 8;
+    store.get("GoalAnatomy").then((value) => {
+      switch (value) {
+        case "GetShredded":
+          this.m_Reps = 20;
+          break;
+        case "LooseWeight":
+          this.m_Reps = 15;
+          break;
+        case "Maintain":
+          this.m_Reps = 12;
+          break;
+        case "BuildMuscles":
+          this.m_Reps = 10;
+          break;
+        case "GetStrong":
+          this.m_Reps = 6;
+          break;
+      }
+    });
 
     const database = useDatabaseStore().getDatabase();
     database !== null
