@@ -162,6 +162,7 @@ export const splits: string[] = [
   "Back - Triceps",
   "Legs - Abs",
   "Legs - Shoulders",
+  "Legs - Shoulders - Abs",
   "Legs - Back",
   "Legs - Chest",
   "Chest - Triceps",
@@ -177,8 +178,8 @@ export const splits: string[] = [
   "UpperBody",
   "LowerBody",
   "Fullbody - Push",
-  "FullBody - Pull",
-  "FullBody",
+  "Fullbody - Pull",
+  "Fullbody",
   //   "Cardio",
   //   "Rest",
 ];
@@ -269,6 +270,15 @@ export const getPossibleSplits = (muscles: number[]) => {
     );
 
   if (muscles.some((item) => ![14, 15, 16, 17, 18, 19, 20].includes(item)))
+    possibleSplits = possibleSplits.filter(
+      (split: string) => split !== "Legs - Shoulders"
+    );
+
+  if (
+    muscles.some(
+      (item) => ![14, 15, 16, 17, 18, 19, 20, 21, 22, 23].includes(item)
+    )
+  )
     possibleSplits = possibleSplits.filter(
       (split: string) => split !== "Legs - Shoulders"
     );
@@ -397,7 +407,7 @@ export const getPossibleSplits = (muscles: number[]) => {
 
   if (muscles.some((item) => [1, 2, 3, 11, 12, 13, 14, 16, 19].includes(item)))
     possibleSplits = possibleSplits.filter(
-      (split: string) => split !== "FullBody - Pull"
+      (split: string) => split !== "Fullbody - Pull"
     );
 
   return possibleSplits;
@@ -425,7 +435,7 @@ export const getPossibleSplitsShorterFunction = (muscles: number[]) => {
       muscles.every((muscle) =>
         [1, 2, 3, 11, 12, 13, 14, 16, 19].includes(muscle)
       ),
-    "FullBody - Pull": (muscles: number[]) =>
+    "Fullbody - Pull": (muscles: number[]) =>
       muscles.some(
         (muscle) => ![1, 2, 3, 11, 12, 13, 14, 16, 19].includes(muscle)
       ),
@@ -466,6 +476,7 @@ export const getAllMusclesFromSplit = (split: string) => {
     "Back - Shoulders - Triceps": [4, 5, 6, 7, 11, 12, 13, 18, 19, 20],
     "Legs - Abs": [14, 15, 16, 17, 21, 22, 23],
     "Legs - Shoulders": [14, 15, 16, 17, 18, 19, 20],
+    "Legs - Shoulders - Abs": [14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
     "Legs - Back": [14, 15, 16, 17, 4, 5, 6, 7],
     "Legs - Chest": [14, 15, 16, 17, 1, 2, 3],
     "Chest - Triceps": [1, 2, 3, 11, 12, 13],
@@ -488,7 +499,8 @@ export const getAllMusclesFromSplit = (split: string) => {
     ],
     LowerBody: [14, 15, 16, 17],
     "Fullbody - Push": [1, 2, 3, 11, 12, 13, 14, 16, 19],
-    "FullBody - Pull": [4, 5, 6, 7, 8, 9, 10, 14, 15, 16, 17],
+    "Fullbody - Pull": [4, 5, 6, 7, 8, 9, 10, 14, 15, 16, 17],
+    Fullbody: Array.from({ length: 23 }, (_, index) => index + 1),
   };
   // find filter list that matches split
   const filtersKeys = Object.keys(filters);
