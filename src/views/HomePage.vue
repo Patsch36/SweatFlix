@@ -13,10 +13,14 @@
         </ion-toolbar>
       </ion-header>
 
+      <ion-button @click="workoutgenerator.generateWorkout()"
+        >generate</ion-button
+      >
+
       <div style="padding-inline: 0.75rem">
         <home-exercise-widget />
         <home-weight-widget />
-        <home-quotes-component />
+        <!-- <home-quotes-component /> -->
       </div>
       <ion-fab slot="fixed" horizontal="end" vertical="bottom">
         <ion-fab-button>
@@ -85,18 +89,19 @@ import HomeExerciseWidget from "@/components/HomeExerciseWidget.vue";
 import HomeQuotesComponent from "@/components/HomeQuotesComponent.vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
-import AchievementManager from "@/datatypes/AchievementManager";
+// import AchievementManager from "@/datatypes/AchievementManager";
+import { WorkoutGenerator } from "@/datatypes/WorkoutGenerator";
 
 const router = useRouter();
 const databasestore = useDatabaseStore();
 
 const activeWorkouts = ref();
 const showModal = ref(false);
-const achievementmanager = ref();
+const workoutgenerator = ref();
 
 onBeforeMount(async () => {
   await loadActiveWorkouts();
-  achievementmanager.value = new AchievementManager();
+  workoutgenerator.value = new WorkoutGenerator();
 });
 
 const loadActiveWorkouts = async () => {

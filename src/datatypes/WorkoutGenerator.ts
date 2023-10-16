@@ -1,7 +1,6 @@
 import { store } from "@/stores/IonicStorage";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { Muscle, getAllMusclesFromSplit } from "./splitCalculator";
-import { includes } from "cypress/types/lodash";
 
 interface MuscleGroup {
   musclegroup: number;
@@ -12,8 +11,12 @@ interface WorkoutExercise {
   exercisename: string;
   reps: string;
   sets: number;
+  muscleGroup: number;
 }
 
+/**
+ * Represents a workout generator that generates a workout based on personal data and exercises from the database.
+ */
 export class WorkoutGenerator {
   private db: any;
   private exercises: any;
@@ -40,6 +43,9 @@ export class WorkoutGenerator {
 
   private split: string;
 
+  /**
+   * Initializes a new instance of the WorkoutGenerator class.
+   */
   constructor() {
     this.split = "";
 
@@ -74,6 +80,7 @@ export class WorkoutGenerator {
 
   /**
    * Generates a workout by evaluating the split and creating the workout.
+   * @private
    */
   private generate() {
     this.split = this.evaluateSplit();
@@ -85,126 +92,147 @@ export class WorkoutGenerator {
    * @private
    */
   private createWorkout() {
-    const generatedWorkouts = this.split.split(";");
-    for (let i = 0; i < generatedWorkouts.length; i++) {
-      const mtf = this.getMuscleTrainFactor(generatedWorkouts[i]);
-      const muscles = getAllMusclesFromSplit(generatedWorkouts[i]);
-
-      let musclegroups: MuscleGroup[] = [];
-      for (let muscle in muscles) {
-        musclegroups.push({
-          musclegroup: muscles[muscle],
-          muscletrainfactor: mtf,
-        });
-      }
-
-      // get random Exercise from this.exercises with first muscle group of musclegroups
-      if (
-        [
-          "UpperBody",
-          "Fullbody - Push",
-          "Fullbody - Pull",
-          "Fullbody",
-        ].includes(generatedWorkouts[i])
-      ) {
-        this.createWorkoutForEachMuscleArea(generatedWorkouts[i]);
-      } else {
-        // TODO: Generate A and B workouts
-        this.createWorkoutForEachMuscleGroup(
-          musclegroups,
-          generatedWorkouts[i]
-        );
-      }
-
-      console.log(JSON.stringify(musclegroups));
-
-      const query = `SELECT * FROM Exercise;`;
-      this.db = useDatabaseStore().getDatabase();
-      this.db?.query(query).then((res: any[]) => {
-        this.exercises = res.values ? res.values : [];
-      });
-      break;
-    }
-  }
-
-  private createPlan() {}
-
-  /**
-   * Creates a workout for each muscle group in split.
-   * @param musclegroups - An array of MuscleGroup objects.
-   * @param workout - A string representing the type of workout.
-   */
-  private createWorkoutForEachMuscleGroup(
-    musclegroups: MuscleGroup[],
-    workout: string
-  ) {
     try {
-      let workoutExercises: WorkoutExercise[] = [];
-      const componentExercises = 10;
-      let counterComponentExercises = 0;
-      let continues = 0;
-      while (musclegroups[0].muscletrainfactor > 1) {
-        const filteredExercises =
-          counterComponentExercises >= componentExercises
-            ? this.exercises.filter((exercise: any) => {
-                return exercise.muscleGroup == musclegroups[0].musclegroup;
-              })
-            : this.exercises.filter((exercise: any) => {
-                return (
-                  exercise.muscleGroup == musclegroups[0].musclegroup &&
-                  exercise.Isolation == 0
-                );
-              });
+      const generatedWorkouts = this.split.split(";");
+      for (let i = 0; i < generatedWorkouts.length; i++) {
+        const mtf = this.getMuscleTrainFactor(generatedWorkouts[i]);
+        const muscles = getAllMusclesFromSplit(generatedWorkouts[i]);
 
-        counterComponentExercises++;
-        if (filteredExercises.length === 0) {
-          continues += 1;
-          if (continues < musclegroups.length) continue;
-          else break;
+        let musclegroups: MuscleGroup[] = [];
+        for (let muscle in muscles) {
+          musclegroups.push({
+            musclegroup: muscles[muscle],
+            muscletrainfactor: mtf,
+          });
         }
 
-        const randomExercise =
-          filteredExercises[
-            Math.round(Math.random() * (filteredExercises.length - 1))
-          ];
+        // get random Exercise from this.exercises with first muscle group of musclegroups
+        if (
+          [
+            "UpperBody",
+            "Fullbody - Push",
+            "Fullbody - Pull",
+            "Fullbody",
+          ].includes(generatedWorkouts[i])
+        ) {
+          this.createWorkoutForEachMuscleArea(generatedWorkouts[i]);
+        } else {
+          // TODO: Generate A and B workouts
+          this.createWorkoutForEachMuscleGroup(
+            musclegroups,
+            generatedWorkouts[i]
+          );
+        }
 
-        const { reps, sets } = this.getRepsAndSets(workout);
-        workoutExercises.push({
-          exercisename: randomExercise.name,
-          reps: reps,
-          sets: sets,
+        console.log(JSON.stringify(musclegroups));
+
+        const query = `SELECT * FROM Exercise;`;
+        this.db = useDatabaseStore().getDatabase();
+        this.db?.query(query).then((res: any[]) => {
+          this.exercises = res.values ? res.values : [];
         });
-
-        this.removeMuscleGroups(
-          musclegroups,
-          randomExercise.muscleGroup,
-          JSON.parse(randomExercise.SecondaryMuscleGroup)
-        );
-
-        // remove randomExercise from this.exercises
-        this.exercises = this.exercises.filter((exercise: any) => {
-          return exercise.name !== randomExercise.name;
-        });
-
-        console.log(this.exercises);
-        alert(
-          workoutExercises.length + "\n" + JSON.stringify(workoutExercises)
-        );
+        break;
       }
     } catch (e) {
+      console.error("ERROR: " + e);
       alert("Please fill the health Sheet and your personal data!");
       return;
     }
   }
 
   /**
+   * Creates a workout for each muscle group in split.
+   * @param musclegroups - An array of MuscleGroup objects.
+   * @param workout - A string representing the type of workout.
+   * @private
+   */
+  private createWorkoutForEachMuscleGroup(
+    musclegroups: MuscleGroup[],
+    workout: string
+  ) {
+    let workoutExercises: WorkoutExercise[] = [];
+    const componentExercises = 3;
+    let counterComponentExercises = 0;
+
+    while (musclegroups[0].muscletrainfactor > 1) {
+      // shuffle musclegroups where muscletrainfactor is as high as musclegroups[0].muscletrainfactor
+      // => So component exercises are not always fiirst three muscle groups
+      musclegroups = this.shuffleArrayFisherYates(musclegroups);
+      // get only exercises for this musclegroup
+      let filteredExercises =
+        counterComponentExercises >= componentExercises
+          ? this.exercises.filter((exercise: any) => {
+              return exercise.muscleGroup == musclegroups[0].musclegroup;
+            })
+          : this.exercises.filter((exercise: any) => {
+              return (
+                exercise.muscleGroup == musclegroups[0].musclegroup &&
+                exercise.Isolation == 0
+              );
+            });
+
+      if (filteredExercises.length === 0) {
+        filteredExercises = this.exercises.filter((exercise: any) => {
+          return exercise.muscleGroup == musclegroups[0].musclegroup;
+        });
+      } else counterComponentExercises++;
+
+      if (filteredExercises.length === 0)
+        alert(
+          "No Exercises found for this muscle group: " +
+            musclegroups[0].musclegroup
+        );
+
+      // alert(
+      //   `${filteredExercises.length} \n ${
+      //     JSON.stringify(filteredExercises) || "No Exercises found"
+      //   }`
+      // );
+
+      // exercise for this musclegroup
+      const randomExercise =
+        filteredExercises[
+          Math.round(Math.random() * (filteredExercises.length - 1))
+        ];
+
+      const { reps, sets } = this.getRepsAndSets(workout);
+      workoutExercises.push({
+        exercisename: randomExercise.name,
+        reps: reps,
+        sets: sets,
+        muscleGroup: randomExercise.muscleGroup,
+      });
+
+      // decrease muscletrainfactors
+      this.removeMuscleGroups(
+        musclegroups,
+        randomExercise.muscleGroup,
+        JSON.parse(randomExercise.SecondaryMuscleGroup)
+      );
+
+      // remove randomExercise from this.exercises
+      this.exercises = this.exercises.filter((exercise: any) => {
+        return exercise.name !== randomExercise.name;
+      });
+
+      console.log(randomExercise);
+      console.log(JSON.stringify(musclegroups));
+      console.log(musclegroups[0].muscletrainfactor > 1);
+      console.log("=====================================");
+    }
+    workoutExercises.sort((a, b) => {
+      return a.muscleGroup - b.muscleGroup;
+    });
+    alert(workoutExercises.length + "\n" + JSON.stringify(workoutExercises));
+  }
+
+  /**
    * Creates a workout plan for each muscle area based on the user's age, gender, and selected workout type.
    * @param workout - The selected workout type.
+   * @private
    */
   private createWorkoutForEachMuscleArea(workout: string) {
-    /**
-     * Object containing the number of exercises for each muscle area based on the user's age and selected workout type.
-     */
+    // Object containing the number of exercises for each muscle area based on the user's age and selected workout type.
     const exercisesMuscles: {
       [key: string]: {
         [key: string]: {
@@ -325,13 +353,12 @@ export class WorkoutGenerator {
           exercisename: randomExercise.name,
           reps: reps,
           sets: sets,
+          muscleGroup: randomExercise.muscleGroup,
         });
       }
     }
 
-    /**
-     * Displays the number of generated workout exercises and the exercises themselves in a pop-up alert.
-     */
+    // Displays the number of generated workout exercises and the exercises themselves in a pop-up alert.
     alert(workoutExercises.length + "\n" + JSON.stringify(workoutExercises));
   }
 
@@ -500,6 +527,7 @@ export class WorkoutGenerator {
    * Returns the muscle train factor based on the age and workout type.
    * @param workout - The type of workout (UpperBody, LowerBody, Fullbody, etc.).
    * @returns The muscle train factor.
+   * TODO: Make Muscletrainfactor more dynamic: Different factor for bigger/ smaller groups
    */
   private getMuscleTrainFactor(workout: string) {
     let muscleTrainFactor = 1;
@@ -552,7 +580,7 @@ export class WorkoutGenerator {
   }
 
   /**
-   * Removes muscle groups from the given array of muscle groups based on the primary and secondary muscle groups.
+   * Decrease MuscleTrainFactor of muscle groups from the given array of muscle groups based on the primary and secondary muscle groups.
    * @param muscleGroups - An array of MuscleGroup objects.
    * @param muscleGroup - The primary muscle group to remove.
    * @param secondaryMuscleGroups - An array of secondary muscle groups to remove.
@@ -563,12 +591,15 @@ export class WorkoutGenerator {
     muscleGroup: number,
     secondaryMuscleGroups: number[]
   ) {
-    // decrease muscletrainFactor for 3 where musclegroup === muscleGroup
+    // TODO: Figure out what to do if muscleGroup is null.
     for (let mg in muscleGroups) {
-      if (muscleGroups[mg].musclegroup === muscleGroup) {
+      if (muscleGroup && muscleGroups[mg].musclegroup === muscleGroup) {
         muscleGroups[mg].muscletrainfactor -= 3;
-      } else if (secondaryMuscleGroups.includes(muscleGroups[mg].musclegroup)) {
-        muscleGroups[mg].muscletrainfactor -= 2;
+      } else if (
+        secondaryMuscleGroups &&
+        secondaryMuscleGroups.includes(muscleGroups[mg].musclegroup)
+      ) {
+        muscleGroups[mg].muscletrainfactor -= 1;
       }
     }
 
@@ -626,5 +657,24 @@ export class WorkoutGenerator {
           return { reps: "6-12", sets: 3 };
       }
     }
+  }
+
+  /**
+   * Shuffles an array of MuscleGroup objects keeping order of muscletrainfactor using the Fisher-Yates algorithm.
+   * @param a - The array of MuscleGroup objects to shuffle.
+   * @returns The shuffled array of MuscleGroup objects.
+   */
+  private shuffleArrayFisherYates(a: MuscleGroup[]) {
+    "use strict";
+    var i, t, j;
+    for (i = a.length - 1; i > 0; i -= 1) {
+      t = a[i];
+      j = Math.floor(Math.random() * (i + 1));
+      if (a[i].muscletrainfactor === a[j].muscletrainfactor) {
+        a[i] = a[j];
+        a[j] = t;
+      }
+    }
+    return a;
   }
 }

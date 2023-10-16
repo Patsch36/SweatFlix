@@ -335,7 +335,11 @@ const setWithHighestWeightValue = () => {
     (workoutExercise: { reps: number; weight: number; workout: string }) => {
       if (weightPerWorkout[workoutExercise.workout]) {
         if (
-          weightPerWorkout[workoutExercise.workout] < workoutExercise.weight
+          weightPerWorkout[workoutExercise.workout] < workoutExercise.weight ||
+          (weightPerWorkout[workoutExercise.workout] ===
+            workoutExercise.weight &&
+            weightsPerWorkout[workoutExercise.workout] <
+              workoutExercise.reps * workoutExercise.weight)
         ) {
           weightPerWorkout[workoutExercise.workout] = workoutExercise.weight;
           weightsPerWorkout[workoutExercise.workout] =
