@@ -13,14 +13,10 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-button @click="workoutgenerator.generateWorkout()"
-        >generate</ion-button
-      >
-
       <div style="padding-inline: 0.75rem">
         <home-exercise-widget />
         <home-weight-widget />
-        <!-- <home-quotes-component /> -->
+        <home-quotes-component />
       </div>
       <ion-fab slot="fixed" horizontal="end" vertical="bottom">
         <ion-fab-button>
@@ -90,7 +86,6 @@ import HomeQuotesComponent from "@/components/HomeQuotesComponent.vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
 // import AchievementManager from "@/datatypes/AchievementManager";
-import { WorkoutGenerator } from "@/datatypes/WorkoutGenerator";
 
 const router = useRouter();
 const databasestore = useDatabaseStore();
@@ -101,7 +96,6 @@ const workoutgenerator = ref();
 
 onBeforeMount(async () => {
   await loadActiveWorkouts();
-  workoutgenerator.value = new WorkoutGenerator();
 });
 
 const loadActiveWorkouts = async () => {
@@ -154,3 +148,5 @@ ion-popover::part(backdrop) {
   background-color: var(--ion-color-dark-shade);
 }
 </style>
+@/datatypes/TrainingsGenerator
+@/datatypes/Trainingsgeneration/TrainingsGenerator

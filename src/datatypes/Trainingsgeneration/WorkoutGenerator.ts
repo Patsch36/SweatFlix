@@ -1,41 +1,19 @@
-import { store } from "@/stores/IonicStorage";
-import { useDatabaseStore } from "@/stores/databaseStore";
-import { Muscle, getAllMusclesFromSplit } from "./splitCalculator";
+import { getAllMusclesFromSplit } from "../splitCalculator";
+import {
+  Workout,
+  WorkoutDays,
+  WorkoutExercise,
+  WorkoutMuscleGroup,
+} from "./datatypes";
 
-interface MuscleGroup {
-  musclegroup: number;
-  muscletrainfactor: number;
-}
-
-interface WorkoutExercise {
-  exercisename: string;
-  reps: string;
-  sets: number;
-  muscleGroup: number;
-}
-
-/**
- * Represents a workout generator that generates a workout based on personal data and exercises from the database.
- */
 export class WorkoutGenerator {
-  private db: any;
   private exercises: any;
 
   // =======
 
-  private desiredWeight: any;
-  private height: any;
   private age: any;
   private gender: any;
-  private workoutDays!: {
-    Mondays: boolean;
-    Tuesdays: boolean;
-    Wednesdays: boolean;
-    Thursdays: boolean;
-    Fridays: boolean;
-    Saturdays: boolean;
-    Sundays: boolean;
-  };
+  private workoutDays!: WorkoutDays;
   private activityLevel: any;
   private goalAnatomy: any;
 
@@ -46,45 +24,31 @@ export class WorkoutGenerator {
   /**
    * Initializes a new instance of the WorkoutGenerator class.
    */
-  constructor() {
+  constructor(
+    exercises: any,
+    age: any,
+    gender: any,
+    workoutdays: WorkoutDays,
+    activitylevel: any,
+    goalanatomy: any
+  ) {
     this.split = "";
+    this.exercises = exercises;
 
-    this.getPersonalData().then(() => {
-      const query = `SELECT * FROM Exercise;`;
-      this.db = useDatabaseStore().getDatabase();
-      this.db?.query(query).then((res: any[]) => {
-        this.exercises = res.values ? res.values : [];
-      });
-    });
-  }
-
-  /**
-   * Generates a workout based on personal data and exercises from the database.
-   * If personal data is not available, it will be fetched before generating the workout.
-   */
-  public generateWorkout() {
-    if (!this.checkData()) {
-      this.getPersonalData().then(() => {
-        const query = `SELECT * FROM Exercise;`;
-        this.db = useDatabaseStore().getDatabase();
-        this.db?.query(query).then((exercises: any[]) => {
-          this.exercises = exercises.values ? exercises.values : [];
-
-          this.generate();
-        });
-      });
-    } else {
-      this.generate();
-    }
+    this.age = age;
+    this.gender = gender;
+    this.workoutDays = workoutdays;
+    this.activityLevel = activitylevel;
+    this.goalAnatomy = goalanatomy;
   }
 
   /**
    * Generates a workout by evaluating the split and creating the workout.
    * @private
    */
-  private generate() {
+  public generate(): Workout[] {
     this.split = this.evaluateSplit();
-    this.createWorkout();
+    return this.createWorkout();
   }
 
   /**
@@ -94,11 +58,13 @@ export class WorkoutGenerator {
   private createWorkout() {
     try {
       const generatedWorkouts = this.split.split(";");
+      const workouts: Workout[] = [];
+      const allExercises = this.exercises;
       for (let i = 0; i < generatedWorkouts.length; i++) {
         const mtf = this.getMuscleTrainFactor(generatedWorkouts[i]);
         const muscles = getAllMusclesFromSplit(generatedWorkouts[i]);
 
-        let musclegroups: MuscleGroup[] = [];
+        let musclegroups: WorkoutMuscleGroup[] = [];
         for (let muscle in muscles) {
           musclegroups.push({
             musclegroup: muscles[muscle],
@@ -115,28 +81,43 @@ export class WorkoutGenerator {
             "Fullbody",
           ].includes(generatedWorkouts[i])
         ) {
-          this.createWorkoutForEachMuscleArea(generatedWorkouts[i]);
+          workouts.push({
+            workoutName: generatedWorkouts[i],
+            exercises: this.createWorkoutForEachMuscleArea(
+              generatedWorkouts[i]
+            ),
+          });
         } else {
           // TODO: Generate A and B workouts
-          this.createWorkoutForEachMuscleGroup(
-            musclegroups,
-            generatedWorkouts[i]
-          );
+          workouts.push({
+            workoutName: generatedWorkouts[i],
+            exercises: this.createWorkoutForEachMuscleGroup(
+              musclegroups,
+              generatedWorkouts[i]
+            ),
+          });
         }
 
-        console.log(JSON.stringify(musclegroups));
-
-        const query = `SELECT * FROM Exercise;`;
-        this.db = useDatabaseStore().getDatabase();
-        this.db?.query(query).then((res: any[]) => {
-          this.exercises = res.values ? res.values : [];
+        workouts[i].exercises.sort((a, b) => {
+          return a.muscleGroup - b.muscleGroup;
         });
-        break;
+
+        workouts[i].exercises = this.adjustWorkoutExercises(
+          workouts[i].exercises
+        );
+
+        // workouts[i].exercises = this.distributeEvenly(workouts[i].exercises);
+
+        // resort workouts[i].exercises: if sorted like 1,1,2,3,3 sort for 1,2,3,1,2,3 so musclegroups are equally spread
+
+        this.exercises = allExercises;
+        console.log(workouts[i]);
       }
+      return workouts;
     } catch (e) {
       console.error("ERROR: " + e);
       alert("Please fill the health Sheet and your personal data!");
-      return;
+      return [];
     }
   }
 
@@ -147,7 +128,7 @@ export class WorkoutGenerator {
    * @private
    */
   private createWorkoutForEachMuscleGroup(
-    musclegroups: MuscleGroup[],
+    musclegroups: WorkoutMuscleGroup[],
     workout: string
   ) {
     let workoutExercises: WorkoutExercise[] = [];
@@ -215,15 +196,15 @@ export class WorkoutGenerator {
         return exercise.name !== randomExercise.name;
       });
 
-      console.log(randomExercise);
-      console.log(JSON.stringify(musclegroups));
-      console.log(musclegroups[0].muscletrainfactor > 1);
-      console.log("=====================================");
+      // console.log(randomExercise);
+      // console.log(JSON.stringify(musclegroups));
+      // console.log(musclegroups[0].muscletrainfactor > 1);
+      // console.log("=====================================");
     }
     workoutExercises.sort((a, b) => {
       return a.muscleGroup - b.muscleGroup;
     });
-    alert(workoutExercises.length + "\n" + JSON.stringify(workoutExercises));
+    return workoutExercises;
   }
 
   /**
@@ -298,7 +279,7 @@ export class WorkoutGenerator {
         );
 
         let filteredExercises2 = filteredExercises.filter((exercise: any) => {
-          let isolation = i === 0 ? 0 : 1;
+          let isolation = i === 0 || muscles[muscle] === 1 ? 0 : 1;
           return (
             exercise.muscleGroup == availableMuscleGroups[muscleGroupIndex] &&
             exercise.Isolation == isolation
@@ -341,7 +322,7 @@ export class WorkoutGenerator {
               });
               if (ind !== -1) availableMuscleGroups.splice(ind, 1);
             }
-          }
+          } else availableMuscleGroups.splice(muscleGroupIndex, 1);
         } else {
           availableMuscleGroups.splice(muscleGroupIndex, 1);
         }
@@ -359,46 +340,7 @@ export class WorkoutGenerator {
     }
 
     // Displays the number of generated workout exercises and the exercises themselves in a pop-up alert.
-    alert(workoutExercises.length + "\n" + JSON.stringify(workoutExercises));
-  }
-
-  /**
-   * Checks if all necessary data is available to generate a workout plan.
-   * @returns {boolean} Returns true if all necessary data is available, otherwise false.
-   */
-  private checkData() {
-    return (
-      this.desiredWeight &&
-      this.height &&
-      this.age &&
-      this.gender &&
-      this.workoutDays &&
-      this.activityLevel &&
-      this.goalAnatomy &&
-      this.exercises
-    );
-  }
-
-  /**
-   * Retrieves personal data from the store and sets it to the corresponding properties of the WorkoutGenerator instance.
-   * @returns {Promise<void>}
-   */
-  private async getPersonalData() {
-    this.desiredWeight = await store.get("Weight Goal");
-    this.height = (await store.get("Height")) || 0;
-    this.age = (await store.get("Age")) || 0;
-    this.gender = (await store.get("Gender")) || "";
-    this.activityLevel = (await store.get("Activity Level")) || "";
-    this.workoutDays = JSON.parse(await store.get("Workout Days")) || {
-      Mondays: true,
-      Tuesdays: true,
-      Wednesdays: true,
-      Thursdays: true,
-      Fridays: true,
-      Saturdays: false,
-      Sundays: false,
-    };
-    this.goalAnatomy = (await store.get("GoalAnatomy")) || "";
+    return workoutExercises;
   }
 
   /**
@@ -418,7 +360,7 @@ export class WorkoutGenerator {
       if (this.age < 40) {
         // For younger men
         if (this.activityLevel === "Beginner") {
-          if (workoutDays > 3) return "UpperBody;UpperBody;LowerBody";
+          if (workoutDays > 3) return "UpperBody;LowerBody;Fullbody";
           else return "Fullbody";
         } else if (this.activityLevel === "Intermediate") {
           if (workoutDays > 3) return "Push;Pull;Legs";
@@ -472,7 +414,7 @@ export class WorkoutGenerator {
       // For younger women
       if (this.age < 40) {
         if (this.activityLevel === "Beginner") {
-          if (workoutDays > 3) return "LowerBody;UpperBody;LowerBody";
+          if (workoutDays > 3) return "LowerBody;UpperBody;Fullbody";
           else return "Fullbody";
         } else if (this.activityLevel === "Intermediate") {
           if (workoutDays > 3) return "UpperBody;LowerBody;UpperBody";
@@ -587,7 +529,7 @@ export class WorkoutGenerator {
    * @returns An array of MuscleGroup objects with the specified muscle groups removed.
    */
   private removeMuscleGroups(
-    muscleGroups: MuscleGroup[],
+    muscleGroups: WorkoutMuscleGroup[],
     muscleGroup: number,
     secondaryMuscleGroups: number[]
   ) {
@@ -631,13 +573,13 @@ export class WorkoutGenerator {
         case "GetShredded":
           return { reps: "13-20", sets: 3 };
         case "LooseWeight":
-          return { reps: "13-20", sets: 2 };
+          return { reps: "13-20", sets: 3 };
         case "Maintain":
           return { reps: "6-12", sets: 2 };
         case "BuildMuscles":
-          return { reps: "6-12", sets: 2 };
+          return { reps: "6-12", sets: 3 };
         case "GetStrong":
-          return { reps: "1-5", sets: 2 };
+          return { reps: "1-5", sets: 3 };
         default:
           return { reps: "6-12", sets: 2 };
       }
@@ -660,11 +602,99 @@ export class WorkoutGenerator {
   }
 
   /**
+   * Adjusts the workout exercises to ensure that the total number of sets does not exceed a certain limit.
+   * @param workoutExercises - An array of workout exercises to adjust.
+   * @returns An array of workout exercises with adjusted sets.
+   */
+  private adjustWorkoutExercises(workoutExercises: WorkoutExercise[]) {
+    const totalSets = workoutExercises
+      .map((exercise) => exercise.sets)
+      .reduce((a, b) => a + b, 0);
+
+    const totalSetsLimit = this.getTotalSetsLimit();
+    if (totalSets > totalSetsLimit) {
+      const amountOfExercises = workoutExercises.length;
+      const shorteningFactor = Math.round(
+        (totalSetsLimit - totalSets) / amountOfExercises
+      );
+
+      let i = 0;
+      while (i < workoutExercises.length) {
+        const currentExercise = workoutExercises[i];
+        const nextExercise = workoutExercises[i + 1];
+
+        if (
+          nextExercise &&
+          currentExercise.muscleGroup === nextExercise.muscleGroup
+        ) {
+          workoutExercises.splice(i + 1, 1);
+        } else if (shorteningFactor * -1 >= currentExercise.sets / 2) {
+          // musclegroups which are not twice in workout are lesser important so shorten a bit
+          // half of shorteningFactor because of splicing exercises is statistically speaking given
+          currentExercise.sets += shorteningFactor / 2;
+        }
+        i += 1;
+      }
+    }
+    return workoutExercises;
+  }
+
+  /**
+   * Returns the total sets limit based on the user's activity level and age.
+   * @returns {number} The total sets limit.
+   */
+  private getTotalSetsLimit() {
+    // set totalSetLimit depending on activity level and age
+    switch (this.activityLevel) {
+      case "Beginner":
+        return 20;
+      case "Intermediate":
+        switch (true) {
+          case this.age < 35:
+            return 25;
+          default:
+            return 20;
+        }
+      case "Advanced":
+        switch (true) {
+          case this.age < 35:
+            return 35;
+          case this.age >= 35 && this.age < 45:
+            return 30;
+          default:
+            return 25;
+        }
+      case "Semi-Professional":
+        switch (true) {
+          case this.age < 45:
+            return 35;
+          case this.age >= 45 && this.age < 65:
+            return 30;
+          default:
+            return 25;
+        }
+      case "Professional":
+        switch (true) {
+          case this.age < 35:
+            return 40;
+          case this.age >= 35 && this.age < 45:
+            return 35;
+          case this.age >= 45 && this.age < 65:
+            return 30;
+          default:
+            return 25;
+        }
+      default:
+        return 25;
+    }
+  }
+
+  /**
    * Shuffles an array of MuscleGroup objects keeping order of muscletrainfactor using the Fisher-Yates algorithm.
    * @param a - The array of MuscleGroup objects to shuffle.
    * @returns The shuffled array of MuscleGroup objects.
    */
-  private shuffleArrayFisherYates(a: MuscleGroup[]) {
+  private shuffleArrayFisherYates(a: WorkoutMuscleGroup[]) {
     "use strict";
     var i, t, j;
     for (i = a.length - 1; i > 0; i -= 1) {
@@ -676,5 +706,46 @@ export class WorkoutGenerator {
       }
     }
     return a;
+  }
+
+  /**
+   * Distributes the given array of objects evenly based on the number of elements in each group.
+   * @param arr - The array of objects to distribute.
+   * @returns An array of objects that have been evenly distributed based on the number of elements in each group.
+   */
+  private distributeEvenly(arr: any[]): any[] {
+    const distributedArray = [];
+    const groupCountMap = new Map<number, number>();
+
+    // Zähle die Anzahl der Elemente in jeder Muskelgruppe
+    for (const item of arr) {
+      const group = item.muscleGroup;
+      if (groupCountMap.has(group)) {
+        const x = groupCountMap.get(group);
+        if (x) groupCountMap.set(group, x + 1);
+      } else {
+        groupCountMap.set(group, 1);
+      }
+    }
+
+    const maxGroupSize = Math.max(...Array.from(groupCountMap.values()));
+
+    for (let i = 0; i < maxGroupSize; i++) {
+      for (const group of Array.from(groupCountMap.keys())) {
+        const item = groupCountMap.get(group);
+        if (item !== undefined && item > 0) {
+          const item = arr.find((obj) => obj.muscleGroup === group);
+          distributedArray.push(item);
+          const x = groupCountMap.get(group);
+          if (x) groupCountMap.set(group, x - 1);
+        }
+      }
+    }
+
+    return distributedArray;
+  }
+
+  private removeExercisesAfterHealthPoints() {
+    // remove Deadlifts for beginner, leg press for high blood pressure, etc.
   }
 }
