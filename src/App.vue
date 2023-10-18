@@ -16,9 +16,11 @@ import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "./stores/databaseStore";
 import { createTables, initTables, dropTables } from "./tables";
 import { store, initKeyValuePairs } from "./stores/IonicStorage";
+import { useSettingsStore } from "./stores/settingsStore";
 
 const dbInitialized = ref(false);
 const databaseStore = useDatabaseStore();
+const settingsStore = useSettingsStore();
 
 const updateCurrentPlanIndex = async () => {
   const currentWorkoutIndexChanged = await store.get("Current Workout Index");
@@ -95,6 +97,8 @@ onBeforeMount(async () => {
   //       iterationNumber
   //   );
   // });
+
+  await settingsStore.loadSettings();
 
   if (
     store.get("Active Plan") == undefined ||

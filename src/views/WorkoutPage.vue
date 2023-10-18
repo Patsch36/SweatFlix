@@ -23,9 +23,27 @@
             :icon="addCircleOutline"
             slot="end"
             class="newWorkoutIcon"
-            @click="router.push(`/workouttemplateEdit/New Workout`)"></ion-icon>
+            @click="addWorkoutTemplatePopoverShow = true"></ion-icon>
         </ion-toolbar>
       </ion-header>
+
+      <ion-popover
+        :isOpen="addWorkoutTemplatePopoverShow"
+        @willDismiss="addWorkoutTemplatePopoverShow = false">
+        <ion-content class="ion-padding-inline">
+          <div class="popover-container">
+            <h6>How do you want to create your workout?</h6>
+            <ion-button
+              @click="
+                addWorkoutTemplatePopoverShow = false;
+                router.push(`/workouttemplateEdit/New Workout`);
+              ">
+              Manual
+            </ion-button>
+            <ion-button @click="autogenerate"> Auto-Generated </ion-button>
+          </div>
+        </ion-content>
+      </ion-popover>
 
       <ion-grid class="ion-margin-bottom">
         <ion-row>
@@ -178,6 +196,7 @@ import {
   IonRow,
   IonCol,
   IonBackdrop,
+  IonPopover,
 } from "@ionic/vue";
 import { computed, onBeforeMount, ref, watch } from "vue";
 import {
@@ -191,6 +210,7 @@ import { useRouter } from "vue-router";
 
 import { useActiveWorkoutsStore } from "@/stores/activeWorkoutsStore";
 import { store } from "@/stores/IonicStorage";
+import { TrainingsGenerator } from "@/datatypes/Trainingsgeneration/TrainingsGenerator";
 
 const queryResults = ref<any>(null);
 const databaseStore = useDatabaseStore();
@@ -200,6 +220,8 @@ const workoutDisplaySegment = ref<string>("all");
 const slidingItems = ref<any>();
 const showList = ref<boolean>(true);
 const popOverShow = ref<any>(null);
+const addWorkoutTemplatePopoverShow = ref(false);
+const trainingsgenerator = ref<any>(null);
 let itemNameUpdate: String;
 
 const router = useRouter();
@@ -237,6 +259,8 @@ onBeforeMount(async () => {
   workoutDisplaySegment.value = "active";
   activePlan.value = (await store.get("Active Plan")) || "No Plan";
   console.log(activePlan.value);
+
+  trainingsgenerator.value = new TrainingsGenerator();
 });
 
 watch(workoutDisplaySegment, async (newValue) => {
@@ -321,6 +345,15 @@ const archivateWorkout = (name: String) => {
     showList.value = true;
   }, 0.01);
 };
+
+const autogenerate = () => {
+  addWorkoutTemplatePopoverShow.value = false;
+  trainingsgenerator.value.generateWorkout();
+  loadWorkouts();
+  setTimeout(() => {
+    loadWorkouts();
+  }, 100);
+};
 </script>
 
 <style scoped>
@@ -389,5 +422,18 @@ ion-card-title {
 
 .archive-button {
   width: 100%;
+}
+
+ion-popover {
+  --width: 300px;
+}
+
+.popover-container {
+  margin-inline: 16px;
+  margin-bottom: 8px;
+}
+
+.popover-container ion-button:nth-child(2) {
+  margin-left: auto;
 }
 </style>

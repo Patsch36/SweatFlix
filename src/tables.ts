@@ -271,7 +271,7 @@ export const initTables = async () => {
     tableInitialisations += promise?.changes?.changes || 0;
 
     promise = await databaseStore.getDatabase()
-      ?.run(`INSERT INTO Exercise (MuscleGroup, Isolation, Bodyweight, SecondaryMuscleGroup Name, Description, Image)
+      ?.run(`INSERT INTO Exercise (MuscleGroup, Isolation, Bodyweight, SecondaryMuscleGroup, Name, Description, Image)
       VALUES
         (1,  0, 0, '[2, 11, 12]', 'Incline Bench Press', 'This exercise primarily targets the upper chest muscles. To perform this exercise, lie back on an incline bench. Hold a barbell or dumbbells above your chest with your arms fully extended. Lower the weights to your chest, then push them back up to the starting position. This movement should be done in a controlled manner, focusing on the contraction and stretch of your upper chest muscles.', ''),
         (2,  0, 0, '[11, 12, 13]', 'Bench Press', 'This exercise targets the middle chest muscles. Lie flat on a bench with your feet firmly planted on the ground. Hold a barbell or dumbbells above your chest with arms fully extended. Lower the weights to your chest and then press them back up to the starting position, engaging your middle chest muscles throughout the movement.', ''),
