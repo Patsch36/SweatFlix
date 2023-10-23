@@ -17,10 +17,10 @@
         <span>Workouts</span>
       </router-link>
 
-      <router-link to="/foodtracking" class="tab-link" active-class="active">
+      <!-- <router-link to="/foodtracking" class="tab-link" active-class="active">
         <ion-icon :icon="restaurant" size="large" />
         <span>Tracking</span>
-      </router-link>
+      </router-link> -->
 
       <router-link to="/profile" class="tab-link" active-class="active">
         <ion-icon :icon="personCircle" size="large" />

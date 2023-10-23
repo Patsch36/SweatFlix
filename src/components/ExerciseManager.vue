@@ -1,187 +1,257 @@
 <template>
-  <div style="display: flex; justify-content: space-between">
-    <ion-button
-      fill="outline"
-      @click="stateStore.setShowAddExerciseModal(true)"
-      color="light"
-      style="width: 47.5%">
-      Add new Exercise
-    </ion-button>
-    <ion-button
-      v-if="!showDoneExercises"
-      @click="
-        modalExercises = allExercises.filter((item) => item.isWorkedOut);
-        showDoneExercises = true;
-      "
-      fill="outline"
-      color="light"
-      style="width: 47.5%">
-      Show done exercises
-    </ion-button>
-    <ion-button
-      v-else
-      @click="
-        modalExercises = allExercises;
-        showDoneExercises = false;
-      "
-      fill="outline"
-      color="light"
-      style="width: 47.5%">
-      Show all exercises
-    </ion-button>
+  <div
+    class="list-header"
+    @click="stateStore.setShowAddExerciseToWorkoutModal(true)"
+    v-if="showList">
+    <ion-icon :icon="addOutline" color="light"></ion-icon>
   </div>
-  <div class="searchbar-container">
-    <ion-searchbar
-      @ionInput="handleInput($event)"
-      placeholder="Search"
-      v-model="searchQuery"
-      @keydown.enter="hideKeyboard"></ion-searchbar>
-    <ion-button @click="hideKeyboard" color="light">
-      <ion-icon slot="icon-only" :icon="searchOutline"></ion-icon>
-    </ion-button>
-  </div>
-  <ion-list>
+  <ion-list v-if="showList">
     <ion-list-header>
-      <ion-label>Exercises</ion-label>
+      <ion-label class="mt-0">Exercises</ion-label>
+      <ion-label class="mt-0" style="text-align: end; margin-right: 24px"
+        >Sets</ion-label
+      >
     </ion-list-header>
-    <ion-item-sliding v-for="exercise in modalExercises" :key="exercise.name">
-      <ion-item @click="router.push(`/exercise/${exercise.name}`)">
-        <ion-label style="color: white; min-width: max-content">
-          <span>{{ exercise.name }}</span>
-          <ion-label color="medium">
-            {{ exercise.SubMuscle }}
-          </ion-label>
+    <ion-reorder-group
+      :disabled="false"
+      @ionItemReorder="handleReorder($event)">
+      <ion-item v-for="exercise in exercises" key="exercise.ID">
+        <ion-label @click="router.push(`/exercise/${exercise.exerciseName}`)">
+          {{ exercise.exerciseName || exercise.name }}
         </ion-label>
         <ion-label
-          v-if="allExercises"
           style="
             display: flex;
             align-items: center;
             justify-content: flex-end;
             margin-left: auto;
           ">
+          <ion-input
+            v-model="exercise.sets"
+            label=""
+            placeholder="2"
+            @ionBlur="changeExerciseValues(exercise)"
+            style="
+              border: 1px solid #fff;
+              border-radius: 5px;
+              max-width: 50px;
+              text-align: center;
+            ">
+          </ion-input>
+          <span style="margin: 0 5px">x</span>
+          <ion-input
+            v-model="exercise.reps"
+            label=""
+            placeholder="8-12"
+            @ionBlur="changeExerciseValues(exercise)"
+            style="
+              border: 1px solid #fff;
+              border-radius: 5px;
+              max-width: 80px;
+              text-align: center;
+            ">
+          </ion-input>
         </ion-label>
+
+        <ion-reorder slot="end"></ion-reorder>
       </ion-item>
-      <ion-item-options side="end">
-        <ion-item-option color="danger" expandable>
-          <ion-button
-            color="transparent"
-            @click="deleteExercise(exercise.name)">
-            <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
-          </ion-button>
-        </ion-item-option>
-      </ion-item-options>
-    </ion-item-sliding>
+    </ion-reorder-group>
   </ion-list>
-  <add-exercise @exerciseAdded="loadAllExercises()"></add-exercise>
+  <AddExerciseToWorkout @refreshExercises="refresh" />
 </template>
 
 <script setup lang="ts">
+import { useRoute, useRouter } from "vue-router";
+import { addOutline } from "ionicons/icons";
 import {
-  IonButton,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonSearchbar,
-  IonListHeader,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
   IonIcon,
+  IonLabel,
+  IonItem,
+  IonInput,
+  IonList,
+  IonListHeader,
+  IonReorderGroup,
+  IonReorder,
 } from "@ionic/vue";
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
-import { Exercise } from "@/datatypes/Exercise";
-import { useRouter } from "vue-router";
 import { useStateStore } from "@/stores/stateStore";
-import { trashOutline, searchOutline } from "ionicons/icons";
-import { Keyboard } from "@capacitor/keyboard";
-import AddExercise from "@/components/addExercise.vue";
+import { Exercise } from "@/datatypes/Exercise";
+import AddExerciseToWorkout from "./modals/addExerciseToWorkout.vue";
 
-const stateStore = useStateStore();
 const databaseStore = useDatabaseStore();
+const stateStore = useStateStore();
+
+const route = useRoute();
 const router = useRouter();
 
-const searchQuery = ref();
+const workout = ref<string>("");
 
+const exercises = ref();
 const allExercises = ref<Exercise[]>([]);
 const modalExercises = ref<Exercise[]>([]);
-const showDoneExercises = ref(false);
 
-const hideKeyboard = async () => {
-  await Keyboard.hide();
-};
+const muscles = ref<number[]>([]);
+const showList = ref<boolean>(true);
 
-onBeforeMount(async () => {
-  await loadAllExercises();
-  modalExercises.value = allExercises.value;
-  searchQuery.value = stateStore.profileSearchQuery;
-  handleInput({ target: { value: searchQuery.value } });
-});
+const name = ref<string>("");
+const popoverOpen = ref<{ [key: string]: any }>({});
 
-const handleInput = async (event: any) => {
-  const query = event.target.value.toLowerCase(); // To ignore case sensitivity
-  stateStore.setProfileSearchQuery(query);
-  console.log(query);
+const loadWorkoutExcercises = async () => {
+  const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID, WorkoutList.OrderIndex
+  FROM WorkoutList INNER JOIN MuscleGroup INNER JOIN Exercise on WorkoutList.exerciseName == Exercise.name
+  AND Exercise.MuscleGroup = MuscleGroup.ID WHERE workoutPlan = '${workout.value}'`;
 
-  if (query === "" || !allExercises.value) {
-    modalExercises.value = allExercises.value;
-  } else {
-    modalExercises.value = allExercises.value.filter((exercise) => {
-      const exerciseName = exercise.name.toLowerCase(); // To ignore case sensitivity
-      const subMuscle = exercise.SubMuscle.toLowerCase(); // To ignore case sensitivity
-      const muscle = exercise.Muscle.toLowerCase(); // To ignore case sensitivity
+  const resp = await databaseStore.getDatabase()?.query(query);
+  exercises.value = resp?.values ? resp.values : [];
 
-      return (
-        exerciseName.indexOf(query) !== -1 || // Check if the query string is found in the name
-        subMuscle.indexOf(query) !== -1 || // Check if the query string is found in the SubMuscle
-        muscle.indexOf(query) !== -1 // Check if the query string is found in the Muscle
-      );
-    });
-
-    if (showDoneExercises.value)
-      modalExercises.value = modalExercises.value.filter(
-        (exercise) => exercise.isWorkedOut
-      );
-    console.log(modalExercises.value);
-  }
+  exercises.value.sort((a: any, b: any) => a.OrderIndex - b.OrderIndex);
 };
 
 const loadAllExercises = async () => {
-  const query = `SELECT DISTINCT
-  Exercise.name,
-  Exercise.description,
-  MuscleGroup.Muscle,
-  MuscleGroup.SubMuscle,
-  CASE WHEN WorkoutExercise.ID IS NOT NULL THEN 1 ELSE 0 END AS isWorkedOut
-FROM
-  Exercise
-INNER JOIN
-  MuscleGroup
-ON
-  Exercise.muscleGroup = MuscleGroup.ID
-LEFT JOIN
-  WorkoutExercise
-ON
-  Exercise.Name = WorkoutExercise.exercise
-  ORDER BY Exercise.Name ASC
-`;
+  const query = `SELECT Exercise.name, Exercise.description, MuscleGroup.Muscle, MuscleGroup.SubMuscle FROM Exercise INNER JOIN MuscleGroup on Exercise.muscleGroup = MuscleGroup.ID`;
 
   const resp = await databaseStore.getDatabase()?.query(query);
   allExercises.value = resp?.values ? resp.values : [];
 };
 
-const deleteExercise = async (name: string) => {
-  const query = `DELETE FROM Exercise WHERE name = '${name}'`;
-  await databaseStore.getDatabase()?.run(query);
+onBeforeMount(async () => {
+  workout.value = route.params.id as string;
+  await loadWorkoutExcercises();
   await loadAllExercises();
+  muscles.value = exercises.value.map((exercise: any) => exercise.ID);
+
   modalExercises.value = allExercises.value;
+  initPopoverOpenRef();
+
+  if (workout.value !== "New Workout" && workout.value !== "NotFound")
+    showList.value = true;
+});
+
+const initPopoverOpenRef = () => {
+  allExercises.value.map((exercise) => {
+    popoverOpen.value[exercise.name] = false;
+  });
+  console.log(popoverOpen.value);
+};
+
+const handleReorder = async (event: CustomEvent) => {
+  // The `from` and `to` properties contain the index of the item
+  // when the drag started and ended, respectively
+  await console.log(
+    "Dragged from index",
+    event.detail.from,
+    "to",
+    event.detail.to
+  );
+
+  const to = event.detail.to;
+  const from = event.detail.from;
+
+  const ind = exercises.value.findIndex(
+    (w: { OrderIndex: any }) => w.OrderIndex === from
+  );
+  const draggedItem = exercises.value[ind].WorkoutTemplateName;
+  console.log(draggedItem);
+
+  if (from < to) {
+    for (let i = from; i < to; i++) {
+      const index = exercises.value.findIndex(
+        (w: { OrderIndex: any }) => w.OrderIndex === i + 1
+      );
+      console.log(i, exercises.value[index]);
+      exercises.value[index].OrderIndex = i;
+    }
+    exercises.value[ind].OrderIndex = to;
+  } else if (from > to) {
+    for (let i = from - 1; i >= to; i--) {
+      const index = exercises.value.findIndex(
+        (w: { OrderIndex: any }) => w.OrderIndex === i
+      );
+      console.log(i + 1, exercises.value[index]);
+      exercises.value[index].OrderIndex = i + 1;
+    }
+    exercises.value[ind].OrderIndex = to;
+  }
+
+  let dbOrderIndex = 0;
+  // Delete all workouts in WorkoutTemplatePlan from Plan.value.ID
+  const query2 = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
+  await databaseStore.getDatabase()?.run(query2);
+
+  for (let i = 0; i < exercises.value.length; i++) {
+    const itemIndex = exercises.value.findIndex(
+      (w: { OrderIndex: any }) => w.OrderIndex === i
+    );
+
+    // Insert workout in WorkoutTemplatePlan with new OrderIndex = dbOrderIndex, pan.value.ID and workoutTemplatename
+    const query = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps, OrderIndex) VALUES ('${name.value}', '${exercises.value[itemIndex].exerciseName}', ${exercises.value[itemIndex].sets}, '${exercises.value[itemIndex].reps}', ${dbOrderIndex})`;
+    console.log(query);
+    await databaseStore.getDatabase()?.run(query);
+    dbOrderIndex += 1;
+  }
+
+  // await loadWorkoutExcercises();
+
+  await event.detail.complete();
+};
+
+const changeExerciseValues = (exercise: any) => {
+  console.log("Exercise ", exercise);
+  const query = `UPDATE WorkoutList SET exerciseName = '${exercise.exerciseName}', sets = ${exercise.sets}, reps = '${exercise.reps}' WHERE workoutPlan = '${workout.value}' AND OrderIndex = ${exercise.OrderIndex}`;
+  console.log(query);
+  databaseStore.getDatabase()?.run(query);
+};
+
+const refresh = async () => {
+  await loadWorkoutExcercises();
+  await loadAllExercises();
+  muscles.value = exercises.value.map((exercise: any) => exercise.ID);
+
+  modalExercises.value = allExercises.value;
+  initPopoverOpenRef();
 };
 </script>
 
 <style scoped>
-.searchbar-container {
+.icon {
   display: flex;
   flex-direction: row;
+  align-items: center;
+}
+
+ion-button {
+  height: 32px;
+  --border-width: 3px;
+  font-size: 16px;
+}
+
+.list-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: end;
+  margin-top: 16px;
+  margin-right: 16px;
+}
+
+.list-header ion-icon {
+  font-size: 30px;
+}
+
+.mt-0 {
+  margin-top: 0 !important;
+}
+
+ion-popover {
+  --background: rgba(40, 173, 218, 0.6);
+  --backdrop-opacity: 0.75;
+  --border-color: rgba(40, 173, 218, 0.6);
+  --color: white;
+  --width: 300px;
+}
+ion-popover ion-content {
+  /* --background: rgba(40, 173, 218, 0.6); */
+  border: 5px solid var(--ion-color-primary);
 }
 </style>

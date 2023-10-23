@@ -130,7 +130,7 @@ import {
 } from "@ionic/vue";
 import { useStateStore } from "@/stores/stateStore";
 import { useDatabaseStore } from "@/stores/databaseStore";
-import WorkoutOrganizer from "./WorkoutOrganizer.vue";
+import WorkoutOrganizer from "@/components/WorkoutOrganizer.vue";
 import { add } from "cypress/types/lodash";
 
 const stateStore = useStateStore();

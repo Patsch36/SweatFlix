@@ -79,10 +79,10 @@ import {
 import { onBeforeMount, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
-import ExerciseManager from "@/components/ExerciseManager.vue";
-import Archievements from "@/components/Archievements.vue";
-import PersonalData from "@/components/PersonalData.vue";
-import Settings from "@/components/Settings.vue";
+import ExerciseManager from "@/components/ProfileComponents/ExerciseManager.vue";
+import Archievements from "@/components/ProfileComponents/Archievements.vue";
+import PersonalData from "@/components/ProfileComponents/PersonalData.vue";
+import Settings from "@/components/ProfileComponents/Settings.vue";
 
 const stateStore = useStateStore();
 const databaseStore = useDatabaseStore();

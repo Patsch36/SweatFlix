@@ -189,7 +189,7 @@ import { computed, onBeforeMount, onMounted, ref } from "vue";
 import Diagram from "@/components/Diagram.vue";
 import { times } from "cypress/types/lodash";
 import { useStateStore } from "@/stores/stateStore";
-import EditExercise from "@/components/EditExercise.vue";
+import EditExercise from "@/components/modals/EditExercise.vue";
 
 const router = useRouter();
 const route = useRoute();

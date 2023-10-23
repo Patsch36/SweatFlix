@@ -65,7 +65,6 @@
             label="Name"
             v-model="name"
             @ion-input="isTemplateNameUnique()"
-            error-text="Existing Workout Name"
             ref="inputReferenceName"></ion-input>
         </ion-item>
         <ion-item>
@@ -83,144 +82,15 @@
             >{{ color }}</ion-button
           >
         </ion-item>
-        <div
-          class="list-header"
-          @click="showAddExerciseModal = true"
-          v-if="showList">
-          <ion-icon :icon="addOutline" color="light"></ion-icon>
-        </div>
-        <ion-list v-if="showList">
-          <ion-list-header>
-            <ion-label class="mt-0">Exercises</ion-label>
-            <ion-label class="mt-0" style="text-align: end; margin-right: 24px"
-              >Sets</ion-label
-            >
-          </ion-list-header>
-          <ion-reorder-group
-            :disabled="false"
-            @ionItemReorder="handleReorder($event)">
-            <ion-item v-for="exercise in exercises" key="exercise.ID">
-              <ion-label
-                @click="router.push(`/exercise/${exercise.exerciseName}`)">
-                {{ exercise.exerciseName || exercise.name }}
-              </ion-label>
-              <ion-label
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: flex-end;
-                  margin-left: auto;
-                ">
-                <ion-input
-                  v-model="exercise.sets"
-                  label=""
-                  placeholder="2"
-                  style="
-                    border: 1px solid #fff;
-                    border-radius: 5px;
-                    max-width: 50px;
-                    text-align: center;
-                  "></ion-input>
-                <span style="margin: 0 5px">x</span>
-                <ion-input
-                  v-model="exercise.reps"
-                  label=""
-                  placeholder="8-12"
-                  style="
-                    border: 1px solid #fff;
-                    border-radius: 5px;
-                    max-width: 80px;
-                    text-align: center;
-                  "></ion-input>
-              </ion-label>
-
-              <ion-reorder slot="end"></ion-reorder>
-            </ion-item>
-          </ion-reorder-group>
-        </ion-list>
+        <exercise-manager />
       </div>
-      <ion-modal ref="modal" :isOpen="showAddExerciseModal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-buttons slot="start">
-              <ion-button @click="cancel()">Cancel</ion-button>
-            </ion-buttons>
-            <ion-title>Add Exercise</ion-title>
-            <ion-buttons slot="end">
-              <ion-button
-                :strong="true"
-                @click="confirmModal()"
-                :disabled="false">
-                Confirm</ion-button
-              >
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <ion-searchbar
-            @ionInput="handleInput($event)"
-            placeholder="Search"></ion-searchbar>
-          <ion-list>
-            <ion-list-header>
-              <ion-label>Exercises</ion-label>
-              <ion-label style="text-align: end; margin-right: 24px">
-                Sets
-              </ion-label>
-            </ion-list-header>
-            <ion-item v-for="exercise in modalExercises" :key="exercise.name">
-              <ion-label @click="openPopover(exercise.name, $event)">
-                <span style="color: white">{{ exercise.name }}</span>
-                <ion-label color="medium">{{ exercise.SubMuscle }}</ion-label>
-              </ion-label>
-              <ion-popover
-                :is-open="popoverOpen[exercise.name]"
-                :keep-contents-mounted="true"
-                @didDismiss="popoverOpen[exercise.name] = false">
-                <ion-content class="ion-padding">
-                  {{ exercise.description }}
-                </ion-content>
-              </ion-popover>
-              <ion-label
-                v-if="allExercises"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: flex-end;
-                  margin-left: auto;
-                ">
-                <ion-input
-                  label=""
-                  v-model="exercise.sets"
-                  placeholder="2"
-                  style="
-                    border: 1px solid #fff;
-                    border-radius: 5px;
-                    max-width: 50px;
-                    text-align: center;
-                  "></ion-input>
-                <span style="margin: 0 5px">x</span>
-                <ion-input
-                  label=""
-                  v-model="exercise.reps"
-                  placeholder="8-12"
-                  style="
-                    border: 1px solid #fff;
-                    border-radius: 5px;
-                    max-width: 80px;
-                    text-align: center;
-                  "></ion-input>
-              </ion-label>
-            </ion-item>
-          </ion-list>
-        </ion-content>
-      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { chevronBack, addOutline, saveOutline } from "ionicons/icons";
+import { chevronBack, saveOutline } from "ionicons/icons";
 import {
   IonIcon,
   IonLabel,
@@ -251,8 +121,8 @@ import {
   getAllMusclesFromSplit,
 } from "@/datatypes/splitCalculator";
 import ColorPicker from "@/components/colorPicker.vue";
-import { Exercise } from "@/datatypes/Exercise";
 import { useActiveWorkoutsStore } from "@/stores/activeWorkoutsStore";
+import ExerciseManager from "@/components/ExerciseManager.vue";
 
 const databaseStore = useDatabaseStore();
 const activeWorkoutsStore = useActiveWorkoutsStore();
@@ -264,16 +134,12 @@ const workout = ref<string>("");
 
 const template = ref();
 const exercises = ref();
-const allExercises = ref<Exercise[]>([]);
-const modalExercises = ref<Exercise[]>([]);
 
 const muscles = ref<number[]>([]);
 const currentSplits = ref<string[]>([]);
 const allMusclesOfSplit = ref<number[]>([]);
 const missingMuscles = ref<number[]>([]);
 const popOverShow = ref<boolean>(false);
-const showAddExerciseModal = ref<boolean>(false);
-const modal = ref<any>(null);
 const missingMusclesFlag = ref<boolean>(true);
 const inputReferenceName = ref<any>(null);
 const disableSaveButton = ref<boolean>(false);
@@ -284,9 +150,6 @@ const newWorkout = shallowRef<boolean>(false);
 const name = ref<string>("");
 const description = ref<string>("");
 const color = ref<string>("");
-
-const popoverOpen = ref<{ [key: string]: any }>({});
-const event = ref<any>(null);
 
 const loadWorkoutTemplate = async () => {
   const query = `SELECT Split, Description, Color FROM WorkoutTemplate WHERE name = '${workout.value}'`;
@@ -318,13 +181,6 @@ const loadWorkoutExcercises = async () => {
   exercises.value.sort((a: any, b: any) => a.OrderIndex - b.OrderIndex);
 };
 
-const loadAllExercises = async () => {
-  const query = `SELECT Exercise.name, Exercise.description, MuscleGroup.Muscle, MuscleGroup.SubMuscle FROM Exercise INNER JOIN MuscleGroup on Exercise.muscleGroup = MuscleGroup.ID`;
-
-  const resp = await databaseStore.getDatabase()?.query(query);
-  allExercises.value = resp?.values ? resp.values : [];
-};
-
 onBeforeMount(async () => {
   workout.value = route.params.id as string;
   if ((await loadWorkoutTemplate()) === "NOWORKOUT") {
@@ -334,14 +190,10 @@ onBeforeMount(async () => {
   } else {
     await loadWorkoutExcercises();
   }
-  await loadAllExercises();
   muscles.value = exercises.value.map((exercise: any) => exercise.ID);
   currentSplits.value = getPossibleSplits(muscles.value);
   allMusclesOfSplit.value = getAllMusclesFromSplit(currentSplits.value[0]);
   missingMuscles.value = await musclesWithSubgroup(allMusclesOfSplit.value);
-
-  modalExercises.value = allExercises.value;
-  initPopoverOpenRef();
 
   initBuffers();
 
@@ -461,96 +313,6 @@ const saveWorkout = async () => {
   }
 };
 
-const generateNumbers = (upperLimit: any) => {
-  // Erstelle ein Array von 1 bis zur angegebenen oberen Grenze
-  return Array.from({ length: upperLimit }, (_, index) => index + 1);
-};
-
-const initPopoverOpenRef = () => {
-  allExercises.value.map((exercise) => {
-    popoverOpen.value[exercise.name] = false;
-  });
-  console.log(popoverOpen.value);
-};
-
-const openPopover = (name: string, event: any) => {
-  popoverOpen.value[name] = true;
-  event.value = event;
-};
-
-const cancel = () => {
-  modal.value.$el.dismiss(null, "cancel");
-  showAddExerciseModal.value = false;
-};
-
-const handleInput = (event: any) => {
-  const query = event.target.value.toLowerCase(); // To ignore case sensitivity
-  console.log(query);
-
-  if (query === "" || !allExercises.value) {
-    modalExercises.value = allExercises.value;
-  } else {
-    modalExercises.value = allExercises.value.filter((exercise) => {
-      const exerciseName = exercise.name.toLowerCase(); // To ignore case sensitivity
-      const subMuscle = exercise.SubMuscle.toLowerCase(); // To ignore case sensitivity
-      const muscle = exercise.Muscle.toLowerCase(); // To ignore case sensitivity
-
-      return (
-        exerciseName.indexOf(query) !== -1 || // Check if the query string is found in the name
-        subMuscle.indexOf(query) !== -1 || // Check if the query string is found in the SubMuscle
-        muscle.indexOf(query) !== -1 // Check if the query string is found in the Muscle
-      );
-    });
-    console.log(modalExercises.value);
-  }
-};
-
-// Add Exercise
-const confirmModal = async () => {
-  handleInput({ target: { value: "" } });
-  let ids: any[] = [];
-  const query = `SELECT MAX(OrderIndex) as max FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
-  const resp = await databaseStore.getDatabase()?.query(query);
-  console.log(resp);
-  let id = resp?.values && resp.values[0].max ? resp.values[0].max + 1 : 0;
-  modalExercises.value = modalExercises.value.map((exercise) => {
-    if (exercise.sets || exercise.reps) {
-      console.log(exercise);
-      const query = `INSERT INTO WorkoutList (OrderIndex, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
-      databaseStore.getDatabase()?.run(query);
-
-      id += 1;
-
-      if (exercise.SubMuscle) ids.push(exercise.SubMuscle);
-      exercise.sets = undefined;
-      exercise.reps = "";
-    }
-    return exercise;
-  });
-  workout.value = name.value;
-  await loadWorkoutTemplate();
-  await loadWorkoutExcercises();
-  cancel();
-
-  for (let i = 0; i < ids.length; i++) {
-    // get id from MuscleGroup of exercise.SubMuscle
-    const query = `SELECT ID FROM MuscleGroup WHERE SubMuscle = '${ids[i]}'`;
-    const resp = await databaseStore.getDatabase()?.query(query);
-    const answer = resp?.values ? resp.values : [];
-
-    muscles.value.push(answer[0].ID);
-  }
-  muscles.value = exercises.value.map((exercise: any) => exercise.ID);
-  currentSplits.value = getPossibleSplits(muscles.value);
-  allMusclesOfSplit.value = getAllMusclesFromSplit(currentSplits.value[0]);
-  missingMuscles.value = await musclesWithSubgroup(allMusclesOfSplit.value);
-  missingMusclesFlag.value = false;
-
-  setTimeout(() => {
-    missingMusclesFlag.value = true;
-  }, 1);
-};
-
 const isTemplateNameUnique = async () => {
   const query = `SELECT name FROM WorkoutTemplate`;
 
@@ -573,7 +335,6 @@ const isTemplateNameUnique = async () => {
   }
 };
 
-// const handleReorder = async (event: CustomEvent) => {
 //   await console.log(
 //     "Dragged from index",
 //     event.detail.from,
@@ -637,67 +398,6 @@ const isTemplateNameUnique = async () => {
 //   }
 //   await event.detail.complete();
 // };
-
-const handleReorder = async (event: CustomEvent) => {
-  // The `from` and `to` properties contain the index of the item
-  // when the drag started and ended, respectively
-  await console.log(
-    "Dragged from index",
-    event.detail.from,
-    "to",
-    event.detail.to
-  );
-
-  const to = event.detail.to;
-  const from = event.detail.from;
-
-  const ind = exercises.value.findIndex(
-    (w: { OrderIndex: any }) => w.OrderIndex === from
-  );
-  const draggedItem = exercises.value[ind].WorkoutTemplateName;
-  console.log(draggedItem);
-
-  if (from < to) {
-    for (let i = from; i < to; i++) {
-      const index = exercises.value.findIndex(
-        (w: { OrderIndex: any }) => w.OrderIndex === i + 1
-      );
-      console.log(i, exercises.value[index]);
-      exercises.value[index].OrderIndex = i;
-    }
-    exercises.value[ind].OrderIndex = to;
-  } else if (from > to) {
-    for (let i = from - 1; i >= to; i--) {
-      const index = exercises.value.findIndex(
-        (w: { OrderIndex: any }) => w.OrderIndex === i
-      );
-      console.log(i + 1, exercises.value[index]);
-      exercises.value[index].OrderIndex = i + 1;
-    }
-    exercises.value[ind].OrderIndex = to;
-  }
-
-  let dbOrderIndex = 0;
-  // Delete all workouts in WorkoutTemplatePlan from Plan.value.ID
-  const query2 = `DELETE FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
-  await databaseStore.getDatabase()?.run(query2);
-
-  for (let i = 0; i < exercises.value.length; i++) {
-    const itemIndex = exercises.value.findIndex(
-      (w: { OrderIndex: any }) => w.OrderIndex === i
-    );
-
-    // Insert workout in WorkoutTemplatePlan with new OrderIndex = dbOrderIndex, pan.value.ID and workoutTemplatename
-    const query = `INSERT INTO WorkoutList (workoutPlan, exerciseName, sets, reps, OrderIndex) VALUES ('${name.value}', '${exercises.value[itemIndex].exerciseName}', ${exercises.value[itemIndex].sets}, '${exercises.value[itemIndex].reps}', ${dbOrderIndex})`;
-    console.log(query);
-    await databaseStore.getDatabase()?.run(query);
-    dbOrderIndex += 1;
-  }
-
-  // await loadWorkoutExcercises();
-
-  await event.detail.complete();
-};
 </script>
 
 <style scoped>

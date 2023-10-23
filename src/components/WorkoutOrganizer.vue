@@ -5,7 +5,7 @@
       <ion-icon
         :icon="add"
         size="large"
-        @click="addWorkoutModalOpen = true"
+        @click="stateStore.setShowAddWorkoutToPlanModal(true)"
         class="ion-margin-end"></ion-icon>
       <ion-icon
         :icon="trashOutline"
@@ -58,89 +58,36 @@
     </ion-item-sliding>
   </ion-list>
 
-  <ion-modal ref="addWorkoutModal" :isOpen="addWorkoutModalOpen">
-    <ion-header>
-      <ion-toolbar>
-        <div class="icon">
-          <ion-icon
-            :icon="chevronBack"
-            @click="addWorkoutModalOpen = false"
-            size="large"
-            color="primary"></ion-icon>
-          <ion-label @click="addWorkoutModalOpen = false" color="primary">
-            Cancel
-          </ion-label>
-        </div>
-        <ion-title>Add Workout</ion-title>
-        <div class="icon" slot="end" style="margin-right: 16px">
-          <ion-label @click="addNewWorkouts" color="primary">Save</ion-label>
-          <ion-icon
-            :icon="saveOutline"
-            @click="addNewWorkouts"
-            style="font-size: 24px; margin-left: 8px"
-            color="primary"></ion-icon>
-        </div>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
-      <ion-item>
-        <ion-checkbox
-          v-model="selectedWorkouts['Restday']"
-          label-placement="end"
-          justify="start">
-          Restday
-        </ion-checkbox>
-      </ion-item>
-      <ion-item v-for="workout in workouttemplates" :key="workout.Name">
-        <ion-checkbox
-          v-model="selectedWorkouts[workout.Name]"
-          label-placement="end"
-          justify="start">
-          {{ workout.Name }}
-        </ion-checkbox>
-      </ion-item>
-    </ion-content>
-  </ion-modal>
+  <AddWorkout @loadWorkouts="refresh()" />
 </template>
 
 <script setup lang="ts">
-import { useDatabaseStore } from "@/stores/databaseStore";
 import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-  IonLabel,
-  IonIcon,
-  IonReorderGroup,
-  IonReorder,
   IonList,
   IonListHeader,
+  IonLabel,
   IonItem,
-  IonButton,
-  IonModal,
-  IonCheckbox,
+  IonReorderGroup,
+  IonReorder,
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
+  IonButton,
+  IonIcon,
 } from "@ionic/vue";
-import { useRoute, useRouter } from "vue-router";
-import {
-  chevronBack,
-  add,
-  saveOutline,
-  trashOutline,
-  reorderThreeOutline,
-} from "ionicons/icons";
+import { trashOutline, reorderThreeOutline, add } from "ionicons/icons";
+import { useDatabaseStore } from "@/stores/databaseStore";
 import { onBeforeMount, ref, defineEmits } from "vue";
 import { store } from "@/stores/IonicStorage";
-import { availableColors } from "@/datatypes/CalendarTypes";
+import { useRoute } from "vue-router";
+import { useStateStore } from "@/stores/stateStore";
+import AddWorkout from "./modals/addWorkout.vue";
 
 const emit = defineEmits(["loadPlan"]);
 
 const databaseStore = useDatabaseStore();
+const stateStore = useStateStore();
 const route = useRoute();
-const addWorkoutModalOpen = ref(false);
 const deleteMode = ref(false);
 const showList = ref(true);
 
@@ -333,49 +280,6 @@ const handleReorder = async (event: CustomEvent) => {
   await event.detail.complete();
 };
 
-const addNewWorkouts = async () => {
-  addWorkoutModalOpen.value = false;
-  // Save everything to database
-
-  // get amount of t in plan.scheme
-  if (plan.value) {
-    const t = plan.value.scheme ? plan.value.scheme.split("t").length : 1;
-
-    let dbOrderIndex = t - 1;
-    for (const [key, value] of Object.entries(selectedWorkouts)) {
-      if (value) {
-        if (key !== "Restday") {
-          const query = `INSERT INTO WorkoutTemplatePlan (PlanID, WorkoutTemplateName, OrderIndex) VALUES (${plan.value.ID}, '${key}', ${dbOrderIndex})`;
-          console.log(query);
-          await databaseStore.getDatabase()?.run(query);
-          dbOrderIndex += 1;
-        }
-
-        selectedWorkouts[key] = false;
-
-        // update scheme
-        if (!plan.value.scheme) plan.value.scheme = "";
-        plan.value.scheme += key === "Restday" ? "r" : "t";
-
-        // save scheme to database
-        const query2 = `UPDATE Plan SET Scheme = '${plan.value.scheme}' WHERE ID = ${plan.value.ID}`;
-        await databaseStore.getDatabase()?.run(query2);
-      }
-    }
-
-    await loadWorkouts();
-
-    console.log("ACTIVE PLAN: ", activePlan.value);
-    console.log("PLAN: ", plan.value.name);
-    console.log("Compared: ", activePlan.value === plan.value.name);
-    if (activePlan.value === plan.value.name) {
-      await activate();
-    }
-    emit("loadPlan");
-  } else {
-  }
-};
-
 const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
   // count the how maniest workout which is no restday this wporkout is in workouts.value
   const count =
@@ -417,10 +321,6 @@ const deleteWorkout = async (workoutName: string, OrderIndex: number) => {
   await loadPlan();
   await loadWorkouts();
 
-  if (activePlan.value === workoutName) {
-    await activate();
-  }
-
   emit("loadPlan");
 };
 
@@ -434,51 +334,11 @@ const toggleListMode = async () => {
   showList.value = true;
 };
 
-const activate = () => {
-  console.log("ACTIVATE");
-  store.set("Active Plan", plan.value.name);
+const refresh = async () => {
+  await loadPlan();
+  await loadWorkouts();
 
-  // Set all active workouts in database workoutTemplate inactive
-  const query = `UPDATE WorkoutTemplate SET active = 0`;
-  databaseStore.getDatabase()?.execute(query);
-
-  // Set all WorkoutTemplates active where WorkoutTemplatePlan.planId = plan.value.ID
-  const query2 = `UPDATE WorkoutTemplate
-      SET active = 1
-      WHERE Name IN (
-          SELECT workoutTemplateName
-          FROM workouttemplatePlan
-          WHERE PlanID = ${plan.value.ID}
-      );`;
-  databaseStore.getDatabase()?.execute(query2);
-  makeAcitveWorkoutsHaveUniqueColors();
-};
-
-const makeAcitveWorkoutsHaveUniqueColors = async () => {
-  // Make sure all active workouts have unique colors
-  const query2 = `SELECT * FROM WorkoutTemplate WHERE active = 1`;
-  const resp = await databaseStore.getDatabase()?.query(query2);
-  const activeWorkouts = resp?.values ? resp.values : [];
-
-  let usedColors: string[] = [];
-  await activeWorkouts.forEach((item: any) => {
-    console.log(usedColors, item.Color);
-    if (usedColors.includes(item.Color)) {
-      // Change color
-      const newColor =
-        Object.keys(availableColors).find(
-          (color) => !usedColors.includes(color)
-        ) ||
-        Object.keys(availableColors)[
-          Math.floor(Math.random() * Object.keys(availableColors).length)
-        ];
-      console.log(newColor);
-
-      const query3 = `UPDATE WorkoutTemplate SET Color = '${newColor}' WHERE Name = '${item.Name}';`;
-      databaseStore.getDatabase()?.run(query3);
-      usedColors.push(newColor);
-    } else if (item.Color) usedColors.push(item.Color);
-  });
+  emit("loadPlan");
 };
 </script>
 

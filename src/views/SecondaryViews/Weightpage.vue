@@ -112,10 +112,10 @@ import {
 import { chevronBack } from "ionicons/icons";
 import { onBeforeMount, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useDatabaseStore } from "../stores/databaseStore";
+import { useDatabaseStore } from "@/stores/databaseStore";
 import { trash } from "ionicons/icons";
-import Diagram from "../components/Diagram.vue";
-import WeightRecord from "../datatypes/weight";
+import Diagram from "@/components/Diagram.vue";
+import WeightRecord from "@/datatypes/weight";
 
 const router = useRouter();
 const databaseStore = useDatabaseStore();

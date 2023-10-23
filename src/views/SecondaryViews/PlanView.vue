@@ -65,104 +65,8 @@
 
         <workout-organizer @loadPlan="loadPlan()"></workout-organizer>
       </div>
+      <edit-plan @reloadPlan="loadPlan()" />
     </ion-content>
-
-    <ion-modal ref="modal" :isOpen="modalOpen">
-      <ion-header>
-        <ion-toolbar>
-          <ion-buttons slot="start">
-            <ion-button @click="cancel()">
-              <ion-icon slot="start" :icon="chevronBack"></ion-icon>
-              Cancel
-            </ion-button>
-          </ion-buttons>
-          <ion-title>Edit Plan</ion-title>
-          <ion-buttons slot="end">
-            <ion-button :strong="true" @click="confirmModal()">
-              <ion-icon slot="end" :icon="saveOutline"></ion-icon>
-              Save
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding">
-        <ion-item>
-          <ion-textarea
-            label="Description"
-            :auto-grow="true"
-            v-model="plan.description"
-            :rows="1">
-          </ion-textarea>
-        </ion-item>
-        <ion-item>
-          <!-- <ion-input label="Type" v-model="plan.type"></ion-input> -->
-          <ion-select
-            label="Choose your Plan Type"
-            interface="action-sheet"
-            :value="plan.type"
-            @ionChange="plan.type = $event.target.value">
-            <ion-select-option value="Strength training">
-              Strength Training
-            </ion-select-option>
-            <ion-select-option value="Mass training">
-              Mass Training
-            </ion-select-option>
-            <ion-select-option value="Cut training">
-              Cut Training
-            </ion-select-option>
-            <ion-select-option value="Cardio">Cardio</ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <!-- <ion-input label="Place" v-model="plan.place"></ion-input> -->
-          <ion-select
-            label="Choose your Llace"
-            interface="action-sheet"
-            :value="plan.place"
-            @ionChange="plan.place = $event.target.value">
-            <ion-select-option value="Gym"> Gym </ion-select-option>
-            <ion-select-option value="Calisthenic Park">
-              Calisthenic Park
-            </ion-select-option>
-            <ion-select-option value="Home"> Home </ion-select-option>
-            <ion-select-option value="Outdoor">Outdoor</ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <!-- <ion-input label="Split" v-model="plan.split"></ion-input> -->
-          <ion-select
-            label="Choose your Split"
-            interface="action-sheet"
-            :value="plan.split"
-            @ionChange="plan.split = $event.target.value">
-            <ion-select-option value="1-way split">
-              1-way split
-            </ion-select-option>
-            <ion-select-option value="2-way split">
-              2-way split
-            </ion-select-option>
-            <ion-select-option value="3-way split">
-              3-way split
-            </ion-select-option>
-            <ion-select-option value="4-way split">
-              4-way split
-            </ion-select-option>
-            <ion-select-option value="5-way split">
-              5-way split
-            </ion-select-option>
-            <ion-select-option value="6-way-split">
-              6-way-split
-            </ion-select-option>
-            <ion-select-option value="7-waysplit">
-              7-waysplit
-            </ion-select-option>
-            <ion-select-option value="8-way split">
-              8-way split
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-content>
-    </ion-modal>
   </ion-page>
 </template>
 
@@ -207,11 +111,13 @@ import {
 } from "ionicons/icons";
 import { onBeforeMount, ref } from "vue";
 import WorkoutOrganizer from "@/components/WorkoutOrganizer.vue";
+import { useStateStore } from "@/stores/stateStore";
+import EditPlan from "@/components/modals/editPlan.vue";
 
 const router = useRouter();
 const databaseStore = useDatabaseStore();
+const stateStore = useStateStore();
 const route = useRoute();
-const modalOpen = ref(false);
 
 const plan = ref();
 const workouts = ref();
@@ -310,18 +216,7 @@ onBeforeMount(async () => {
 });
 
 const edit = () => {
-  modalOpen.value = true;
-};
-
-const confirmModal = async () => {
-  modalOpen.value = false;
-  // Save everything to database
-  const query = `UPDATE Plan SET Description = '${plan.value.description}', Type = '${plan.value.type}', Place = '${plan.value.place}', Split = '${plan.value.split}' WHERE ID = ${plan.value.ID}`;
-  await databaseStore.getDatabase()?.query(query);
-};
-
-const cancel = async () => {
-  modalOpen.value = false;
+  stateStore.setShowEditPlanModal(true);
 };
 </script>
 

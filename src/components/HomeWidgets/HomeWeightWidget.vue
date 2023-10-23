@@ -42,7 +42,7 @@ import { onBeforeMount, ref } from "vue";
 import { store } from "@/stores/IonicStorage";
 const router = useRouter();
 
-import { useDatabaseStore } from "../stores/databaseStore";
+import { useDatabaseStore } from "@/stores/databaseStore";
 
 const databaseStore = useDatabaseStore();
 const queryCurrentWeightResults = ref<any>([]);

@@ -1,16 +1,16 @@
 import { createRouter, createWebHistory } from "@ionic/vue-router";
 import { RouteRecordRaw } from "vue-router";
-import HomePage from "../views/HomePage.vue";
-import CalendarPage from "../views/CalendarPage.vue";
-import ProfilePage from "../views/ProfilePage.vue";
-import WorkoutPage from "@/views/WorkoutPage.vue";
-import WeightPage from "@/views/Weightpage.vue";
-import WorkoutDetailPage from "@/views/WorkoutDetailPage.vue";
-import WorkoutTemplatePage from "@/views/WorkoutTemplatePage.vue";
-import WorkoutTemplateEditPage from "@/views/WorkouTemplateEditPage.vue";
-import PlansView from "@/views/PlansView.vue";
-import PlanView from "@/views/PlanView.vue";
-import ExerciseView from "@/views/ExerciseView.vue";
+import HomePage from "../views/MainViews/HomePage.vue";
+import CalendarPage from "../views/MainViews/CalendarPage.vue";
+import ProfilePage from "../views/MainViews/ProfilePage.vue";
+import WorkoutPage from "@/views/MainViews/WorkoutPage.vue";
+import WeightPage from "@/views/SecondaryViews/Weightpage.vue";
+import WorkoutDetailPage from "@/views/SecondaryViews/WorkoutDetailPage.vue";
+import WorkoutTemplatePage from "@/views/SecondaryViews/WorkoutTemplatePage.vue";
+import WorkoutTemplateEditPage from "@/views/SecondaryViews/WorkouTemplateEditPage.vue";
+import PlansView from "@/views/SecondaryViews/PlansView.vue";
+import PlanView from "@/views/SecondaryViews/PlanView.vue";
+import ExerciseView from "@/views/SecondaryViews/ExerciseView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -75,27 +75,27 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/HealthSheet",
     name: "HealthSheet",
-    component: () => import("../views/HealthSheet.vue"),
+    component: () => import("../views/SecondaryViews/HealthSheet.vue"),
   },
   {
     path: "/RM-Calculator",
     name: "RM-Calculator",
-    component: () => import("../views/RMCalculator.vue"),
+    component: () => import("../views/FAB-Views/RMCalculator.vue"),
   },
   {
     path: "/archivatedWorkouts",
     name: "archivatedWorkouts",
-    component: () => import("../views/ArchivatedWorkouts.vue"),
+    component: () => import("../views/SecondaryViews/ArchivatedWorkouts.vue"),
   },
   {
     path: "/absolveWorkout/:id",
     name: "absolveWorkout",
-    component: () => import("../views/AbsolveWorkoutPage.vue"),
+    component: () => import("../views/FAB-Views/AbsolveWorkoutPage.vue"),
   },
   {
     path: "/timer",
     name: "timer",
-    component: () => import("../views/TimerView.vue"),
+    component: () => import("../views/FAB-Views/TimerView.vue"),
   },
 ];
 

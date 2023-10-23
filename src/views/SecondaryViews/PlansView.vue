@@ -153,7 +153,7 @@ import {
 import { onBeforeMount, ref, shallowRef } from "vue";
 import { store } from "@/stores/IonicStorage";
 import { useStateStore } from "@/stores/stateStore";
-import AddPlan from "@/components/addPlan.vue";
+import AddPlan from "@/components/modals/addPlan.vue";
 import { availableColors } from "@/datatypes/CalendarTypes";
 
 const stateStore = useStateStore();

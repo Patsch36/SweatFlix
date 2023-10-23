@@ -88,7 +88,7 @@ import { DateObj } from "@/datatypes/CalendarTypes";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useRouter } from "vue-router";
 import { useSettingsStore } from "@/stores/settingsStore";
-import AddWorkoutModal from "@/components/addWorkoutModal.vue";
+import AddWorkoutModal from "@/components/modals/addWorkoutModal.vue";
 import { useStateStore } from "@/stores/stateStore";
 import { useSelectedDateStore } from "@/stores/selectedDateStore";
 

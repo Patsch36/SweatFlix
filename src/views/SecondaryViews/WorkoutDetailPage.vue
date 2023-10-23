@@ -18,10 +18,14 @@
         <div class="icon" slot="end" style="margin-right: 16px">
           <ion-icon
             :icon="pencilOutline"
-            @click="modalOpen = true"
+            @click="stateStore.setShowEditWorkoutModal(true)"
             style="font-size: 24px; margin-right: 8px"
             color="primary"></ion-icon>
-          <ion-label @click="modalOpen = true" color="primary">Edit</ion-label>
+          <ion-label
+            @click="stateStore.setShowEditWorkoutModal(true)"
+            color="primary"
+            >Edit</ion-label
+          >
         </div>
       </ion-toolbar>
     </ion-header>
@@ -148,121 +152,16 @@
           </ion-item-options>
         </ion-item-sliding>
       </ion-list>
-
-      <ion-modal ref="modal" :isOpen="modalOpen">
-        <!-- @willDismiss="onWillDismiss"> -->
-        <ion-header>
-          <ion-toolbar>
-            <ion-buttons slot="start">
-              <ion-button @click="cancel()">Cancel</ion-button>
-            </ion-buttons>
-            <ion-title>Edit Workout</ion-title>
-            <ion-buttons slot="end">
-              <ion-button
-                :strong="true"
-                @click="confirmModal()"
-                :disabled="false">
-                Confirm</ion-button
-              >
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <ion-item v-if="workoutQueryResult">
-            <ion-label>Start Time</ion-label>
-            <ion-datetime-button datetime="time"></ion-datetime-button>
-
-            <ion-modal :keep-contents-mounted="true">
-              <ion-datetime
-                presentation="time"
-                id="time"
-                v-model="modalStarttime"></ion-datetime>
-            </ion-modal>
-          </ion-item>
-
-          <ion-item v-if="workoutQueryResult">
-            <ion-label>End Time</ion-label>
-            <ion-datetime-button datetime="datetime"></ion-datetime-button>
-
-            <ion-modal :keep-contents-mounted="true">
-              <ion-datetime
-                presentation="date-time"
-                id="datetime"
-                v-model="modalEndtime"></ion-datetime>
-            </ion-modal>
-          </ion-item>
-          <ion-item>
-            <ion-textarea
-              label="Notes"
-              style="height: 150px"
-              v-model="modalNotes"></ion-textarea>
-          </ion-item>
-          <h5
-            v-if="exercises.length > 0"
-            v-for="(exercise, index) in modalPlaceholder"
-            :key="index"
-            style="margin-top: 50px">
-            {{ exercise.exerciseName }}, Set {{ exercise.set }}
-            <ion-item>
-              <div style="display: flex; flex-direction: column">
-                <div style="display: flex; flex-direction: row">
-                  <ion-input
-                    label="Reps"
-                    type="number"
-                    :value="exercise.reps?.toString() || '0'"
-                    v-model="exercise.reps"
-                    @ion-blur="
-                      leaveReps(
-                        exercise.exerciseName,
-                        exercise.set,
-                        $event.target.value
-                      )
-                    ">
-                  </ion-input>
-                  <ion-input
-                    label="Weight"
-                    type="number"
-                    :value="exercise.weight?.toString() || '0'"
-                    v-model="exercise.weight"
-                    @ion-blur="
-                      leaveWeight(
-                        exercise.exerciseName,
-                        exercise.set,
-                        $event.target.value
-                      )
-                    ">
-                  </ion-input>
-                  <ion-select
-                    label="Unit"
-                    :interface-options="{
-                      header: 'Units',
-                    }"
-                    interface="action-sheet"
-                    placeholder="Unit"
-                    @ion-blur="
-                      leaveUnit(
-                        exercise.exerciseName,
-                        exercise.set,
-                        $event.target.value
-                      )
-                    ">
-                    <ion-select-option value="kg">kg</ion-select-option>
-                    <ion-select-option value="lbs">lbs</ion-select-option>
-                    <ion-select-option value="sec">Seconds</ion-select-option>
-                  </ion-select>
-                </div>
-              </div>
-            </ion-item>
-          </h5>
-        </ion-content>
-      </ion-modal>
     </ion-content>
+    <EditWorkoutDetails @reloadWorkoutData="refresh" />
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import Diagram from "@/components/Diagram.vue";
+import EditWorkoutDetails from "@/components/modals/editWorkoutDetails.vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import { useStateStore } from "@/stores/stateStore";
 import {
   IonContent,
   IonHeader,
@@ -277,18 +176,10 @@ import {
   IonCol,
   IonList,
   IonItem,
-  IonModal,
   IonButton,
-  IonButtons,
-  IonDatetime,
-  IonDatetimeButton,
-  IonTextarea,
   IonItemSliding,
   IonItemOption,
   IonItemOptions,
-  IonSelect,
-  IonSelectOption,
-  IonInput,
   IonProgressBar,
 } from "@ionic/vue";
 import {
@@ -304,7 +195,7 @@ import { useRoute, useRouter } from "vue-router";
 const databaseStore = useDatabaseStore();
 const route = useRoute();
 const router = useRouter();
-console.log(route.fullPath);
+const stateStore = useStateStore();
 
 const showDiagram = ref(true);
 
@@ -328,15 +219,6 @@ const currentCount = ref(0);
 const queryResults = ref<any>([]);
 const exercises = ref<any>([]);
 const sets = ref(0);
-const SetResults = ref<
-  {
-    exerciseName: string;
-    set: number;
-    reps?: number;
-    weight?: number;
-    unit?: string;
-  }[]
->([]);
 
 const modalPlaceholder = ref<
   {
@@ -348,7 +230,6 @@ const modalPlaceholder = ref<
   }[]
 >([]);
 
-const modal = ref();
 const modalOpen = ref(false);
 const modalStarttime = ref("");
 const modalEndtime = ref();
@@ -524,6 +405,7 @@ const setPreviousNext = (targetDate: string) => {
   let nextIndex = -1;
 
   // Finde das vorherige und das nächste Datum mit Date-Objekten
+  console.log("Date Objects:", dateObjects);
   for (let i = 0; i < dateObjects.length; i++) {
     if (dateObjects[i].toDateString() === targetDateObject) {
       if (i > 0) {
@@ -561,202 +443,6 @@ onBeforeMount(async () => {
   modalNotes.value = workoutQueryResult.value.note;
 });
 
-const cancel = () => {
-  modal.value.$el.dismiss(null, "cancel");
-  modalOpen.value = false;
-};
-
-const confirmModal = async () => {
-  modal.value.$el.dismiss(name, "confirm");
-  modalOpen.value = false;
-
-  // Test if stardate is in Workout Table
-  const resp = await databaseStore.getDatabase()?.query(`SELECT *
-    FROM Workout
-    WHERE startdate = '${modalStarttime.value}';
-    `);
-  const workout = resp?.values ? resp.values[0] : null;
-  console.log(workout?.values);
-
-  if (workout.startdate) {
-    const updateQuery = `UPDATE Workout SET workoutname = '${workoutQueryResult.value.workoutname}', startdate = '${modalStarttime.value}', enddate = '${modalEndtime.value}', note = '${modalNotes.value}' WHERE startdate = '${modalStarttime.value}';`;
-    console.log(updateQuery);
-    await databaseStore.getDatabase()?.execute(updateQuery);
-  } else {
-    const query = `INSERT INTO Workout (workoutname, startdate, enddate, note) VALUES ('${workoutQueryResult.value.workoutname}', '${modalStarttime.value}', '${modalEndtime.value}', '${modalNotes.value}');`;
-    console.log(query);
-    await databaseStore.getDatabase()?.execute(query);
-
-    // update WorkoutExercise Table where workout = workoutQueryResult.value.startdate to modalStarttime.value
-    const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE workout = '${workoutQueryResult.value.startdate}';`;
-    console.log(updateWEQuery);
-    await databaseStore.getDatabase()?.execute(updateWEQuery);
-
-    const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
-    console.log(deleteQuery);
-    await databaseStore.getDatabase()?.execute(deleteQuery);
-
-    // if (workoutExercises.value.length === 0) {
-    // await SetResults.value.map(async (exercise: any) => {
-    //   console.log(exercise);
-    //   console.log("modalPlaceholder", modalPlaceholder.value);
-    //   const index = modalPlaceholder.value.findIndex(
-    //     (obj: any) =>
-    //       obj.exerciseName === exercise.exerciseName && obj.set === exercise.set
-    //   );
-
-    //   console.log("Index", index);
-    //   exercise.reps
-    //     ? exercise.reps
-    //     : (exercise.reps = modalPlaceholder.value[index].reps);
-    //   exercise.weight
-    //     ? exercise.weight
-    //     : (exercise.weight = modalPlaceholder.value[index].weight);
-    //   exercise.unit ? exercise.unit : (exercise.unit = "kg");
-
-    // const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
-    //       VALUES ('${modalStarttime.value}', '${exercise.exerciseName}', ${exercise.set} ,
-    //       ${exercise.reps}, ${exercise.weight}, '${exercise.unit}');`;
-
-    // console.log(insertQuery);
-    // await databaseStore.getDatabase()?.execute(insertQuery);
-    // });
-    // } else if (SetResults.value.length !== 0) {
-    // await SetResults.value.map(async (exercise: any) => {
-    //   const index = workoutExercises.value.findIndex(
-    //     (obj: any) =>
-    //       obj.exercise === exercise.exerciseName &&
-    //       obj.setNumber === exercise.set
-    //   );
-    //   exercise.reps
-    //     ? exercise.reps
-    //     : (exercise.reps = workoutExercises.value[index].reps);
-    //   exercise.weight
-    //     ? exercise.weight
-    //     : (exercise.weight = workoutExercises.value[index].weight);
-    //   exercise.unit ? exercise.unit : (exercise.unit = "kg");
-
-    // console.log("update");
-    // const query = `UPDATE WorkoutExercise
-    //       SET reps = ${exercise.reps},
-    //           weight = ${exercise.weight},
-    //           unit = '${exercise.unit}'
-    //       WHERE workout = '${modalStarttime.value}'
-    //         AND exercise = '${exercise.exerciseName}' AND setNumber = ${exercise.set};`;
-    // console.log(query);
-    // await databaseStore.getDatabase()?.execute(query);
-    // });
-  }
-
-  for (let i = 0; i < modalPlaceholder.value.length; i++) {
-    console.log("ModalPlaceholer: ", modalPlaceholder.value[i]);
-    console.log("WorkoutExercises: ", workoutExercises.value);
-    const index = workoutExercises.value.findIndex(
-      (obj: any) =>
-        obj.exercise == modalPlaceholder.value[i].exerciseName &&
-        obj.setNumber == modalPlaceholder.value[i].set
-    );
-
-    console.log("Index", index);
-    if (index !== -1) {
-      console.log("update");
-      const query = `UPDATE WorkoutExercise
-              SET reps = ${modalPlaceholder.value[i].reps},
-                  weight = ${modalPlaceholder.value[i].weight},
-                  unit = '${modalPlaceholder.value[i].unit}'
-              WHERE workout = '${modalStarttime.value}'
-                AND exercise = '${modalPlaceholder.value[i].exerciseName}' AND setNumber = ${modalPlaceholder.value[i].set};`;
-      console.log(query);
-      await databaseStore.getDatabase()?.run(query);
-    } else {
-      console.log("insert");
-      const insertQuery = `INSERT INTO WorkoutExercise (workout, exercise, setNumber,  reps, weight, unit)
-              VALUES ('${modalStarttime.value}', '${modalPlaceholder.value[i].exerciseName}', ${modalPlaceholder.value[i].set} ,
-              ${modalPlaceholder.value[i].reps}, ${modalPlaceholder.value[i].weight}, '${modalPlaceholder.value[i].unit}');`;
-
-      console.log(insertQuery);
-      await databaseStore.getDatabase()?.run(insertQuery);
-    }
-  }
-
-  showDiagram.value = false;
-  await loadWorkout();
-  await loadExercises();
-  await getOverallWeightsOfWorkout();
-  showDiagram.value = true;
-};
-
-const leaveReps = (
-  exerciseName: string,
-  set: number,
-  value: string | number | null | undefined
-) => {
-  console.log(exerciseName, set, value, SetResults);
-  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
-  const index = SetResults.value.findIndex(
-    (obj) => obj.exerciseName === exerciseName && obj.set === set
-  );
-  console.log(index);
-  if (index !== -1) {
-    value === "" || value === null || value === undefined
-      ? SetResults.value[index].weight
-        ? (SetResults.value[index].reps = 0)
-        : SetResults.value.splice(index, 1)
-      : (SetResults.value[index].reps = Number(value));
-  } else {
-    SetResults.value.push({
-      exerciseName,
-      set,
-      reps: Number(value),
-    });
-  }
-};
-
-const leaveWeight = (
-  exerciseName: string,
-  set: number,
-  value: string | number | null | undefined
-) => {
-  console.log(exerciseName, set, value, SetResults);
-  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
-  const index = SetResults.value.findIndex(
-    (obj) => obj.exerciseName === exerciseName && obj.set === set
-  );
-  if (index !== -1) {
-    value === "" || value === null || value === undefined
-      ? SetResults.value[index].reps
-        ? (SetResults.value[index].weight = 0)
-        : SetResults.value.splice(index, 1)
-      : (SetResults.value[index].weight = Number(value));
-  } else {
-    SetResults.value.push({
-      exerciseName,
-      set,
-      weight: Number(value),
-    });
-  }
-};
-
-const leaveUnit = (
-  exerciseName: string,
-  set: number,
-  value: string | number | null | undefined
-) => {
-  // Look if theres an object in SetResultsReps where exerciseName and set are the same, then update otherwise add as new element
-  const index = SetResults.value.findIndex(
-    (obj) => obj.exerciseName === exerciseName && obj.set === set
-  );
-  if (index !== -1) {
-    SetResults.value[index].unit = value?.toString();
-  } else {
-    SetResults.value.push({
-      exerciseName: exerciseName,
-      set,
-      unit: value?.toString(),
-    });
-  }
-};
-
 const deleteWeightEntry = async (exercise: string, set: number) => {
   console.log(
     `UPDATE WorkoutExercise SET reps = 0, weight = 0 WHERE workout = "${workoutQueryResult.value.startdate}" AND exercise = '${exercise}' AND setNumber = ${set};`
@@ -783,6 +469,19 @@ const routeLink = (direction: string) => {
       router.push(`/workoutdetails/${next.value}`);
     }, 0.01);
   }
+};
+
+const refresh = async () => {
+  showDiagram.value = false;
+  const date = route.params.id as string;
+  await loadWorkout();
+  await loadExercises();
+  await getOverallWeightsOfWorkout();
+  await loadListExercises();
+  await loadLastExercises();
+  await loadDatesOfWorkouts();
+  setPreviousNext(date);
+  showDiagram.value = true;
 };
 </script>
 

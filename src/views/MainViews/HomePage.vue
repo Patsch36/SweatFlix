@@ -80,9 +80,9 @@ import { add, barbell, calculator, timer } from "ionicons/icons";
 
 import { onBeforeMount, ref } from "vue";
 
-import HomeWeightWidget from "@/components/HomeWeightWidget.vue";
-import HomeExerciseWidget from "@/components/HomeExerciseWidget.vue";
-import HomeQuotesComponent from "@/components/HomeQuotesComponent.vue";
+import HomeWeightWidget from "@/components/HomeWidgets/HomeWeightWidget.vue";
+import HomeExerciseWidget from "@/components/HomeWidgets/HomeExerciseWidget.vue";
+import HomeQuotesComponent from "@/components/HomeWidgets/HomeQuotesComponent.vue";
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
 // import AchievementManager from "@/datatypes/AchievementManager";
