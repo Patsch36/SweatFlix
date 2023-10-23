@@ -64,6 +64,12 @@ export class TrainingsGenerator {
     }
   }
 
+  /**
+   * Saves the generated workout plan to the database.
+   * @param workoutTemplate - The generated workout plan.
+   * @param plan - The plan details, including scheme and start workout.
+   * @returns A Promise that resolves when the workout plan is saved to the database.
+   */
   private async saveToDatabase(
     workoutTemplate: Workout[],
     plan: {

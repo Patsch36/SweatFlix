@@ -208,27 +208,20 @@ const loadWorkouts = async () => {
   // Iterate through plan.value.scheme. If t, insert first element of ws and remove ist. if R, insert {WorkoutTemplateName: 'Restday'}. Make OrderIndex rising.
   const newWs = [];
   let wsIndex = 0;
-  console.log(ws);
-
   const loopLimit = plan.value.scheme ? plan.value.scheme.length : 0;
   for (let i = 0; i < loopLimit; i++) {
     if (plan.value.scheme[i] === "t") {
-      console.log(
-        wsIndex,
-        ws[ws.findIndex((obj) => obj.OrderIndex === wsIndex)]
-      );
+      const ind = ws.findIndex((obj) => obj.OrderIndex === wsIndex);
+      if (ind === -1) {
+        console.log("no workout found");
+        continue;
+      }
       newWs.push({
-        WorkoutTemplateName:
-          ws[ws.findIndex((obj) => obj.OrderIndex === wsIndex)]
-            .WorkoutTemplateName,
+        WorkoutTemplateName: ws[ind].WorkoutTemplateName,
         OrderIndex: i,
       });
-      //   ws.shift();
-      if (wsIndex < ws.length) {
-        wsIndex += 1;
-      } else {
-        wsIndex = 0;
-      }
+      // ws.shift();
+      wsIndex = (wsIndex + 1) % ws.length;
     } else if (plan.value.scheme[i] === "r") {
       newWs.push({ WorkoutTemplateName: "Restday", OrderIndex: i });
     }
