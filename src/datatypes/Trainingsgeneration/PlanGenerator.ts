@@ -1,6 +1,4 @@
-import { first } from "cypress/types/lodash";
 import { Workout, WorkoutDays } from "./datatypes";
-import { t } from "vitest/dist/types-198fd1d9";
 
 // interface Weekdays {
 //   [key: string]: boolean;
@@ -68,16 +66,13 @@ export class PlanGenerator {
     let availableWorkoutDaysToRestList: number[] = [];
     let FirstIterationFLag = true;
 
-    while (
-      scheme.length < workouts.length ||
-      !(
-        currentDay == startDay &&
-        currentWorkout == startWorkout &&
-        availableWorkoutDaysToRestList.includes(
-          workoutsInRowLimit - workoutsInRowCounter
-        )
-      )
-    ) {
+    const amountOfWorkoutDays = Object.values(this.weekdays).filter(
+      Boolean
+    ).length;
+
+    let dayOfWeek = 1;
+
+    do {
       if (
         this.weekdays[currentDay as keyof WorkoutDays] &&
         workoutsInRowCounter < workoutsInRowLimit
@@ -88,9 +83,31 @@ export class PlanGenerator {
         workoutIndex = (workoutIndex + 1) % workouts.length;
 
         if (FirstIterationFLag) availableWorkoutDaysToRest++;
+
+        // If there were already many workoutdays until 6th period, make rest to give higher chance for repetition in scheme
+        if (dayOfWeek === 6) {
+          const lastSix = scheme.slice(-6).split("");
+          const count = lastSix.filter((char) => char === "t").length;
+          console.log("count: " + count);
+          if (count === workouts.length) {
+            currentDay = this.getNextDay(currentDay);
+            dayOfWeek = (dayOfWeek + 1) % Object.keys(this.weekdays).length;
+            workoutsInRowCounter = 0;
+            scheme += "r";
+            if (currentDay == startDay && currentWorkout == startWorkout)
+              return this.buildScheme(
+                scheme,
+                availableWorkoutDaysToRestList,
+                workoutsInRowLimit,
+                workoutsInRowCounter,
+                startWorkouts
+              );
+          }
+        }
       } else {
         workoutsInRowCounter = 0;
         scheme += "r";
+        workoutsInRowCounter = 0;
         if (FirstIterationFLag)
           availableWorkoutDaysToRestList.push(availableWorkoutDaysToRest);
         FirstIterationFLag = false;
@@ -98,13 +115,43 @@ export class PlanGenerator {
 
       currentDay = this.getNextDay(currentDay);
       currentWorkout = workouts[workoutIndex].workoutName;
-      if (currentDay == "Mondays") {
+      dayOfWeek = (dayOfWeek + 1) % Object.keys(this.weekdays).length;
+      if (currentDay == startDay) {
         FirstIterationFLag = true;
         availableWorkoutDaysToRest = 0;
         startWorkouts.push(currentWorkout);
       }
-    }
+    } while (
+      scheme.length < workouts.length ||
+      !(
+        currentDay == startDay &&
+        currentWorkout == startWorkout &&
+        workoutsInRowLimit - workoutsInRowCounter > 0 &&
+        (availableWorkoutDaysToRestList.includes(
+          workoutsInRowLimit - workoutsInRowCounter
+        ) ||
+          workoutsInRowCounter == 0)
+      )
+    );
 
+    console.log("scheme: " + scheme);
+
+    return this.buildScheme(
+      scheme,
+      availableWorkoutDaysToRestList,
+      workoutsInRowLimit,
+      workoutsInRowCounter,
+      startWorkouts
+    );
+  }
+
+  private buildScheme(
+    scheme: string,
+    availableWorkoutDaysToRestList: number[],
+    workoutsInRowLimit: number,
+    workoutsInRowCounter: number,
+    startWorkouts: string[]
+  ) {
     let firstWorkout = "";
     const index = availableWorkoutDaysToRestList.indexOf(
       workoutsInRowLimit - workoutsInRowCounter

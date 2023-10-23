@@ -370,7 +370,7 @@ export class WorkoutGenerator {
           if (workoutDays > 4)
             return "Chest - Biceps;Back - Triceps;Legs - Shoulders - Abs;UpperBody;LowerBody";
           else if (workoutDays === 4)
-            return "UpperBody;UpperBody;LowerBody;UpperBody";
+            return "UpperBody;LowerBody;UpperBody;LowerBody";
           else if (workoutDays === 3) return "Push;Pull;Legs";
           else return "Fullbody";
         } else if (this.activityLevel === "Semi-Professional") {
