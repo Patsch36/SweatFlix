@@ -156,7 +156,6 @@ stateStore.$subscribe((mutation, state) => {
 const selectedDateStore = useSelectedDateStore();
 
 const highlightedDates: DateObj[] = [];
-const datetime = ref();
 const modal = ref();
 const modalOpen = ref(false);
 const input = ref();

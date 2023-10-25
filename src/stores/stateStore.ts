@@ -12,6 +12,7 @@ export const useStateStore = defineStore("stateStore", () => {
   const showEditPlanModal = ref(false);
   const showEditWorkoutModal = ref(false);
   const showAddExerciseToWorkoutModal = ref(false);
+  const showFinishWorkoutModal = ref(false);
 
   const setShowAddPlanModal = (show: boolean) => {
     showAddPlanModal.value = show;
@@ -66,6 +67,10 @@ export const useStateStore = defineStore("stateStore", () => {
     showAddExerciseToWorkoutModal.value = show;
   };
 
+  const setShowFinishWorkoutModal = (show: boolean) => {
+    showFinishWorkoutModal.value = show;
+  };
+
   return {
     setShowAddPlanModal,
     setShowAddExerciseModal,
@@ -77,6 +82,7 @@ export const useStateStore = defineStore("stateStore", () => {
     setShowEditPlanModal,
     setShowEditWorkoutModal,
     setShowAddExerciseToWorkoutModal,
+    setShowFinishWorkoutModal,
     showAddPlanModal,
     showAddExerciseModal,
     openedProfileAccordion,
@@ -87,5 +93,6 @@ export const useStateStore = defineStore("stateStore", () => {
     showEditPlanModal,
     showEditWorkoutModal,
     showAddExerciseToWorkoutModal,
+    showFinishWorkoutModal,
   };
 });
