@@ -17,25 +17,31 @@
     <ion-content class="ion-padding">
       <ion-item v-if="workoutQueryResult">
         <ion-label>Start Time</ion-label>
-        <ion-datetime-button datetime="time"></ion-datetime-button>
+        <ion-datetime-button
+          datetime="time"
+          v-model="modalStarttime"></ion-datetime-button>
 
         <ion-modal :keep-contents-mounted="true">
           <ion-datetime
             presentation="time"
             id="time"
-            v-model="modalStarttime"></ion-datetime>
+            v-model="modalStarttime"
+            @ionChange="changeStarttime($event.detail.value)"></ion-datetime>
         </ion-modal>
       </ion-item>
 
       <ion-item v-if="workoutQueryResult">
         <ion-label>End Time</ion-label>
-        <ion-datetime-button datetime="datetime"></ion-datetime-button>
+        <ion-datetime-button
+          datetime="datetime"
+          :value="modalEndtime"></ion-datetime-button>
 
         <ion-modal :keep-contents-mounted="true">
           <ion-datetime
             presentation="date-time"
             id="datetime"
-            v-model="modalEndtime"></ion-datetime>
+            :value="modalEndtime"
+            @ionChange="changeEndtime($event.detail.value)"></ion-datetime>
         </ion-modal>
       </ion-item>
       <ion-item>
@@ -44,6 +50,7 @@
           style="height: 150px"
           v-model="modalNotes"></ion-textarea>
       </ion-item>
+      <h1>Newdate: {{ newStartTime }}</h1>
       <h5
         v-if="exercises.length > 0"
         v-for="(exercise, index) in modalPlaceholder"
@@ -106,7 +113,6 @@
 </template>
 
 <script setup lang="ts">
-import Diagram from "@/components/Diagram.vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
 import {
@@ -126,7 +132,7 @@ import {
   IonSelectOption,
   IonInput,
 } from "@ionic/vue";
-import { onBeforeMount, ref, watch } from "vue";
+import { onBeforeMount, onMounted, ref, shallowRef, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const databaseStore = useDatabaseStore();
@@ -170,8 +176,11 @@ const modalPlaceholder = ref<
 const modal = ref();
 const modalOpen = ref(false);
 const modalStarttime = ref("");
+const originalStartTime = ref();
 const modalEndtime = ref();
 const modalNotes = ref("");
+
+const newStartTime = ref("");
 
 stateStore.$subscribe((mutation, state) => {
   modalOpen.value = state.showEditWorkoutModal;
@@ -286,6 +295,7 @@ onBeforeMount(async () => {
   const date = route.params.id as string;
 
   modalStarttime.value = workoutQueryResult.value.startdate;
+  originalStartTime.value = modalStarttime.value;
   modalEndtime.value = workoutQueryResult.value.enddate;
   modalNotes.value = workoutQueryResult.value.note;
 });
@@ -302,13 +312,13 @@ const confirmModal = async () => {
   // Test if stardate is in Workout Table
   const resp = await databaseStore.getDatabase()?.query(`SELECT *
     FROM Workout
-    WHERE startdate = '${modalStarttime.value}';
+    WHERE DATE(startdate) = DATE('${originalStartTime.value}');
     `);
   const workout = resp?.values ? resp.values[0] : null;
   console.log(workout?.values);
 
   if (workout.startdate) {
-    const updateQuery = `UPDATE Workout SET workoutname = '${workoutQueryResult.value.workoutname}', startdate = '${modalStarttime.value}', enddate = '${modalEndtime.value}', note = '${modalNotes.value}' WHERE startdate = '${modalStarttime.value}';`;
+    const updateQuery = `UPDATE Workout SET workoutname = '${workoutQueryResult.value.workoutname}', note = '${modalNotes.value}' WHERE DATE(startdate) = DATE('${originalStartTime.value}');`;
     console.log(updateQuery);
     await databaseStore.getDatabase()?.execute(updateQuery);
   } else {
@@ -317,11 +327,11 @@ const confirmModal = async () => {
     await databaseStore.getDatabase()?.execute(query);
 
     // update WorkoutExercise Table where workout = workoutQueryResult.value.startdate to modalStarttime.value
-    const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE workout = '${workoutQueryResult.value.startdate}';`;
+    const updateWEQuery = `UPDATE WorkoutExercise SET workout = '${modalStarttime.value}' WHERE DATE(workout) = DATE('${workoutQueryResult.value.startdate}');`;
     console.log(updateWEQuery);
     await databaseStore.getDatabase()?.execute(updateWEQuery);
 
-    const deleteQuery = `DELETE FROM Workout WHERE startdate = '${workoutQueryResult.value.startdate}';`;
+    const deleteQuery = `DELETE FROM Workout WHERE DATE(startdate) = DATE('${workoutQueryResult.value.startdate}');`;
     console.log(deleteQuery);
     await databaseStore.getDatabase()?.execute(deleteQuery);
 
@@ -393,7 +403,7 @@ const confirmModal = async () => {
               SET reps = ${modalPlaceholder.value[i].reps},
                   weight = ${modalPlaceholder.value[i].weight},
                   unit = '${modalPlaceholder.value[i].unit}'
-              WHERE workout = '${modalStarttime.value}'
+              WHERE DATE(workout) = DATE('${originalStartTime.value}')
                 AND exercise = '${modalPlaceholder.value[i].exerciseName}' AND setNumber = ${modalPlaceholder.value[i].set};`;
       console.log(query);
       await databaseStore.getDatabase()?.run(query);
@@ -407,7 +417,7 @@ const confirmModal = async () => {
       await databaseStore.getDatabase()?.run(insertQuery);
     }
 
-    emits("reloadWorkoutData");
+    emits("reloadWorkoutData", originalStartTime.value);
   }
 
   showDiagram.value = false;
@@ -485,5 +495,42 @@ const leaveUnit = (
       unit: value?.toString(),
     });
   }
+};
+
+const changeEndtime = (value: string | string[] | null | undefined) => {
+  const updateQuery = `UPDATE Workout SET enddate = '${value}' WHERE startdate = '${originalStartTime}';`;
+  console.log(updateQuery);
+  databaseStore.getDatabase()?.execute(updateQuery);
+};
+
+const updateWorkoutExercises = async (
+  newStartTime: string,
+  _originalStarttime: string
+) => {
+  const updateQuery = `UPDATE WorkoutExercise SET workout = '${newStartTime}' WHERE workout = '${_originalStarttime}';`;
+  console.log(updateQuery);
+  await databaseStore.getDatabase()?.run(updateQuery);
+};
+
+const changeStarttime = (value: string | string[] | null | undefined) => {
+  newStartTime.value = value?.toString() as string;
+  const _originalStarttime = originalStartTime.value;
+  originalStartTime.value = newStartTime.value;
+  const insertQuery = `INSERT INTO Workout (workoutname, startdate, enddate, note) VALUES ('${workoutQueryResult.value.workoutname}', '${newStartTime.value}', '${modalEndtime.value}', '${modalNotes.value}');`;
+  console.log(insertQuery);
+  databaseStore
+    .getDatabase()
+    ?.run(insertQuery)
+    .then(() => {
+      updateWorkoutExercises(newStartTime.value, _originalStarttime).then(
+        () => {
+          const dropQuery = `DELETE FROM Workout WHERE startdate = '${_originalStarttime}';`;
+          console.log(dropQuery);
+          databaseStore.getDatabase()?.run(dropQuery);
+        }
+      );
+    });
+
+  // originalStartTime = newStartTime;
 };
 </script>

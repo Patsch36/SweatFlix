@@ -65,7 +65,6 @@
           </ion-progress-bar>
         </div>
 
-        <ion-button @click="absolvingExercisesStore.clear()">c</ion-button>
         <swiper @swiper="setSwiperInstance">
           <swiper-slide
             v-for="(exercise, index) in absolvingExercisesStore.exercises"

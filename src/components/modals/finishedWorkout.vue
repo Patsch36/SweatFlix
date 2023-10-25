@@ -160,8 +160,8 @@ stateStore.$subscribe((mutation, state) => {
     if (newXPs === 0) clearInterval(intervalid);
 
     if (xp.value < newLevelLimit.value) {
-      xp.value++;
-      newXPs--;
+      xp.value += 4;
+      newXPs -= 4;
     } else if (xp.value >= newLevelLimit.value || newXPs > 0) {
       xp.value = 0;
       currentLevel.value++;
@@ -173,7 +173,7 @@ stateStore.$subscribe((mutation, state) => {
       }
       newLevelLimit.value = levelManager.value.levelFromXP(currentLevel.value);
     }
-  }, 1);
+  }, 0.2);
 
   showResultModal.value = state.showFinishWorkoutModal;
 });

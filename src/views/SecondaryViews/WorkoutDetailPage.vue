@@ -471,9 +471,10 @@ const routeLink = (direction: string) => {
   }
 };
 
-const refresh = async () => {
+const refresh = async (_date: string) => {
   showDiagram.value = false;
-  const date = route.params.id as string;
+  const date = _date as string;
+  // alert(date);
   await loadWorkout();
   await loadExercises();
   await getOverallWeightsOfWorkout();
@@ -482,6 +483,12 @@ const refresh = async () => {
   await loadDatesOfWorkouts();
   setPreviousNext(date);
   showDiagram.value = true;
+
+  setPreviousNext(date);
+
+  modalStarttime.value = workoutQueryResult.value.startdate;
+  modalEndtime.value = workoutQueryResult.value.enddate;
+  modalNotes.value = workoutQueryResult.value.note;
 };
 </script>
 
