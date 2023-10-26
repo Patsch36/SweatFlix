@@ -181,7 +181,7 @@ const loadMaxDate = async () => {
   const resp = await databaseStore.getDatabase()?.query(query);
   maxDate.value = resp?.values
     ? resp.values[0]["MAX(startdate)"].slice(0, 10)
-    : null;
+    : "01.01.1970";
 };
 
 onBeforeMount(async () => {

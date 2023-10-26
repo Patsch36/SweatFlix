@@ -151,6 +151,7 @@ const showMuscleGroupPopover = ref(false);
 const { exercise } = defineProps(["exercise"]);
 
 const name = ref();
+const originalName = ref();
 const description = ref();
 const subMuscle = ref();
 const muscle = ref();
@@ -180,6 +181,7 @@ stateStore.$subscribe((mutation, state) => {
   modalOpen.value = state.showEditExerciseModal;
   console.log("Exercise", exercise);
   name.value = exercise.name;
+  originalName.value = exercise.name;
   description.value = exercise.ExDesc;
   subMuscle.value = exercise.SubMuscle;
   muscle.value = exercise.Muscle;
@@ -253,14 +255,26 @@ const confirmModal = async () => {
   console.log(selectQuery);
   const resp = await databaseStore.getDatabase()?.query(selectQuery);
   const muscleGroupID = resp?.values ? resp.values[0].ID : null;
+
   // Save everything to database
-  const query = `UPDATE Exercise SET name = '${name.value}', description = '${
-    description.value
-  }', muscleGroup = '${muscleGroupID}', SecondaryMuscleGroup = '${buildListString()}', isolation = ${
+  const query = `INSERT INTO Exercise (name, description, muscleGroup, SecondaryMuscleGroup, isolation, bodyweight) VALUES ('${
+    name.value
+  }', '${description.value}', '${muscleGroupID}', '${buildListString()}', ${
     isolation.value
-  }, bodyweight = ${bodyweight.value} WHERE name = '${exercise.name}'`;
+  }, ${bodyweight.value})`;
   console.log(query);
   await databaseStore.getDatabase()?.run(query);
+
+  const updateWOrkoutListQuery = `UPDATE WorkoutList SET exerciseName = '${name.value}' WHERE exerciseName = '${originalName.value}'`;
+  console.log(updateWOrkoutListQuery);
+  await databaseStore.getDatabase()?.run(updateWOrkoutListQuery);
+
+  const workoutExerciseQuery = `UPDATE WorkoutExercise SET exercise = '${name.value}' WHERE exercise = '${originalName.value}'`;
+  await databaseStore.getDatabase()?.run(workoutExerciseQuery);
+
+  const DeleteQuery = `DELETE FROM Exercise WHERE name = '${originalName.value}'`;
+  await databaseStore.getDatabase()?.run(DeleteQuery);
+
   emit("reloadExercises", name.value);
   stateStore.setShowEditExerciseModal(false);
 };
