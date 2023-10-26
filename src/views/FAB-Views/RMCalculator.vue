@@ -154,8 +154,10 @@
               >
             </ion-radio-group>
           </ion-item>
+          <h6 style="margin-left: 16px">Choose datetime of values:</h6>
           <ion-datetime
             presentation="date"
+            :first-day-of-week="settingsStore.firstDayOfWeek"
             @ionChange="dateVal = $event.detail.value"
             class="datetime-object">
           </ion-datetime>
@@ -203,8 +205,6 @@ import {
   IonPopover,
   IonList,
   IonDatetime,
-  IonDatetimeButton,
-  IonModal,
   IonRadioGroup,
   IonRadio,
   IonCard,
@@ -220,9 +220,11 @@ import { useRouter } from "vue-router";
 
 import { SetManager } from "@/datatypes/SetManager";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 const router = useRouter();
 const databaseStore = useDatabaseStore();
+const settingsStore = useSettingsStore();
 
 const calcmode = ref("1RM");
 const setmanager = new SetManager();
