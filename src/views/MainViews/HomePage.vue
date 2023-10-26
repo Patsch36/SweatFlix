@@ -34,6 +34,7 @@
           </ion-fab-button>
           <ion-fab-button
             @click="showModal = true"
+            v-if="maxDate && maxDate !== new Date().toISOString().slice(0, 10)"
             @ionPopoverDidDismiss="showModal = false">
             <ion-label>Start Workout</ion-label>
             <ion-icon :icon="barbell"></ion-icon>
@@ -96,10 +97,19 @@ const settingsStore = useSettingsStore();
 
 const activeWorkouts = ref();
 const showModal = ref(false);
-const workoutgenerator = ref();
+const maxDate = ref();
+
+const loadMaxDate = async () => {
+  const query = `SELECT MAX(startdate) FROM Workout`;
+  const resp = await databasestore.getDatabase()?.query(query);
+  maxDate.value = resp?.values
+    ? resp.values[0]["MAX(startdate)"].slice(0, 10)
+    : null;
+};
 
 onBeforeMount(async () => {
   await loadActiveWorkouts();
+  await loadMaxDate();
 });
 
 const loadActiveWorkouts = async () => {

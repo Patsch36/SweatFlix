@@ -97,6 +97,8 @@ const settingsStore = useSettingsStore();
 const stateStore = useStateStore();
 const selectedDateStore = useSelectedDateStore();
 
+const maxDate = ref();
+
 const highlightedDates: DateObj[] = [];
 let operation = "";
 const datetime = ref();
@@ -174,9 +176,18 @@ const loadDates = async () => {
   );
 };
 
+const loadMaxDate = async () => {
+  const query = `SELECT MAX(startdate) FROM Workout`;
+  const resp = await databaseStore.getDatabase()?.query(query);
+  maxDate.value = resp?.values
+    ? resp.values[0]["MAX(startdate)"].slice(0, 10)
+    : null;
+};
+
 onBeforeMount(async () => {
   await loadWorkouts();
   await loadDates();
+  await loadMaxDate();
   if (queryResults.value && queryResults.value.length > 0) {
     queryResults.value.reverse();
   }
@@ -270,6 +281,10 @@ const removeValues = async () => {
 
 const openAddModal = () => {
   datetime.value.$el.confirm();
+  if (maxDate.value === new Date().toISOString().slice(0, 10)) {
+    alert("You already have a workout for today");
+    return;
+  }
   if (selectedDateStore.getDate() !== "") {
     stateStore.setShowAddWorkoutModal(true);
   } else {
