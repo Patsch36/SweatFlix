@@ -180,15 +180,39 @@ export class SetManager {
         return (
           (this.calculate1RMBoydEppley(weight, reps) +
             this.calculate1RMBrzycki(weight, reps) +
-            this.calculate1RMLander(weight, reps)) /
-          3
+            this.calculate1RMLander(weight, reps) +
+            this.calculate1RMOConner(weight, reps) +
+            this.calculate1RMLombardi(weight, reps) +
+            this.calculate1RMMayhew(weight, reps)) /
+          5
         );
+      } else if (formula === "optimal") {
+        if (reps <= 5) {
+          return (
+            (this.calculate1RMBoydEppley(weight, reps) +
+              this.calculate1RMBrzycki(weight, reps)) /
+            2
+          );
+        } else if (reps <= 10) return this.calculate1RMLander(weight, reps);
+        else
+          return (
+            (this.calculate1RMOConner(weight, reps) +
+              this.calculate1RMLombardi(weight, reps) +
+              this.calculate1RMMayhew(weight, reps)) /
+            3
+          );
       } else if (formula === "eppley") {
         return this.calculate1RMBoydEppley(weight, reps);
       } else if (formula === "brzycki") {
         return this.calculate1RMBrzycki(weight, reps);
       } else if (formula === "lander") {
         return this.calculate1RMLander(weight, reps);
+      } else if (formula === "oconner") {
+        return this.calculate1RMOConner(weight, reps);
+      } else if (formula === "lombardi") {
+        return this.calculate1RMLombardi(weight, reps);
+      } else if (formula === "mayhew") {
+        return this.calculate1RMMayhew(weight, reps);
       }
     });
 
@@ -214,8 +238,11 @@ export class SetManager {
         return (
           (this.calculateNRMBoydEppley(weight, reps) +
             this.calculateNRMBrzycki(weight, reps) +
-            this.calculateNRMLander(weight, reps)) /
-          3
+            this.calculateNRMLander(weight, reps) +
+            this.calculateNRMOConner(weight, reps) +
+            this.calculateNRMLombardi(weight, reps) +
+            this.calculateNRMMayhew(weight, reps)) /
+          5
         );
       } else if (formula === "eppley") {
         return this.calculateNRMBoydEppley(weight, reps);
@@ -223,6 +250,12 @@ export class SetManager {
         return this.calculateNRMBrzycki(weight, reps);
       } else if (formula === "lander") {
         return this.calculateNRMLander(weight, reps);
+      } else if (formula === "oconner") {
+        return this.calculateNRMOConner(weight, reps);
+      } else if (formula === "lombardi") {
+        return this.calculateNRMLombardi(weight, reps);
+      } else if (formula === "mayhew") {
+        return this.calculateNRMMayhew(weight, reps);
       }
     });
 
@@ -266,6 +299,34 @@ export class SetManager {
     return oneRM;
   }
 
+  private calculate1RMOConner(weight: number, repetitions: number): number {
+    if (repetitions <= 0) {
+      throw new Error("The number of repetitions must be greater than 0.");
+    }
+
+    const oneRM = weight * (1 + 0.25 * repetitions);
+    return oneRM;
+  }
+
+  private calculate1RMLombardi(weight: number, repetitions: number): number {
+    if (repetitions <= 0) {
+      throw new Error("The number of repetitions must be greater than 0.");
+    }
+
+    const oneRM = weight * Math.pow(repetitions, 0.1);
+    return oneRM;
+  }
+
+  private calculate1RMMayhew(weight: number, repetitions: number): number {
+    if (repetitions <= 0) {
+      throw new Error("The number of repetitions must be greater than 0.");
+    }
+
+    const oneRM =
+      (100 * weight) / (52.2 + 41.9 * Math.exp(-0.055 * repetitions));
+    return oneRM;
+  }
+
   private calculateNRMBoydEppley(weight: number, repetitions: number): number {
     // const w =
     //   this.calculate1RMBoydEppley(weight, repetitions) / (1 + this.m_Reps / 30);
@@ -290,6 +351,36 @@ export class SetManager {
     const w =
       (this.calculate1RMLander(weight, repetitions) *
         (101.3 - 2.67123 * this.m_Reps)) /
+      100;
+    return w;
+  }
+
+  private calculateNRMOConner(weight: number, repetitions: number): number {
+    // const w =
+    //   this.calculate1RMOConner(weight, repetitions) /
+    //   (1 + 0.25 * this.m_Reps);
+    const w =
+      this.calculate1RMOConner(weight, repetitions) * (1 + 0.25 * this.m_Reps);
+    return w;
+  }
+
+  private calculateNRMLombardi(weight: number, repetitions: number): number {
+    // const w =
+    //   this.calculate1RMLombardi(weight, repetitions) /
+    //   Math.pow(this.m_Reps, 0.1);
+    const w =
+      this.calculate1RMLombardi(weight, repetitions) *
+      Math.pow(this.m_Reps, 0.1);
+    return w;
+  }
+
+  private calculateNRMMayhew(weight: number, repetitions: number): number {
+    // const w =
+    //   this.calculate1RMMayhew(weight, repetitions) /
+    //   (52.2 + 41.9 * Math.exp(-0.055 * this.m_Reps));
+    const w =
+      (this.calculate1RMMayhew(weight, repetitions) *
+        (52.2 + 41.9 * Math.exp(-0.055 * this.m_Reps))) /
       100;
     return w;
   }

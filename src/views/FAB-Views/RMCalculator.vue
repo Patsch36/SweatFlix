@@ -72,9 +72,15 @@
             interface="action-sheet"
             placeholder="Choose Exercise">
             <ion-select-option value="all">All</ion-select-option>
+            <ion-select-option value="optimal">
+              Optimal Formula(s)
+            </ion-select-option>
             <ion-select-option value="eppley">Eppley</ion-select-option>
             <ion-select-option value="brzycki">Brzycki</ion-select-option>
             <ion-select-option value="lander">Lander</ion-select-option>
+            <ion-select-option value="oconner">Oconner</ion-select-option>
+            <ion-select-option value="lombardi">Lombardi</ion-select-option>
+            <ion-select-option value="mayhew">Mayhew</ion-select-option>
           </ion-select>
         </ion-item>
         <br />
