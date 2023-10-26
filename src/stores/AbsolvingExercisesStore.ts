@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
+import { SetManager } from "@/datatypes/SetManager";
 
 export const useAbsolvingExercisesStore = defineStore(
   "absolvingExercisesStore",
@@ -13,6 +14,10 @@ export const useAbsolvingExercisesStore = defineStore(
     const overallWeight = ref();
     const enddate = ref("");
     const startdate = ref("");
+    const ORMs = ref<any[]>([]);
+    const NRMs = ref<any[]>([]);
+    const setManager = ref();
+    const reps = ref(0);
 
     let __workout = "";
     let __date = "";
@@ -120,6 +125,55 @@ export const useAbsolvingExercisesStore = defineStore(
         exerciseResults.value.push(templist);
       }
       console.log("Results", exerciseResults.value);
+
+      setManager.value = new SetManager();
+      reps.value = setManager.value.getReps();
+      set1RMs();
+      setNRMs();
+    };
+
+    const setORMSAndNRMs = async () => {
+      if (exercises.value === undefined) return;
+      ORMs.value = [];
+      NRMs.value = [];
+      set1RMs();
+      setNRMs();
+    };
+
+    const set1RMs = () => {
+      for (let i = 0; i < exercises.value.length; i++) {
+        setManager.value
+          .get1RM(
+            exercises.value[i].exerciseName,
+            new Date().toISOString().slice(0, 19),
+            14
+          )
+          .then((res: any) => {
+            console.log(
+              "Calculated ORM for",
+              exercises.value[i].exerciseName,
+              " is ",
+              res
+            );
+            ORMs.value.push(res);
+          });
+      }
+    };
+
+    const setNRMs = () => {
+      for (let i = 0; i < exercises.value.length; i++) {
+        console.log(exercises.value.exerciseName);
+        setManager.value
+          .getNRM(
+            exercises.value[i].exerciseName,
+            new Date().toISOString().slice(0, 19),
+            14
+          )
+          .then((res: any) => {
+            console.log(res);
+            NRMs.value.push(res);
+          });
+      }
     };
 
     const save = async (workout: string, startdate: string) => {
@@ -162,10 +216,14 @@ export const useAbsolvingExercisesStore = defineStore(
       amountOfFinishedSets,
       startdate,
       enddate,
+      ORMs,
+      NRMs,
+      reps,
       overallWeight,
       loadWorkoutExcercises,
       clear,
       save,
+      setORMSAndNRMs,
     };
   }
 );

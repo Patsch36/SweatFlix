@@ -76,7 +76,7 @@ import {
   IonItem,
   IonLabel,
 } from "@ionic/vue";
-import { onBeforeMount, ref } from "vue";
+import { ref } from "vue";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import { useStateStore } from "@/stores/stateStore";
 import ExerciseManager from "@/components/ProfileComponents/ExerciseManager.vue";

@@ -73,6 +73,55 @@
         <ion-select-option :value="7">Sunday</ion-select-option>
       </ion-select>
     </ion-item>
+    <ion-item>
+      <ion-label>Home Widgets</ion-label>
+      <div class="possibleOptions">
+        <ion-item>
+          <ion-checkbox
+            labelPlacement="end"
+            justify="start"
+            v-model="settingsStore.showWorkoutManager"
+            @ionChange="
+              settingsStore.setShowWorkoutManager($event.target.checked)
+            ">
+            Workout Manager
+          </ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-checkbox
+            labelPlacement="end"
+            justify="start"
+            v-model="settingsStore.showWeightManager"
+            @ionChange="
+              settingsStore.setShowWeightManager($event.target.checked)
+            ">
+            Weight Manager
+          </ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-checkbox
+            labelPlacement="end"
+            justify="start"
+            v-model="settingsStore.showLevelManager"
+            @ionChange="
+              settingsStore.setShowLevelManager($event.target.checked)
+            ">
+            Level Manager
+          </ion-checkbox>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-checkbox
+            labelPlacement="end"
+            justify="start"
+            v-model="settingsStore.showQuotesManager"
+            @ionChange="
+              settingsStore.setShowQuotesManager($event.target.checked)
+            ">
+            Quote Manager
+          </ion-checkbox>
+        </ion-item>
+      </div>
+    </ion-item>
   </ion-item-group>
 
   <!-- <ion-item-group>

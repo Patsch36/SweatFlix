@@ -127,7 +127,7 @@
           Saturdays
         </ion-checkbox>
       </ion-item>
-      <ion-item>
+      <ion-item lines="none">
         <ion-checkbox
           labelPlacement="end"
           justify="start"

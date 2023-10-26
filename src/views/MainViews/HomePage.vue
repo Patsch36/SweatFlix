@@ -14,10 +14,10 @@
       </ion-header>
 
       <div style="padding-inline: 0.75rem">
-        <home-exercise-widget />
-        <home-weight-widget />
-        <home-level-widget />
-        <home-quotes-component />
+        <home-exercise-widget v-if="settingsStore.showWorkoutManager" />
+        <home-weight-widget v-if="settingsStore.showWeightManager" />
+        <home-level-widget v-if="settingsStore.showLevelManager" />
+        <home-quotes-component v-if="settingsStore.showQuotesManager" />
       </div>
       <ion-fab slot="fixed" horizontal="end" vertical="bottom">
         <ion-fab-button>
@@ -87,10 +87,12 @@ import HomeQuotesComponent from "@/components/HomeWidgets/HomeQuotesComponent.vu
 import { useRouter } from "vue-router";
 import { useDatabaseStore } from "@/stores/databaseStore";
 import HomeLevelWidget from "@/components/HomeWidgets/HomeLevelWidget.vue";
+import { useSettingsStore } from "@/stores/settingsStore";
 // import AchievementManager from "@/datatypes/AchievementManager";
 
 const router = useRouter();
 const databasestore = useDatabaseStore();
+const settingsStore = useSettingsStore();
 
 const activeWorkouts = ref();
 const showModal = ref(false);

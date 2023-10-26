@@ -9,6 +9,10 @@ export const useSettingsStore = defineStore("settings", () => {
   const doMediation = ref(true);
   const language = ref("en");
   const firstDayOfWeek = ref(1);
+  const showWorkoutManager = ref(true);
+  const showWeightManager = ref(true);
+  const showLevelManager = ref(true);
+  const showQuotesManager = ref(true);
 
   const setDoWarmup = async (value: boolean) => {
     await store.set("doWarmup", value);
@@ -40,6 +44,26 @@ export const useSettingsStore = defineStore("settings", () => {
     firstDayOfWeek.value = value;
   };
 
+  const setShowWorkoutManager = async (value: boolean) => {
+    await store.set("showWorkoutManager", value);
+    showWorkoutManager.value = value;
+  };
+
+  const setShowWeightManager = async (value: boolean) => {
+    await store.set("showWeightManager", value);
+    showWeightManager.value = value;
+  };
+
+  const setShowLevelManager = async (value: boolean) => {
+    await store.set("showLevelManager", value);
+    showLevelManager.value = value;
+  };
+
+  const setShowQuotesManager = async (value: boolean) => {
+    await store.set("showQuotesManager", value);
+    showQuotesManager.value = value;
+  };
+
   const loadSettings = async () => {
     const doWarmupValue = await store.get("doWarmup");
     const doCooldownValue = await store.get("doCooldown");
@@ -47,6 +71,10 @@ export const useSettingsStore = defineStore("settings", () => {
     const doMediationValue = await store.get("doMediation");
     const languageValue = await store.get("language");
     const firstDayOfWeekValue = await store.get("firstDayOfWeek");
+    const showWorkoutManagerValue = await store.get("showWorkoutManager");
+    const showWeightManagerValue = await store.get("showWeightManager");
+    const showLevelManagerValue = await store.get("showLevelManager");
+    const showQuotesManagerValue = await store.get("showQuotesManager");
 
     if (doWarmupValue !== null) {
       doWarmup.value = doWarmupValue;
@@ -71,6 +99,22 @@ export const useSettingsStore = defineStore("settings", () => {
     if (firstDayOfWeekValue !== null) {
       firstDayOfWeek.value = firstDayOfWeekValue;
     }
+
+    if (showWorkoutManagerValue !== null) {
+      showWorkoutManager.value = showWorkoutManagerValue;
+    }
+
+    if (showWeightManagerValue !== null) {
+      showWeightManager.value = showWeightManagerValue;
+    }
+
+    if (showLevelManagerValue !== null) {
+      showLevelManager.value = showLevelManagerValue;
+    }
+
+    if (showQuotesManagerValue !== null) {
+      showQuotesManager.value = showQuotesManagerValue;
+    }
   };
 
   return {
@@ -80,6 +124,10 @@ export const useSettingsStore = defineStore("settings", () => {
     doMediation,
     language,
     firstDayOfWeek,
+    showWorkoutManager,
+    showWeightManager,
+    showLevelManager,
+    showQuotesManager,
     setDoWarmup,
     setDoCooldown,
     setDoStretching,
@@ -87,5 +135,9 @@ export const useSettingsStore = defineStore("settings", () => {
     setLanguage,
     setFirstDayOfWeek,
     loadSettings,
+    setShowWorkoutManager,
+    setShowWeightManager,
+    setShowLevelManager,
+    setShowQuotesManager,
   };
 });

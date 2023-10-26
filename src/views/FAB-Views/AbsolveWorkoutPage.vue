@@ -105,12 +105,13 @@
                   <p></p>
                 </ion-item>
               </ion-list>
-              <p v-if="ORMs[index]">
-                You're 1RM for this exercise is: {{ ORMs[index] }}kg
+              <p v-if="absolvingExercisesStore.ORMs[index]">
+                You're 1RM for this exercise is:
+                {{ absolvingExercisesStore.ORMs[index] }}kg
               </p>
-              <p v-if="NRMs[index] && showReps">
-                You're {{ setManager.getReps() }}RM for this exercise is:
-                {{ NRMs[index] }}kg
+              <p v-if="absolvingExercisesStore.NRMs[index] && showReps">
+                You're {{ absolvingExercisesStore.reps }}RM for this exercise
+                is: {{ absolvingExercisesStore.NRMs[index] }}kg
               </p>
             </ion-grid>
           </swiper-slide>
@@ -149,6 +150,7 @@ import {
   IonButton,
 } from "@ionic/vue";
 import { SetManager } from "@/datatypes/SetManager";
+
 import { useAbsolvingExercisesStore } from "@/stores/AbsolvingExercisesStore";
 import { useStateStore } from "@/stores/stateStore";
 import FinishedWorkout from "@/components/modals/finishedWorkout.vue";
@@ -164,16 +166,15 @@ const showReps = ref(false);
 const workout = ref();
 const template = ref();
 
-const setManager = ref();
-const ORMs = ref<any[]>([]);
-const NRMs = ref<any[]>([]);
-
 const startdate = ref();
 
 const slides = ref();
 
 onMounted(() => {
   showTitle.value = true;
+  // setTimeout(() => {
+  absolvingExercisesStore.setORMSAndNRMs();
+  // }, 5000);
 });
 
 onBeforeMount(async () => {
@@ -183,10 +184,6 @@ onBeforeMount(async () => {
 
   startdate.value = new Date().toISOString().slice(0, 19);
   absolvingExercisesStore.startdate = startdate.value;
-
-  setManager.value = new SetManager();
-  await set1RMs();
-  await setNRMs();
 
   setTimeout(() => {
     showReps.value = true;
@@ -202,37 +199,6 @@ const loadWorkoutTemplate = async () => {
 
   const resp = await databaseStore.getDatabase()?.query(query);
   template.value = resp?.values ? resp.values[0] : {};
-};
-
-const set1RMs = () => {
-  for (let i = 0; i < absolvingExercisesStore.exercises.value.length; i++) {
-    setManager.value
-      .get1RM(
-        absolvingExercisesStore.exercises.value[i].exerciseName,
-        new Date().toISOString().slice(0, 19),
-        14
-      )
-      .then((res: any) => {
-        console.log(res);
-        ORMs.value.push(res);
-      });
-  }
-};
-
-const setNRMs = () => {
-  for (let i = 0; i < absolvingExercisesStore.exercises.value.length; i++) {
-    console.log(absolvingExercisesStore.exercises.value.exerciseName);
-    setManager.value
-      .getNRM(
-        absolvingExercisesStore.exercises.value[i].exerciseName,
-        new Date().toISOString().slice(0, 19),
-        14
-      )
-      .then((res: any) => {
-        console.log(res);
-        NRMs.value.push(res);
-      });
-  }
 };
 
 const save = async () => {
