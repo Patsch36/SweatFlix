@@ -103,7 +103,7 @@ import { useStateStore } from "@/stores/stateStore";
 const databaseStore = useDatabaseStore();
 const stateStore = useStateStore();
 
-const emit = defineEmits(["refreshExercises"]);
+const emits = defineEmits(["refreshExercises"]);
 
 stateStore.$subscribe((mutation, state) => {
   showAddExerciseModal.value = state.showAddExerciseToWorkoutModal;
@@ -116,6 +116,7 @@ const workout = ref<string>("");
 const exercises = ref();
 const allExercises = ref<Exercise[]>([]);
 const modalExercises = ref<Exercise[]>([]);
+const { name } = defineProps(["name"]);
 
 const muscles = ref<number[]>([]);
 const currentSplits = ref<string[]>([]);
@@ -124,8 +125,6 @@ const missingMuscles = ref<number[]>([]);
 const showAddExerciseModal = ref<boolean>(false);
 const modal = ref<any>(null);
 const missingMusclesFlag = ref<boolean>(true);
-
-const name = ref<string>("");
 
 const popoverOpen = ref<{ [key: string]: any }>({});
 
@@ -201,7 +200,7 @@ const handleInput = (event: any) => {
 const confirmModal = async () => {
   handleInput({ target: { value: "" } });
   let ids: any[] = [];
-  const query = `SELECT MAX(OrderIndex) as max FROM WorkoutList WHERE workoutPlan = '${name.value}'`;
+  const query = `SELECT MAX(OrderIndex) as max FROM WorkoutList WHERE workoutPlan = '${name}'`;
   const resp = await databaseStore.getDatabase()?.query(query);
   console.log(resp);
   let id =
@@ -211,7 +210,7 @@ const confirmModal = async () => {
   modalExercises.value = modalExercises.value.map((exercise) => {
     if (exercise.sets || exercise.reps) {
       console.log(exercise);
-      const query = `INSERT INTO WorkoutList (OrderIndex, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name.value}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
+      const query = `INSERT INTO WorkoutList (OrderIndex, workoutPlan, exerciseName, sets, reps) VALUES (${id}, '${name}', '${exercise.name}', ${exercise.sets}, '${exercise.reps}')`;
       databaseStore.getDatabase()?.run(query);
 
       id += 1;
@@ -220,9 +219,11 @@ const confirmModal = async () => {
       exercise.sets = undefined;
       exercise.reps = "";
     }
+    emits("refreshExercises");
     return exercise;
   });
-  workout.value = name.value;
+
+  workout.value = name;
   cancel();
 
   for (let i = 0; i < ids.length; i++) {
@@ -239,7 +240,6 @@ const confirmModal = async () => {
   missingMuscles.value = await musclesWithSubgroup(allMusclesOfSplit.value);
   missingMusclesFlag.value = false;
   stateStore.setShowAddExerciseToWorkoutModal(false);
-  emit("refreshExercises");
 
   setTimeout(() => {
     missingMusclesFlag.value = true;

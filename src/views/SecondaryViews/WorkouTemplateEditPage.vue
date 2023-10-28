@@ -82,7 +82,7 @@
             >{{ color }}</ion-button
           >
         </ion-item>
-        <exercise-manager />
+        <exercise-manager v-if="saved" :name="name" />
       </div>
     </ion-content>
   </ion-page>
@@ -131,6 +131,8 @@ const route = useRoute();
 const router = useRouter();
 
 const workout = ref<string>("");
+
+const saved = ref<boolean>(false);
 
 const template = ref();
 const exercises = ref();
@@ -266,6 +268,7 @@ const saveWorkout = async () => {
         // Set new Exercises in workoutlist if exercises are chosen
         for (let i = 0; i < exercises.value.length; i++) {
           const exercise = exercises.value[i];
+          console.log(exercise);
           const updateQuery = `UPDATE WorkoutList SET sets = ${exercise.sets}, reps = '${exercise.reps}' WHERE ID = '${exercise.WID}'`;
           await databaseStore.getDatabase()?.run(updateQuery);
         }
@@ -306,7 +309,8 @@ const saveWorkout = async () => {
       await databaseStore.getDatabase()?.run(updateQuery);
     }
 
-    if (showList.value) router.go(-1);
+    if (saved.value == false) saved.value = true;
+    else if (showList.value) router.go(-1);
     else showList.value = true;
   } else {
     alert("Name already exists");
