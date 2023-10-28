@@ -57,7 +57,10 @@
       </ion-item>
     </ion-reorder-group>
   </ion-list>
-  <AddExerciseToWorkout @refreshExercises="refresh" />
+  <AddExerciseToWorkout
+    @refreshExercises="refresh()"
+    :name="name"
+    v-if="name !== undefined" />
 </template>
 
 <script setup lang="ts">
@@ -94,13 +97,15 @@ const modalExercises = ref<Exercise[]>([]);
 const muscles = ref<number[]>([]);
 const showList = ref<boolean>(true);
 
-const name = ref<string>("");
+const { name } = defineProps(["name"]);
 const popoverOpen = ref<{ [key: string]: any }>({});
 
 const loadWorkoutExcercises = async () => {
   const query = `SELECT WorkoutList.exerciseName, WorkoutList.sets, WorkoutList.reps, MuscleGroup.ID, WorkoutList.OrderIndex
   FROM WorkoutList INNER JOIN MuscleGroup INNER JOIN Exercise on WorkoutList.exerciseName == Exercise.name
   AND Exercise.MuscleGroup = MuscleGroup.ID WHERE workoutPlan = '${workout.value}'`;
+
+  console.log(query);
 
   const resp = await databaseStore.getDatabase()?.query(query);
   exercises.value = resp?.values ? resp.values : [];
@@ -204,6 +209,7 @@ const changeExerciseValues = (exercise: any) => {
 };
 
 const refresh = async () => {
+  // alert("REFRESH");
   await loadWorkoutExcercises();
   await loadAllExercises();
   muscles.value = exercises.value.map((exercise: any) => exercise.ID);
